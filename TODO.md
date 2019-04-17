@@ -11,7 +11,7 @@
   - [`ext/autosummary/generate.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autosummary/generate.py)                                                                                                            
   - [`ext/autodoc/__init__.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autodoc/__init__.py)
   - [`ext/apidoc.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/apidoc.py)
-
+- This [`script`](https://gist.github.com/lyoshenka/f9588f273a4840c5a751432af4222517)
 
 ## What should we do?
 
