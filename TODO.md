@@ -2,7 +2,7 @@
 
 ## What has been done?
 
-- The builtin `dir` function along with `[https://docs.python.org/3/library/inspect.html](inspect)` is of great help
+- The builtin `dir` function along with [https://docs.python.org/3/library/inspect.html](`inspect`) is of great help
 - There's a package in the standard library called `[https://docs.python.org/3/library/pydoc.html](pydoc)`
 - The package `[https://github.com/ljcooke/see](ljcooke/see)` is "Python's dir() for humans."
 - The Sphinx package has functionality we might find interesting, see 
