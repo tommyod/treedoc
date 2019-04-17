@@ -2,14 +2,15 @@
 
 ## What has been done?
 
-- The builtin `dir` function along with [https://docs.python.org/3/library/inspect.html](`inspect`) is of great help
-- There's a package in the standard library called `[https://docs.python.org/3/library/pydoc.html](pydoc)`
-- The package `[https://github.com/ljcooke/see](ljcooke/see)` is "Python's dir() for humans."
+- The builtin `dir` function along with [`inspect`](https://docs.python.org/3/library/inspect.html)] is of great help
+- There's a package in the standard library called [`pydoc`](https://docs.python.org/3/library/pydoc.html)
+- The package [`ljcooke/see`](https://github.com/ljcooke/see) is "Python's dir() for humans."
 - The Sphinx package has functionality we might find interesting, see 
-  - `[https://github.com/sphinx-doc/sphinx/blob/master/sphinx/util/inspect.py](util/inspect.py)`
-  - `[https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autosummary/generate.py](ext/autosummary/generate.py)`
-  - `[https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autodoc/__init__.py](ext/autodoc/__init__.py)`
-  - `[https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/apidoc.py](ext/apidoc.py)`
+  - [`util/inspect.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/util/inspect.py)
+  - [`ext/autosummary/generate.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autosummary/generate.py)                                                                                                            
+  - [`ext/autodoc/__init__.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autodoc/__init__.py)
+  - [`ext/apidoc.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/apidoc.py)
+
 
 ## What should we do?
 
