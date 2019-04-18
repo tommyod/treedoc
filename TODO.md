@@ -2,10 +2,11 @@
 
 ## What has been done?
 
-- The builtin `dir` function along with [`inspect`](https://docs.python.org/3/library/inspect.html)] is of great help
+- The builtin `dir` function along with [`inspect`](https://docs.python.org/3/library/inspect.html) is of great help
 - There's a package in the standard library called [`pydoc`](https://docs.python.org/3/library/pydoc.html)
   - The source is found at [`Lib/pydoc.py](https://github.com/python/cpython/blob/master/Lib/pydoc.py)
 - The package [`ljcooke/see`](https://github.com/ljcooke/see) is "Python's dir() for humans."
+- The package [`gabrielcnr/python-ls`](https://github.com/gabrielcnr/python-ls) is "Python's dir builtin with recursive search."
 - The Sphinx package has functionality we might find interesting, see 
   - [`util/inspect.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/util/inspect.py)
   - [`ext/autosummary/generate.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autosummary/generate.py)                                                                                                            
