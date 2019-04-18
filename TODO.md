@@ -12,6 +12,8 @@
   - [`ext/autodoc/__init__.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autodoc/__init__.py)
   - [`ext/apidoc.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/apidoc.py)
 - This [`script`](https://gist.github.com/lyoshenka/f9588f273a4840c5a751432af4222517)
+- [`vadivelmurugank/inspectshow`](https://github.com/vadivelmurugank/inspectshow)- "inspectshow module lists all the module internals in a tree format."
+
 
 ## What should we do?
 
