@@ -28,7 +28,16 @@ def main(*args, **kwargs):
     try:
         obj = importlib.import_module(args.object)
     except ModuleNotFoundError:
-        obj = eval(args.object)
+        try:
+            obj = eval(args.object)
+        except:
+            *start, final = args.object.split(".")
+            start = ".".join(start)
+
+            mod = __import__(start, fromlist=[final])
+            obj = getattr(mod, final)
+
+            # eval("from {} import {} as obj".format(start, final))
 
     traverser = ObjectTraverser()
 

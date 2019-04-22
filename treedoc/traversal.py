@@ -22,6 +22,12 @@ def is_method(obj):
     return inspect.ismethoddescriptor(obj) or inspect.ismethod(obj)
 
 
+def is_bound_method(obj):
+    condition1 = "." in obj.__qualname__
+    condition2 = inspect.getfullargspec(obj).args[0] == "self"
+    return condition1 and condition2
+
+
 def is_interesting(obj):
     funcs = [getattr(inspect, method) for method in dir(inspect) if "is" == method[:2]]
     return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
@@ -79,6 +85,21 @@ class ObjectTraverser:
             if inspect.isabstract(obj) and inspect.isabstract(attribute):
                 continue
 
+            if inspect.isclass(attribute) and inspect.getmodule(attribute) != obj:
+                print(f"{name} - {attribute.__module__}")
+                continue
+
+            if (
+                inspect.isfunction(attribute)
+                and not is_bound_method(attribute)
+                and inspect.getmodule(attribute) != obj
+            ):
+
+                # print(f"{name} - {attribute.__module__}")
+                continue
+
+                # print(f"{obj.__name__} - {obj.__module__}")
+
             try:
                 getattr(attribute, "__name__")
             except AttributeError:
@@ -107,16 +128,15 @@ class ObjectTraverser:
 
 
 if __name__ == "__main__":
-    import pytest
-    import math
+
+    import KDEpy
 
     from printing import simpleprint
-    from tests import module
 
     objtrav = ObjectTraverser()
-    for row in objtrav.search(list):
+    for row in objtrav.search(KDEpy):
 
-        simpleprint(row)
+        print(simpleprint(row))
 
         # print(row[-1].__doc__)
 
