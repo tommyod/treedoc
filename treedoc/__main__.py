@@ -1,25 +1,42 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr 21 21:04:08 2019
-
-@author: tommy
+Entrypoint for command line interface.
 """
 
 
 import argparse
+import importlib
+from treedoc.traversal import ObjectTraverser
+from treedoc.printing import simpleprint
+
+
+def treedoc(obj):
+    pass
+
 
 def main(*args, **kwargs):
-    
-    print(args)
-    print(kwargs)
 
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('integers', metavar='N', type=int, nargs='+',
-                        help='an integer for the accumulator')
-    parser.add_argument('--sum', dest='accumulate', action='store_const',
-                        const=sum, default=max,
-                        help='sum the integers (default: find the max)')
+    parser = argparse.ArgumentParser(description="Process some integers.")
+
+    parser.add_argument(
+        "object", metavar="PROJECT_DIR", default=None, nargs="?", help=("output path")
+    )
 
     args = parser.parse_args()
-    print(args.accumulate(args.integers))
+
+    try:
+        obj = importlib.import_module(args.object)
+    except ModuleNotFoundError:
+        obj = eval(args.object)
+
+    traverser = ObjectTraverser()
+
+    for row in traverser.search(obj):
+        row = simpleprint(row)
+        if row is not None:
+            print(row)
+
+
+if __name__ == "__main__":
+    main()

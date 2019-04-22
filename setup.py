@@ -12,11 +12,8 @@ setup(
     packages=find_packages(exclude=[]),
     python_requires=">=3.5",
     install_requires=[],
-    entry_points={
-        'console_scripts': [
-            'treedoc = treedoc.__main__:main',
-        ],
-},
+    # https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
+    entry_points={"console_scripts": ["treedoc = treedoc.__main__:main"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
@@ -25,5 +22,4 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
     ],
     keywords=["documentation"],
-    
 )

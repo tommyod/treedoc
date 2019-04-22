@@ -7,7 +7,7 @@ Recursive traversal of objects.
 import inspect
 import time
 import functools
-import copy
+
 
 def pprint(*args, **kwargs):
     return None
@@ -34,9 +34,9 @@ class ObjectTraverser:
     def search(self, obj, stack=None, key=None):
         """
         """
-        time.sleep(0.01)
+        time.sleep(0.001)
 
-        print(f"yield_data({obj}, stack={stack})")
+        pprint(f"yield_data({obj}, stack={stack})")
 
         try:
             getattr(obj, "__name__")
@@ -51,7 +51,7 @@ class ObjectTraverser:
 
         for name, attribute in sorted(inspect.getmembers(obj), key=key):
 
-            time.sleep(0.01)
+            time.sleep(0.001)
             pprint(f"Looking at {name}, {type(attribute)}")
 
             if name in ("__class__", "__doc__", "__hash__", "builtins"):
@@ -89,19 +89,20 @@ class ObjectTraverser:
 
             # This prevent recursing to superclasses
             if inspect.isclass(attribute):
-                pprint(f" The MRO of {name} is {inspect.getmro(attribute)}. Parent is {obj.__name__}")
+                pprint(
+                    f" The MRO of {name} is {inspect.getmro(attribute)}. Parent is {obj.__name__}"
+                )
                 pprint(f"{name} is a class: {inspect.isclass(attribute)}")
                 pprint(f"{obj.__name__} is a class: {inspect.isclass(obj)}")
             if inspect.isclass(attribute) and obj in inspect.getmro(attribute):
                 continue
-                
 
             if not recurse_on(attribute):
                 pprint(f" Not recursing on {name}")
                 yield stack + [attribute]
             else:
                 yield from self.search(obj=attribute, stack=stack)
-                
+
         stack.pop()
 
 
@@ -111,7 +112,6 @@ if __name__ == "__main__":
 
     from printing import simpleprint
     from tests import module
-    import KDEpy
 
     objtrav = ObjectTraverser()
     for row in objtrav.search(list):
