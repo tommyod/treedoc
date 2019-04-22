@@ -5,6 +5,27 @@ Printers: objects that format rows in the tree.
 """
 
 import inspect
+import pydoc
+import pkgutil
+
+# =============================================================================
+# for importer, modname, ispkg in pkgutil.iter_modules(KDEpy.__path__):
+#     print(importer, modname, ispkg)
+# =============================================================================
+
+
+def get_modules(package, recurse=False):
+
+    print(package)
+    if not hasattr(package, "__path__"):
+        return
+
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
+        print(importer, modname, ispkg)
+        if ispkg and recurse:
+            get_modules(
+                importer.find_module(modname).load_module(modname), recurse=recurse
+            )
 
 
 def is_magic_method(obj):
@@ -53,12 +74,17 @@ def simpleprint(row, hide_magic=True):
         if hide_magic:
             return
 
+    first_line, rest_lines = pydoc.splitdoc(pydoc.getdoc(last))
+    to_return = ""
     if argspec != "":
-        return SEP.join([c.__name__ for c in row]) + argspec
+        to_return = (
+            SEP.join([c.__name__ for c in row])
+            + argspec
+            + ("\n\t" + first_line if first_line else "")
+        )
     else:
-        return SEP.join([c.__name__ for c in row])
-    try:
-        pass
-        # print(inspect.signature(row[-1])[:50], file=sys.stdout)
-    except (TypeError, ValueError):
-        pass
+        to_return = SEP.join([c.__name__ for c in row]) + (
+            "\n\t" + first_line if first_line else ""
+        )
+
+    return to_return + "\n"

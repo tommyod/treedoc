@@ -8,6 +8,8 @@ import inspect
 import time
 import functools
 
+time = time
+
 
 def pprint(*args, **kwargs):
     return None
@@ -24,6 +26,8 @@ def is_method(obj):
 
 def is_bound_method(obj):
     condition1 = "." in obj.__qualname__
+    if not inspect.getfullargspec(obj).args:
+        return False
     condition2 = inspect.getfullargspec(obj).args[0] == "self"
     return condition1 and condition2
 
@@ -40,7 +44,7 @@ class ObjectTraverser:
     def search(self, obj, stack=None, key=None):
         """
         """
-        time.sleep(0.001)
+        # time.sleep(0.001)
 
         pprint(f"yield_data({obj}, stack={stack})")
 
@@ -57,7 +61,7 @@ class ObjectTraverser:
 
         for name, attribute in sorted(inspect.getmembers(obj), key=key):
 
-            time.sleep(0.001)
+            # time.sleep(0.001)
             pprint(f"Looking at {name}, {type(attribute)}")
 
             if name in ("__class__", "__doc__", "__hash__", "builtins"):
