@@ -18,10 +18,13 @@ def is_interesting(obj):
     return any([func(obj) for func in funcs])
 
 
+import builtins
+import collections
 import inspect
-
-from collections.abc import Callable
+import math
+import os
 import time
+from collections.abc import Callable
 
 
 def yield_data(obj, stack=None):
@@ -71,10 +74,6 @@ def yield_data(obj, stack=None):
             yield from yield_data(attribute, stack=stack)
 
 
-import math
-import os
-import collections
-import builtins
 
 for builtin in dir(builtins):
     if builtin in (

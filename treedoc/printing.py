@@ -5,8 +5,8 @@ Printers: objects that format rows in the tree.
 """
 
 import inspect
-import pydoc
 import pkgutil
+import pydoc
 
 # =============================================================================
 # for importer, modname, ispkg in pkgutil.iter_modules(KDEpy.__path__):

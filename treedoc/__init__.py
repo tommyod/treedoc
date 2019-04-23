@@ -5,3 +5,6 @@ Created on Sun Apr 21 21:04:08 2019
 
 @author: tommy
 """
+
+
+__version__ = "0.1.0"

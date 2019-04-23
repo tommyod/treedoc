@@ -4,9 +4,9 @@
 Recursive traversal of objects.
 """
 
+import functools
 import inspect
 import time
-import functools
 
 time = time
 

@@ -6,19 +6,49 @@ Entrypoint for command line interface.
 
 
 import argparse
-import importlib
-from treedoc.traversal import ObjectTraverser
+import sys
+
 from treedoc.printing import simpleprint
+from treedoc.traversal import ObjectTraverser
+from treedoc.utils import resolve_object
 
 
-def treedoc(obj):
-    pass
+def treedoc(
+    object,
+    depth=999,
+    sub_packages=True,
+    sub_modules=False,
+    private=False,
+    magic=False,
+    printer=simpleprint,
+    stream=sys.stdout,
+):
+    """
+    Print minimalistic tree-like documentation.
+    """
+
+    if isinstance(object, str):
+        obj = resolve_object(object)
+
+    traverser = ObjectTraverser()
+
+    for row in traverser.search(obj):
+        row = simpleprint(row)
+        if row is not None:
+            print(row, file=sys.stdout)
 
 
-def main(*args, **kwargs):
+def main():
+    """
+    Endpoint for CLI implementation.
+    """
 
     parser = argparse.ArgumentParser(
-        description="Minimalistic documentation in a tree structure."
+        prog="treedoc",  # The name of the program
+        description="Minimalistic documentation in a tree structure.",
+        epilog="Contribute on ",  # Text following the argument descriptions
+        allow_abbrev=True,
+        add_help=True,
     )
 
     parser.add_argument("object", default=None, nargs="?", help=("The object"))
@@ -29,7 +59,13 @@ def main(*args, **kwargs):
 
     traversal = parser.add_argument_group("traversal")
     traversal.add_argument(
-        "-D", "--depth", default=999, dest="depth", nargs="?", help=("The depth")
+        "-D",
+        "--depth",
+        default=999,
+        dest="depth",
+        nargs="?",
+        type=int,
+        help=("The depth"),
     )
     traversal.add_argument(
         "-P",
@@ -45,7 +81,7 @@ def main(*args, **kwargs):
         default=False,
         dest="sub_modules",
         action="store_true",
-        help=("Recurse into sub-modules."),
+        help=("Recurse into sub-packages and sub-modules."),
     )
 
     # =============================================================================
@@ -80,27 +116,9 @@ def main(*args, **kwargs):
     )
 
     args = parser.parse_args()
+    args_to_func = {k: w for (k, w) in args._get_kwargs()}
 
-    try:
-        obj = importlib.import_module(args.object)
-    except ModuleNotFoundError:
-        try:
-            obj = eval(args.object)
-        except:
-            *start, final = args.object.split(".")
-            start = ".".join(start)
-
-            mod = __import__(start, fromlist=[final])
-            obj = getattr(mod, final)
-
-            # eval("from {} import {} as obj".format(start, final))
-
-    traverser = ObjectTraverser()
-
-    for row in traverser.search(obj):
-        row = simpleprint(row)
-        if row is not None:
-            print(row)
+    treedoc(**args_to_func)
 
 
 if __name__ == "__main__":

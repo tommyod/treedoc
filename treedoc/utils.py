@@ -11,6 +11,9 @@ import pydoc
 
 def resolve_object(object_string):
     """
+    Resolve a string to a Python object.
+    
+    
     list -> builtin
     collections -> module
     collections.Counter -> object
@@ -28,6 +31,7 @@ def resolve_object(object_string):
     >>> resolve_object("gibberish.Counter") is None
     True
     """
+    assert isinstance(object_string, str)
     return pydoc.locate(object_string)
 
 

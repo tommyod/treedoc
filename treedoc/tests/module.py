@@ -6,8 +6,8 @@ Created on Sun Apr 21 21:13:23 2019
 @author: tommy
 """
 
-import operator
 import functools
+import operator
 
 
 def func_addition(a, b):
