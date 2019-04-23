@@ -74,7 +74,6 @@ def yield_data(obj, stack=None):
             yield from yield_data(attribute, stack=stack)
 
 
-
 for builtin in dir(builtins):
     if builtin in (
         "Ellipsis",
