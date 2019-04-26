@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr 21 21:04:08 2019
+Created on Mon Apr 22 21:38:59 2019
 
 @author: tommy
 """
-
-
-__version__ = "0.1.0"
