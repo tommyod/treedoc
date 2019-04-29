@@ -28,63 +28,65 @@ def get_modules(package, recurse=False):
             )
 
 
-def is_magic_method(obj):
-
-    if not inspect.ismethod(obj) or inspect.ismethoddescriptor(obj):
-        return False
-
-    assert hasattr(obj, "__name__")
-    obj_name = obj.__name__
-    return obj_name.endswith("__") and obj_name.startswith("__")
 
 
-def is_private(obj):
-    assert hasattr(obj, "__name__")
-    obj_name = obj.__name__
-    return obj_name.startswith("_")
+
 
 
 class SimplePrinter:
-    def __init__(self, magic_methods=False, private=False):
-        self.magic_methods = magic_methods
-        self.private = private
-
-    def format_row(self, row):
-
-        *_, final_object = row
-
-
-def simpleprint(row, hide_magic=True):
-
+    
+    
     SEP = " -> "
     END = "\n"
+    
+    def __init__(self, *, signature=1, docstring=1):
+        self.signature = 0
+        self.docstring = docstring
+        
+        
+    def _get_docstring(self, final_object):
+        
+        first_line, rest_lines = pydoc.splitdoc(pydoc.getdoc(final_object))
+        
+        if self.docstring == 0:
+            return ''
+        elif self.docstring == 1:
+            return first_line
+        elif self.docstring == 2:
+            return first_line
+        else:
+            pass
+        # TODO
+        
+        
+    def _format_argspec(self, final_object):
+        
+        if self.signature == 0:
+            return '()'
+        elif self.signature == 1:
+            return "(" + ", ".join(inspect.getfullargspec(final_object).args) + ")"
+        elif self.signature == 2:
+            return "(" + ", ".join(inspect.getfullargspec(final_object).args) + ")"
+        else:
+            pass
+        # TODO
 
-    # try:
-    # doc = inspect.getdoc(row[-1])
+    def print_row(self, row):
 
-    *_, last = row
-    # print(last)
-
-    try:
-        argspec = "(" + ", ".join(inspect.getfullargspec(last).args) + ")"
-    except:
-        argspec = ""
-
-    if last.__name__.endswith("__") and last.__name__.startswith("__"):
-        if hide_magic:
-            return
-
-    first_line, rest_lines = pydoc.splitdoc(pydoc.getdoc(last))
-    to_return = ""
-    if argspec != "":
-        to_return = (
-            SEP.join([c.__name__ for c in row])
-            + argspec
-            + ("\n\t" + first_line if first_line else "")
-        )
-    else:
-        to_return = SEP.join([c.__name__ for c in row]) + (
-            "\n\t" + first_line if first_line else ""
-        )
-
-    return to_return + "\n"
+        *_, final_object = row
+        
+        
+        try:
+            inspect.getfullargspec(final_object)
+            signature = self._format_argspec(final_object)
+        except TypeError:
+            signature = ''
+            
+            
+        docstring = self._get_docstring(final_object)
+        
+        return (
+                self.SEP.join([c.__name__ for c in row])
+                + signature
+                #+ ("\n\t" + docstring if docstring else "")
+            ) #+ '\n'

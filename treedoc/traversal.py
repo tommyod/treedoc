@@ -6,7 +6,9 @@ Recursive traversal of objects.
 
 import functools
 import inspect
+import sys
 import time
+from treedoc.utils import is_magic_method, is_private
 
 time = time
 
@@ -38,38 +40,75 @@ def is_interesting(obj):
 
 
 class ObjectTraverser:
-    def __init__(self):
-        pass
+    
+    _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
+    
+    
+    def __init__(self, *, depth=999, private=False, magic=False, stream=sys.stdout, **kwargs):
+        self.depth = depth
+        self.sort_key = None
+        self.private = private
+        self.magic = magic
+        self.stream = stream
+        
 
-    def search(self, obj, stack=None, key=None):
+    def search(self, obj):
+        yield from self._search(obj, stack=None)
+        
+    def _p(self, *args):
+        return None
+        print(*args, file=self.stream)
+
+    def _search(self, obj, stack=None):
         """
         """
-        # time.sleep(0.001)
+        
+        # If None, create an empty stack
+        stack = stack or []
 
         pprint(f"yield_data({obj}, stack={stack})")
-
+        
+        # Abort immediately if no name is found on the object
         try:
             getattr(obj, "__name__")
         except AttributeError:
             return
-
-        if stack is None:
-            stack = []
+        
+        # Only consider magic methods and private objects if the user wants to
+        if (is_private(obj) and not self.private):
+            self._p(f"Skipping because {obj.__name__} is private and we're not showing those.")
+            return
+        
+        if (is_magic_method(obj) and not self.magic):
+            self._p(f"Skipping because {obj.__name__} is magic and we're not showing those.")
+            return
+        
         stack.append(obj)
+        
+        if (len(stack) > self.depth + 1):
+            stack.pop()
+            return
 
         yield stack
+        
+        if not recurse_on(obj):
+            stack.pop()
+            return
 
-        for name, attribute in sorted(inspect.getmembers(obj), key=key):
+        for name, attribute in sorted(inspect.getmembers(obj), key=self.sort_key):
 
             # time.sleep(0.001)
-            pprint(f"Looking at {name}, {type(attribute)}")
+            self._p(f"Looking at {name}, {type(attribute)}")
 
-            if name in ("__class__", "__doc__", "__hash__", "builtins"):
+            if name in self._ignored_names:
                 continue
 
             if not is_interesting(attribute):
                 pprint(f" {name} was not interesting")
-                continue
+                pass
+                #continue
+            
+            
 
             # Prevent recursing into modules
             # TODO: Generalize this
@@ -84,32 +123,34 @@ class ObjectTraverser:
                     )
                     continue
 
-            if inspect.isclass(obj) and inspect.isclass(attribute):
-                continue
-            if inspect.isabstract(obj) and inspect.isabstract(attribute):
-                continue
+            #if inspect.isclass(obj) and inspect.isclass(attribute):
+            #    continue
+            #if inspect.isabstract(obj) and inspect.isabstract(attribute):
+            #    continue
 
-            if inspect.isclass(attribute) and inspect.getmodule(attribute) != obj:
-                print(f"{name} - {attribute.__module__}")
-                continue
-
-            if (
-                inspect.isfunction(attribute)
-                and not is_bound_method(attribute)
-                and inspect.getmodule(attribute) != obj
-            ):
-
-                # print(f"{name} - {attribute.__module__}")
+            # We're deatling with a class imported from another library, skip it
+            if inspect.isclass(attribute) and not inspect.getmodule(attribute).__name__.startswith(obj.__name__):
+                pprint(f"{name} - {attribute.__module__} - {inspect.getmodule(attribute).__name__} - {obj.__name__}")
                 continue
 
-                # print(f"{obj.__name__} - {obj.__module__}")
+# =============================================================================
+#             if (
+#                 inspect.isfunction(attribute)
+#                 and not is_bound_method(attribute)
+#                 and inspect.getmodule(attribute) != obj
+#             ):
+#                 pass
+# =============================================================================
 
+            
             try:
                 getattr(attribute, "__name__")
             except AttributeError:
                 try:
                     setattr(attribute, "__name__", name)
                 except AttributeError:
+                    # This is for everything to work with properties, df.DataFrame.T
+                    obj_name = name
                     continue
 
             # This prevent recursing to superclasses
@@ -122,11 +163,16 @@ class ObjectTraverser:
             if inspect.isclass(attribute) and obj in inspect.getmro(attribute):
                 continue
 
-            if not recurse_on(attribute):
-                pprint(f" Not recursing on {name}")
-                yield stack + [attribute]
-            else:
-                yield from self.search(obj=attribute, stack=stack)
+
+            yield from self._search(obj=attribute, stack=stack)
+    
+# =============================================================================
+#             if not recurse_on(attribute):
+#                 pprint(f" Not recursing on {name}")
+#                 yield stack + [attribute]
+#             else:
+#                 yield from self._search(obj=attribute, stack=stack)
+# =============================================================================
 
         stack.pop()
 

@@ -7,4 +7,7 @@ Created on Sun Apr 21 21:04:08 2019
 """
 
 
+from treedoc.main import treedoc
+
+
 __version__ = "0.1.0"

@@ -12,40 +12,74 @@ import pkgutil
 
 import treedoctestpackage
 import treedoc
+import collections.abc
 
 import importlib
+import inspect
 
 
-def yield_subpackages(package, modules_too=True, include_tests=False, include_hidden=False):
+def is_magic_method(obj):
+    #if not inspect.ismethod(obj) or inspect.ismethoddescriptor(obj) or isinstance(obj, collections.abc.Callable):
+    #    return False
+
+    assert hasattr(obj, "__name__")
+    obj_name = obj.__name__
+    return obj_name.endswith("__") and obj_name.startswith("__")
+
+
+def is_private(obj):
+    assert hasattr(obj, "__name__")
+    obj_name = obj.__name__
+    return obj_name.startswith("_") and obj_name[1] != '_'
+
+
+def ispackage(obj):
+
+    if not hasattr(obj, "__file__"):
+        return False
+
+    return obj.__file__.endswith("__init__.py")
+
+
+def descend_from_package(
+    package, types="package", include_tests=False, include_hidden=False
+):
     """
+    Descent from a package to either a sub-package or modules on level down.
+    
+    Yields a tuple of (object, object_name) one level down.
     """
-    
-    path=package.__path__
-    prefix=package.__name__+'.'
-    onerror=lambda x: None
-    
-    generator = pkgutil.walk_packages(path=path,prefix=prefix,onerror=onerror)
-    
-    
-    for importer, module_name, ispkg in generator:
-        
+
+    path = package.__path__
+    prefix = package.__name__ + "."
+
+    generator = pkgutil.iter_modules(path=path, prefix=prefix)
+
+    for (importer, object_name, ispkg) in generator:
+
+        ismodule = not ispkg
+
         # Covers names such as "test", "tests", "testing", ...
-        if '.test' in module_name.lower() and not include_tests:
+        if ".test" in object_name.lower() and not include_tests:
             continue
-        
-        if '._' in module_name.lower() and not include_hidden:
+
+        if "._" in object_name.lower() and not include_hidden:
             continue
-        
+
         try:
-            module = importlib.import_module(module_name)
+            obj = importlib.import_module(object_name)
         except (ModuleNotFoundError, ImportError) as error:
-            print(f'Could not import {module_name}. Error: {error}')
-        
-        if modules_too:
-            yield module, module_name
-        else:
-            if ispkg:
-                yield module, module_name
+            # TODO: Replace this with logging
+            print(f"Could not import {object_name}. Error: {error}")
+
+        if types.lower() == "package" and ispkg:
+            yield obj, object_name
+        elif types.lower() == "module" and ismodule:
+            yield obj, object_name
+        elif types.lower() == "both":
+            yield obj, object_name
+        elif types.lower() not in ("package", "module", "both"):
+            raise ValueError("Parameter `types` must be 'package', 'module' or 'both'.")
 
 
 def resolve_object(object_string):
@@ -78,9 +112,4 @@ if __name__ == "__main__":
     import pytest
 
     # --durations=10  <- May be used to show potentially slow tests
-    # pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
-    
-    import pandas
-    
-    for module, module_name in yield_subpackages(pandas, modules_too=True):
-        print(module_name)
+    pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])

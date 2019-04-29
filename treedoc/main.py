@@ -8,7 +8,7 @@ Entrypoint for command line interface.
 import argparse
 import sys
 
-from treedoc.printing import simpleprint
+from treedoc.printing import SimplePrinter
 from treedoc.traversal import ObjectTraverser
 from treedoc.utils import resolve_object
 
@@ -16,11 +16,14 @@ from treedoc.utils import resolve_object
 def treedoc(
     object,
     depth=999,
-    sub_packages=True,
-    sub_modules=False,
+    subpackages=True,
+    submodules=False,
     private=False,
     magic=False,
-    printer=simpleprint,
+    tests=False,
+    signature=1,
+    docstring=1,
+    printer=SimplePrinter,
     stream=sys.stdout,
 ):
     """
@@ -30,10 +33,11 @@ def treedoc(
     if isinstance(object, str):
         obj = resolve_object(object)
 
-    traverser = ObjectTraverser()
+    printer = printer(signature=signature, docstring=docstring)
+    traverser = ObjectTraverser(depth=depth, private=private, magic=magic, stream=stream)
 
     for row in traverser.search(obj):
-        row = simpleprint(row)
+        row = printer.print_row(row)
         if row is not None:
             print(row, file=sys.stdout)
 
@@ -59,29 +63,43 @@ def main():
 
     traversal = parser.add_argument_group("traversal")
     traversal.add_argument(
-        "-D",
-        "--depth",
-        default=999,
-        dest="depth",
-        nargs="?",
-        type=int,
-        help=("The depth"),
+        "--depth", default=999, dest="depth", nargs="?", type=int, help="the depth"
     )
+
     traversal.add_argument(
-        "-P",
-        "--packages",
+        "--subpackages",
         default=False,
-        dest="sub_packages",
+        dest="subpackages",
         action="store_true",
-        help=("Recurse into sub-packages."),
+        help="recurse into sub-packages.",
     )
+
     traversal.add_argument(
-        "-M",
         "--modules",
         default=False,
-        dest="sub_modules",
+        dest="submodules",
         action="store_true",
-        help=("Recurse into sub-packages and sub-modules."),
+        help="recurse into sub-packages and sub-modules.",
+    )
+
+    traversal.add_argument(
+        "--private",
+        default=False,
+        dest="private",
+        action="store_true",
+        help="show private objects, i.e. _func(x).",
+    )
+
+    traversal.add_argument(
+        "--magic",
+        default=False,
+        dest="magic",
+        action="store_true",
+        help="show magic methods, i.e. __add(self, other)__.",
+    )
+
+    traversal.add_argument(
+        "--tests", default=False, dest="tests", action="store_true", help="show tests."
     )
 
     # =============================================================================
@@ -89,34 +107,40 @@ def main():
     # =============================================================================
 
     printing = parser.add_argument_group("printing")
-    printing.add_argument(
-        "-p",
-        "--private",
-        default=False,
-        dest="private",
-        action="store_true",
-        help=("Show private objects, i.e. _func(x)."),
-    )
-    printing.add_argument(
-        "-m",
-        "--magic",
-        default=False,
-        dest="magic",
-        action="store_true",
-        help=("Show magic methods, i.e. __add(self, other)__."),
-    )
 
-    printers = {"simple": lambda x: x ** 2, "dense": lambda x: x ** 2}
+    printers = {"simple": SimplePrinter, "dense": lambda x: x ** 2}
     printing.add_argument(
         "--printer",
-        default=None,
+        default="simple",
         dest="printer",
         nargs="?",
-        help=("Printer to use: {}.".format(", ".join(printers.keys()))),
+        choices=list(printers.keys()),
+        help="Printer to use.",
+    )
+
+    parser.add_argument(
+        "--signature",
+        action="store",
+        default=1,
+        dest="signature",
+        type=int,
+        choices=[0, 1, 2],
+        help="How much signature information to show.",
+    )
+
+    parser.add_argument(
+        "--docstring",
+        action="store",
+        default=1,
+        dest="docstring",
+        type=int,
+        choices=[0, 1, 2, 3, 4, 5],
+        help="How much docstring information to show.",
     )
 
     args = parser.parse_args()
     args_to_func = {k: w for (k, w) in args._get_kwargs()}
+    args_to_func['printer'] = printers[args_to_func['printer']]
 
     treedoc(**args_to_func)
 

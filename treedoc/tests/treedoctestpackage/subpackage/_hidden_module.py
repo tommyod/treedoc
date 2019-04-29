@@ -13,6 +13,7 @@ def func_addition(a, b):
     """Permforms addition."""
     return operator.add(a, b)
 
+
 def _hidden_func_addition(a, b):
     """Permforms addition."""
     return operator.add(a, b)
