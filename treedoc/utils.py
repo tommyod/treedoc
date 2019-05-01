@@ -25,17 +25,17 @@ def ispropersubpackage(package_a, package_b):
     """
     try:
         path_a, _ = os.path.split(inspect.getfile(package_a))
-        
+
         # is a built-in module
     except TypeError:
         return False
-        
+
     path_b, _ = os.path.split(inspect.getfile(package_b))
     return (path_b in path_a) and not (path_b == path_a)
 
 
 def is_magic_method(obj):
-    #if not inspect.ismethod(obj) or inspect.ismethoddescriptor(obj) or isinstance(obj, collections.abc.Callable):
+    # if not inspect.ismethod(obj) or inspect.ismethoddescriptor(obj) or isinstance(obj, collections.abc.Callable):
     #    return False
 
     assert hasattr(obj, "__name__")
@@ -46,8 +46,8 @@ def is_magic_method(obj):
 def is_private(obj):
     assert hasattr(obj, "__name__")
     obj_name = obj.__name__
-    typical_private = obj_name.startswith("_") and obj_name[1] != '_'
-    private_subpackage = '._' in obj_name
+    typical_private = obj_name.startswith("_") and obj_name[1] != "_"
+    private_subpackage = "._" in obj_name
     return typical_private or private_subpackage
 
 

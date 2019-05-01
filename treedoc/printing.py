@@ -28,28 +28,21 @@ def get_modules(package, recurse=False):
             )
 
 
-
-
-
-
-
 class SimplePrinter:
-    
-    
+
     SEP = " -> "
     END = "\n"
-    
+
     def __init__(self, *, signature=1, docstring=1):
         self.signature = 0
         self.docstring = docstring
-        
-        
+
     def _get_docstring(self, final_object):
-        
+
         first_line, rest_lines = pydoc.splitdoc(pydoc.getdoc(final_object))
-        
+
         if self.docstring == 0:
-            return ''
+            return ""
         elif self.docstring == 1:
             return first_line
         elif self.docstring == 2:
@@ -57,12 +50,11 @@ class SimplePrinter:
         else:
             pass
         # TODO
-        
-        
+
     def _format_argspec(self, final_object):
-        
+
         if self.signature == 0:
-            return '()'
+            return "()"
         elif self.signature == 1:
             return "(" + ", ".join(inspect.getfullargspec(final_object).args) + ")"
         elif self.signature == 2:
@@ -74,19 +66,17 @@ class SimplePrinter:
     def print_row(self, row):
 
         *_, final_object = row
-        
-        
+
         try:
             inspect.getfullargspec(final_object)
             signature = self._format_argspec(final_object)
         except TypeError:
-            signature = ''
-            
-            
+            signature = ""
+
         docstring = self._get_docstring(final_object)
-        
+
         return (
-                self.SEP.join([c.__name__ for c in row])
-                + signature
-                #+ ("\n\t" + docstring if docstring else "")
-            ) #+ '\n'
+            self.SEP.join([c.__name__ for c in row])
+            + signature
+            # + ("\n\t" + docstring if docstring else "")
+        )  # + '\n'

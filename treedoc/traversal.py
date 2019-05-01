@@ -40,21 +40,21 @@ def is_interesting(obj):
 
 
 class ObjectTraverser:
-    
+
     _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
-    
-    
-    def __init__(self, *, depth=999, private=False, magic=False, stream=sys.stdout, **kwargs):
+
+    def __init__(
+        self, *, depth=999, private=False, magic=False, stream=sys.stdout, **kwargs
+    ):
         self.depth = depth
         self.sort_key = None
         self.private = private
         self.magic = magic
         self.stream = stream
-        
 
     def search(self, obj):
         yield from self._search(obj, stack=None)
-        
+
     def _p(self, *args):
         return None
         print(*args, file=self.stream)
@@ -62,35 +62,39 @@ class ObjectTraverser:
     def _search(self, obj, stack=None):
         """
         """
-        
+
         # If None, create an empty stack
         stack = stack or []
 
         pprint(f"yield_data({obj}, stack={stack})")
-        
+
         # Abort immediately if no name is found on the object
         try:
             getattr(obj, "__name__")
         except AttributeError:
             return
-        
+
         # Only consider magic methods and private objects if the user wants to
-        if (is_private(obj) and not self.private):
-            self._p(f"Skipping because {obj.__name__} is private and we're not showing those.")
+        if is_private(obj) and not self.private:
+            self._p(
+                f"Skipping because {obj.__name__} is private and we're not showing those."
+            )
             return
-        
-        if (is_magic_method(obj) and not self.magic):
-            self._p(f"Skipping because {obj.__name__} is magic and we're not showing those.")
+
+        if is_magic_method(obj) and not self.magic:
+            self._p(
+                f"Skipping because {obj.__name__} is magic and we're not showing those."
+            )
             return
-        
+
         stack.append(obj)
-        
-        if (len(stack) > self.depth + 1):
+
+        if len(stack) > self.depth + 1:
             stack.pop()
             return
 
         yield stack
-        
+
         if not recurse_on(obj):
             stack.pop()
             return
@@ -106,32 +110,34 @@ class ObjectTraverser:
             if not is_interesting(attribute):
                 pprint(f" {name} was not interesting")
                 pass
-                #continue
-            
-            
+                # continue
 
             # Prevent recursing into modules
             # TODO: Generalize this
             if inspect.ismodule(obj) and inspect.ismodule(attribute):
-                
+
                 if not ispropersubpackage(attribute, obj):
                     continue
-                
+
                 self._p(f" Both {name} and {obj.__name__} are modules")
-                self._p(f" Packages: {attribute.__package__} and {obj.__package__} are modules")
-                
+                self._p(
+                    f" Packages: {attribute.__package__} and {obj.__package__} are modules"
+                )
+
                 if obj.__package__ == attribute.__package__:
                     continue
-                
+
                 if attribute.__package__ in obj.__package__:
                     continue
 
-
             # We're dealing with a class imported from another library, skip it
-            if inspect.isclass(attribute) and not inspect.getmodule(attribute).__name__.startswith(obj.__name__):
-                self._p(f"{name} - {attribute.__module__} - {inspect.getmodule(attribute).__name__} - {obj.__name__}")
+            if inspect.isclass(attribute) and not inspect.getmodule(
+                attribute
+            ).__name__.startswith(obj.__name__):
+                self._p(
+                    f"{name} - {attribute.__module__} - {inspect.getmodule(attribute).__name__} - {obj.__name__}"
+                )
                 continue
-
 
             try:
                 getattr(attribute, "__name__")
@@ -154,7 +160,6 @@ class ObjectTraverser:
             if inspect.isclass(attribute) and obj in inspect.getmro(attribute):
                 continue
 
-
             yield from self._search(obj=attribute, stack=stack)
-    
+
         stack.pop()

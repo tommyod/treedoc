@@ -35,7 +35,9 @@ def treedoc(
         obj = resolve_object(object)
 
     printer = printer(signature=signature, docstring=docstring)
-    traverser = ObjectTraverser(depth=depth, private=private, magic=magic, stream=stream)
+    traverser = ObjectTraverser(
+        depth=depth, private=private, magic=magic, stream=stream
+    )
 
     for row in traverser.search(obj):
         row = printer.print_row(row)
@@ -53,7 +55,7 @@ def main():
         description="Minimalistic documentation in a tree structure.",
         epilog="Report issues and contribute on https://github.com/tommyod/treedoc.",  # Text following the argument descriptions
         allow_abbrev=True,
-        #add_help=True,
+        # add_help=True,
     )
 
     parser.add_argument("object", default=None, nargs="?", help=("The object"))
@@ -138,7 +140,7 @@ def main():
         choices=[0, 1, 2, 3, 4],
         help="How much docstring information to show.",
     )
-    
+
     printing.add_argument(
         "--info",
         action="store",
@@ -151,7 +153,7 @@ def main():
 
     args = parser.parse_args()
     args_to_func = {k: w for (k, w) in args._get_kwargs()}
-    args_to_func['printer'] = printers[args_to_func['printer']]
+    args_to_func["printer"] = printers[args_to_func["printer"]]
 
     treedoc(**args_to_func)
 
