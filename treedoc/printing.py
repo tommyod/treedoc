@@ -4,10 +4,10 @@
 Printers: objects that format rows in the tree.
 """
 
-import inspect
-import pydoc
 import abc
 import collections
+import inspect
+import pydoc
 
 
 class PrinterABC(abc.ABC):

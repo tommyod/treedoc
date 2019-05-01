@@ -4,14 +4,12 @@
 Utility functions for traversal and printing.
 """
 
-import pydoc
-import pkgutil
-import os
 import functools
-import collections.abc
-
 import importlib
 import inspect
+import os
+import pkgutil
+import pydoc
 
 
 def pprint(*args, **kwargs):
