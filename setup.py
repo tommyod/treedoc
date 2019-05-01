@@ -8,7 +8,7 @@ setup(
     author="tommyod",
     author_email="tod001@uib.no",
     license="MIT",
-    packages=find_packages(exclude=['*tests*']),
+    packages=find_packages(exclude=["*tests*"]),
     python_requires=">=3.5",
     install_requires=[],
     # https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
