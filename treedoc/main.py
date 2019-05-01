@@ -14,7 +14,7 @@ from treedoc.utils import resolve_object
 
 
 def treedoc(
-    object,
+    obj,
     depth=999,
     subpackages=True,
     submodules=False,
@@ -31,8 +31,11 @@ def treedoc(
     Print minimalistic tree-like documentation.
     """
 
-    if isinstance(object, str):
-        obj = resolve_object(object)
+    if isinstance(obj, str):
+        obj = resolve_object(obj)
+
+    if obj is None:
+        raise ValueError("Could not resolve object")
 
     printer = printer(signature=signature, docstring=docstring)
     traverser = ObjectTraverser(
@@ -58,7 +61,7 @@ def main():
         # add_help=True,
     )
 
-    parser.add_argument("object", default=None, nargs="?", help=("The object"))
+    parser.add_argument("obj", default=None, nargs="?", help=("The object"))
 
     # =============================================================================
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
