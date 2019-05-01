@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 22 21:53:47 2019
-
-@author: tommy
+Utility functions for traversal and printing.
 """
 
 import pydoc
@@ -17,6 +15,31 @@ import collections.abc
 
 import importlib
 import inspect
+
+def pprint(*args, **kwargs):
+    return None
+    print(*args, **kwargs)
+
+
+def recurse_on(obj):
+    return inspect.ismodule(obj) or inspect.isclass(obj)
+
+
+def is_method(obj):
+    return inspect.ismethoddescriptor(obj) or inspect.ismethod(obj)
+
+
+def is_bound_method(obj):
+    condition1 = "." in obj.__qualname__
+    if not inspect.getfullargspec(obj).args:
+        return False
+    condition2 = inspect.getfullargspec(obj).args[0] == "self"
+    return condition1 and condition2
+
+
+def is_interesting(obj):
+    funcs = [getattr(inspect, method) for method in dir(inspect) if "is" == method[:2]]
+    return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
 
 
 def ispropersubpackage(package_a, package_b):

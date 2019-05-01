@@ -12,34 +12,8 @@ from treedoc.utils import is_magic_method, is_private, ispropersubpackage
 
 time = time
 
-
-def pprint(*args, **kwargs):
-    return None
-    print(*args, **kwargs)
-
-
-def recurse_on(obj):
-    return inspect.ismodule(obj) or inspect.isclass(obj)
-
-
-def is_method(obj):
-    return inspect.ismethoddescriptor(obj) or inspect.ismethod(obj)
-
-
-def is_bound_method(obj):
-    condition1 = "." in obj.__qualname__
-    if not inspect.getfullargspec(obj).args:
-        return False
-    condition2 = inspect.getfullargspec(obj).args[0] == "self"
-    return condition1 and condition2
-
-
-def is_interesting(obj):
-    funcs = [getattr(inspect, method) for method in dir(inspect) if "is" == method[:2]]
-    return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
-
-
 class ObjectTraverser:
+    """Traverse Python objects, modules and packages recursively."""
 
     _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
 
@@ -53,9 +27,12 @@ class ObjectTraverser:
         self.stream = stream
 
     def search(self, obj):
+        """DFS search from an object."""
         yield from self._search(obj, stack=None)
 
     def _p(self, *args):
+        """Printing/logging method."""
+        # TODO: set up proper logging
         return None
         print(*args, file=self.stream)
 
