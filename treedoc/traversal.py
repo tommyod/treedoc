@@ -8,7 +8,7 @@ import functools
 import inspect
 import sys
 import time
-from treedoc.utils import is_magic_method, is_private
+from treedoc.utils import is_magic_method, is_private, ispropersubpackage
 
 time = time
 
@@ -112,37 +112,27 @@ class ObjectTraverser:
 
             # Prevent recursing into modules
             # TODO: Generalize this
-
             if inspect.ismodule(obj) and inspect.ismodule(attribute):
-                pprint(f" Both {name} and {obj.__name__} are modules")
-                continue
-                # If it's not the same package, skip it
-                if attribute.__package__ != obj.__package__:
-                    pprint(
-                        f" Both {attribute.__package__} and {obj.__package__} are modules"
-                    )
+                
+                if not ispropersubpackage(attribute, obj):
+                    continue
+                
+                self._p(f" Both {name} and {obj.__name__} are modules")
+                self._p(f" Packages: {attribute.__package__} and {obj.__package__} are modules")
+                
+                if obj.__package__ == attribute.__package__:
+                    continue
+                
+                if attribute.__package__ in obj.__package__:
                     continue
 
-            #if inspect.isclass(obj) and inspect.isclass(attribute):
-            #    continue
-            #if inspect.isabstract(obj) and inspect.isabstract(attribute):
-            #    continue
 
-            # We're deatling with a class imported from another library, skip it
+            # We're dealing with a class imported from another library, skip it
             if inspect.isclass(attribute) and not inspect.getmodule(attribute).__name__.startswith(obj.__name__):
-                pprint(f"{name} - {attribute.__module__} - {inspect.getmodule(attribute).__name__} - {obj.__name__}")
+                self._p(f"{name} - {attribute.__module__} - {inspect.getmodule(attribute).__name__} - {obj.__name__}")
                 continue
 
-# =============================================================================
-#             if (
-#                 inspect.isfunction(attribute)
-#                 and not is_bound_method(attribute)
-#                 and inspect.getmodule(attribute) != obj
-#             ):
-#                 pass
-# =============================================================================
 
-            
             try:
                 getattr(attribute, "__name__")
             except AttributeError:
@@ -150,47 +140,21 @@ class ObjectTraverser:
                     setattr(attribute, "__name__", name)
                 except AttributeError:
                     # This is for everything to work with properties, df.DataFrame.T
+                    # TODO: Figure out how to deal with properties
                     obj_name = name
                     continue
 
             # This prevent recursing to superclasses
             if inspect.isclass(attribute):
-                pprint(
+                self._p(
                     f" The MRO of {name} is {inspect.getmro(attribute)}. Parent is {obj.__name__}"
                 )
-                pprint(f"{name} is a class: {inspect.isclass(attribute)}")
-                pprint(f"{obj.__name__} is a class: {inspect.isclass(obj)}")
+                self._p(f"{name} is a class: {inspect.isclass(attribute)}")
+                self._p(f"{obj.__name__} is a class: {inspect.isclass(obj)}")
             if inspect.isclass(attribute) and obj in inspect.getmro(attribute):
                 continue
 
 
             yield from self._search(obj=attribute, stack=stack)
     
-# =============================================================================
-#             if not recurse_on(attribute):
-#                 pprint(f" Not recursing on {name}")
-#                 yield stack + [attribute]
-#             else:
-#                 yield from self._search(obj=attribute, stack=stack)
-# =============================================================================
-
         stack.pop()
-
-
-if __name__ == "__main__":
-
-    import KDEpy
-
-    from printing import simpleprint
-
-    objtrav = ObjectTraverser()
-    for row in objtrav.search(KDEpy):
-
-        print(simpleprint(row))
-
-        # print(row[-1].__doc__)
-
-        # print(*[c for c in row], sep="->")
-        # print(*[c.__name__ for c in row], sep="->")
-        # print(*[type(c) for c in row], sep="->")
-        # print()

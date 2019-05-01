@@ -8,6 +8,7 @@ Created on Mon Apr 22 21:53:47 2019
 
 import pydoc
 import pkgutil
+import os
 
 
 import treedoctestpackage
@@ -16,6 +17,21 @@ import collections.abc
 
 import importlib
 import inspect
+
+
+def ispropersubpackage(package_a, package_b):
+    """
+    Is A a subpackage or submodule of B?
+    """
+    try:
+        path_a, _ = os.path.split(inspect.getfile(package_a))
+        
+        # is a built-in module
+    except TypeError:
+        return False
+        
+    path_b, _ = os.path.split(inspect.getfile(package_b))
+    return (path_b in path_a) and not (path_b == path_a)
 
 
 def is_magic_method(obj):
@@ -30,7 +46,9 @@ def is_magic_method(obj):
 def is_private(obj):
     assert hasattr(obj, "__name__")
     obj_name = obj.__name__
-    return obj_name.startswith("_") and obj_name[1] != '_'
+    typical_private = obj_name.startswith("_") and obj_name[1] != '_'
+    private_subpackage = '._' in obj_name
+    return typical_private or private_subpackage
 
 
 def ispackage(obj):

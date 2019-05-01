@@ -22,7 +22,8 @@ def treedoc(
     magic=False,
     tests=False,
     signature=1,
-    docstring=1,
+    docstring=2,
+    info=2,
     printer=SimplePrinter,
     stream=sys.stdout,
 ):
@@ -50,9 +51,9 @@ def main():
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
         description="Minimalistic documentation in a tree structure.",
-        epilog="Contribute on ",  # Text following the argument descriptions
+        epilog="Report issues and contribute on https://github.com/tommyod/treedoc.",  # Text following the argument descriptions
         allow_abbrev=True,
-        add_help=True,
+        #add_help=True,
     )
 
     parser.add_argument("object", default=None, nargs="?", help=("The object"))
@@ -118,7 +119,7 @@ def main():
         help="Printer to use.",
     )
 
-    parser.add_argument(
+    printing.add_argument(
         "--signature",
         action="store",
         default=1,
@@ -128,14 +129,24 @@ def main():
         help="How much signature information to show.",
     )
 
-    parser.add_argument(
+    printing.add_argument(
         "--docstring",
         action="store",
-        default=1,
+        default=2,
         dest="docstring",
         type=int,
-        choices=[0, 1, 2, 3, 4, 5],
+        choices=[0, 1, 2, 3, 4],
         help="How much docstring information to show.",
+    )
+    
+    printing.add_argument(
+        "--info",
+        action="store",
+        default=2,
+        dest="info",
+        type=int,
+        choices=[0, 1, 2, 3, 4],
+        help="How much general information to show.",
     )
 
     args = parser.parse_args()
