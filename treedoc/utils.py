@@ -86,7 +86,7 @@ def descend_from_package(
     package, types="package", include_tests=False, include_hidden=False
 ):
     """
-    Descent from a package to either a sub-package or modules on level down.
+    Descent from a package to either a subpackage or modules on level down.
     
     Yields a tuple of (object, object_name) one level down.
     """

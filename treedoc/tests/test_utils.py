@@ -51,12 +51,12 @@ class TestDescentFromPackage:
 
         assert set([subpackage, subpackage2]) == sub_packages
 
-        # We only go one sub-package down
+        # We only go one subpackage down
         from treedoctestpackage.subpackage import subsubpackage
 
         assert subsubpackage not in sub_packages
 
-        # If we go down from a sub-package, we get a sub-sub package
+        # If we go down from a subpackage, we get a subsubpackage
 
         from treedoctestpackage import subpackage
 

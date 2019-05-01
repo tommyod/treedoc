@@ -77,7 +77,7 @@ def main():
         default=False,
         dest="subpackages",
         action="store_true",
-        help="recurse into sub-packages.",
+        help="recurse into subpackages.",
     )
 
     traversal.add_argument(
@@ -85,7 +85,7 @@ def main():
         default=False,
         dest="submodules",
         action="store_true",
-        help="recurse into sub-packages and sub-modules.",
+        help="recurse into subpackages and submodules.",
     )
 
     traversal.add_argument(

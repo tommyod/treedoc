@@ -15,10 +15,10 @@ function invgrep () {
     return $((! $?))
 }
 
-words="sub-packages sub-modules"
+words="sub-package sub-module sub- super-"
 # Iterate the string variable using for loop
 for word in $words; do
     echo "Searching for word: '$word'"
     echo "----------------------------------"
-    invgrep "$word" -r -n '--include=*.'{py,md,txt}
+    invgrep "$word" -r -n '--include=*.'{py,md,txt} 
 done
