@@ -7,14 +7,12 @@ Utility functions for traversal and printing.
 import pydoc
 import pkgutil
 import os
-
-
-import treedoctestpackage
-import treedoc
+import functools
 import collections.abc
 
 import importlib
 import inspect
+
 
 def pprint(*args, **kwargs):
     return None
@@ -22,14 +20,17 @@ def pprint(*args, **kwargs):
 
 
 def recurse_on(obj):
+    """The objects we recurse on."""
     return inspect.ismodule(obj) or inspect.isclass(obj)
 
 
 def is_method(obj):
+    """Whether an object is a method or not."""
     return inspect.ismethoddescriptor(obj) or inspect.ismethod(obj)
 
 
 def is_bound_method(obj):
+    """Whether a method is bound to a class or not."""
     condition1 = "." in obj.__qualname__
     if not inspect.getfullargspec(obj).args:
         return False
@@ -37,8 +38,9 @@ def is_bound_method(obj):
     return condition1 and condition2
 
 
-def is_interesting(obj):
-    funcs = [getattr(inspect, method) for method in dir(inspect) if "is" == method[:2]]
+def is_inspectable(obj):
+    """An object is inspectable if it returns True for any of the inspect.is.. functions."""
+    funcs = (getattr(inspect, method) for method in dir(inspect) if "is" == method[:2])
     return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
 
 

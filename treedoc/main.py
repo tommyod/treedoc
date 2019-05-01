@@ -40,7 +40,7 @@ def treedoc(
     )
 
     for row in traverser.search(obj):
-        row = printer.print_row(row)
+        row = printer.format_row(row)
         if row is not None:
             print(row, file=sys.stdout)
 

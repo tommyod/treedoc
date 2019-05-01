@@ -8,9 +8,16 @@ import functools
 import inspect
 import sys
 import time
-from treedoc.utils import is_magic_method, is_private, ispropersubpackage
+from treedoc.utils import (
+    is_magic_method,
+    is_private,
+    ispropersubpackage,
+    recurse_on,
+    is_inspectable,
+)
 
 time = time
+
 
 class ObjectTraverser:
     """Traverse Python objects, modules and packages recursively."""
@@ -43,7 +50,7 @@ class ObjectTraverser:
         # If None, create an empty stack
         stack = stack or []
 
-        pprint(f"yield_data({obj}, stack={stack})")
+        self._p(f"yield_data({obj}, stack={stack})")
 
         # Abort immediately if no name is found on the object
         try:
@@ -84,8 +91,8 @@ class ObjectTraverser:
             if name in self._ignored_names:
                 continue
 
-            if not is_interesting(attribute):
-                pprint(f" {name} was not interesting")
+            if not is_inspectable(attribute):
+                self._p(f" {name} was not interesting")
                 pass
                 # continue
 
@@ -125,6 +132,7 @@ class ObjectTraverser:
                     # This is for everything to work with properties, df.DataFrame.T
                     # TODO: Figure out how to deal with properties
                     obj_name = name
+                    obj_name = obj_name
                     continue
 
             # This prevent recursing to superclasses
