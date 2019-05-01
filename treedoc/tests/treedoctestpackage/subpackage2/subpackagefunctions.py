@@ -6,7 +6,6 @@ Created on Sun Apr 21 21:13:23 2019
 @author: tommy
 """
 
-import functools
 import operator
 
 

@@ -7,3 +7,6 @@ Created on Sun Apr 21 21:14:43 2019
 """
 
 from treedoctestpackage.module import MyClass, func_addition
+
+MyClass = MyClass
+func_addition = func_addition
