@@ -42,10 +42,11 @@ def treedoc(
         depth=depth, private=private, magic=magic, stream=stream
     )
 
-    for row in traverser.search(obj):
+    for row, final_node_at_depth in traverser.search(obj):
         row = printer.format_row(row)
         if row is not None:
             print(row, file=sys.stdout)
+            print(final_node_at_depth)
 
 
 def main():

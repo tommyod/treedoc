@@ -9,6 +9,8 @@ import collections
 import inspect
 import pydoc
 
+from treedoc.utils import inspect_classify
+
 
 class PrinterABC(abc.ABC):
     """Abstract base class for printers."""
@@ -107,5 +109,19 @@ class SimplePrinter(Printer, PrinterABC):
         return (
             self.SEP.join([c.__name__ for c in row])
             + signature
+            + str(inspect_classify(leaf_object))
             # + ("\n\t" + docstring if docstring else "")
         )  # + '\n'
+
+
+if __name__ == "__main__":
+
+    import pytest
+
+    pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
+
+    import subprocess
+
+    subprocess.call(["treedoc", "list"])
+    subprocess.call(["treedoc", "collections"])
+    subprocess.call(["treedoc", "pandas"])

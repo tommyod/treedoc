@@ -36,9 +36,49 @@ def is_bound_method(obj):
     return condition1 and condition2
 
 
+def inspect_classify(obj):
+    """
+    Classify an object according to the inspect module. Not disjoint.
+    
+    Examples
+    --------
+    >>> inspect_classify(list)
+    ['class']
+    >>> f = lambda x : x * x
+    >>> inspect_classify(f)
+    ['function', 'routine']
+    >>> class Vector:
+    ...     def add(self, other):
+    ...         pass
+    >>> inspect_classify(Vector)
+    ['class']
+    >>> inspect_classify(Vector.add)
+    ['function', 'routine']
+    >>> gen = (i for i in range(10))
+    >>> inspect_classify(gen)
+    ['generator']
+    >>> inspect_classify(max)
+    ['builtin', 'routine']
+    """
+    classes = list()
+
+    for function_name in sorted(dir(inspect)):
+
+        if not function_name.startswith("is"):
+            continue
+
+        function = getattr(inspect, function_name)
+
+        if function(obj):
+            classes.append(function_name[2:])
+
+    return classes
+
+
 def is_inspectable(obj):
     """An object is inspectable if it returns True for any of the inspect.is.. functions."""
-    funcs = (getattr(inspect, method) for method in dir(inspect) if "is" == method[:2])
+    funcs = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
+    funcs = (getattr(inspect, func_name) for func_name in funcs)
     return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
 
 
