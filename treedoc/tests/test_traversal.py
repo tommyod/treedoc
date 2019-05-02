@@ -5,3 +5,11 @@ Created on Mon Apr 22 21:38:59 2019
 
 @author: tommy
 """
+
+import treedoctestpackage
+
+treedoctestpackage = treedoctestpackage
+
+
+def test_traversal():
+    assert True

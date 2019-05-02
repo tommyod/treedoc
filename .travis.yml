@@ -40,6 +40,10 @@ script:
   - pip show treedoc # Show information about the package
   - black . --check # Check that code is formatted correctly w.r.t. black
   - flake8 treedoc --select=F401 # Unused imports
+  - bash ./linting.sh # Spelling errors
+  
+  # Install the testpackage before running the tests
+  - pip install treedoc/tests
   - pytest treedoc --verbose --doctest-modules # Run all tests
                  
 # Build order
