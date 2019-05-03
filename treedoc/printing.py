@@ -115,13 +115,153 @@ class SimplePrinter(Printer, PrinterABC):
 
 
 if __name__ == "__main__":
+    if False:
+            
+        import pytest
+    
+        pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
+    
+        import subprocess
+    
+        subprocess.call(["treedoc", "list"])
+        subprocess.call(["treedoc", "collections"])
+        subprocess.call(["treedoc", "pandas"])
+        
+        
+    rows = [(['root'], [True]),
+            (['root', 'A'], [True, False]),
+            (['root', 'B'], [True, False]),
+            (['root', 'C'], [True, False]),
+            (['root', 'C', 'a'], [True, False, False]),
+            (['root', 'C', 'b'], [True, False, False]),
+            (['root', 'C', 'c'], [True, False, False]),
+            (['root', 'C', 'c', 'A'], [True, False, False, False]),
+            (['root', 'C', 'c', 'B'], [True, False, False, False]),
+            (['root', 'C', 'c', 'C'], [True, False, False, False]),
+            (['root', 'C', 'c', 'D'], [True, False, False, False]),
+            (['root', 'C', 'c', 'D', 'a'], [True, False, False, False, False]),
+            (['root', 'C', 'c', 'D', 'b'], [True, False, False, False, False]),
+            (['root', 'C', 'c', 'D', 'c'], [True, False, False, False, False]),
+            (['root', 'C', 'c', 'D', 'd'], [True, False, False, False, False]),
+            (['root', 'C', 'c', 'D', 'd', 'A'], [True, False, False, False, False, False]),
+            (['root', 'C', 'c', 'D', 'd', 'B'], [True, False, False, False, False, False]),
+            (['root', 'C', 'c', 'D', 'd', 'C'], [True, False, False, False, False, True]),
+            (['root', 'C', 'c', 'D', 'd', 'C', 'a'], [True, False, False, False, False, True, True]),
+            (['root', 'C', 'c', 'D', 'e'], [True, False, False, False, True]),
+            (['root', 'C', 'c', 'D', 'e', 'A'], [True, False, False, False, True, True]),
+            (['root', 'C', 'c', 'E'], [True, False, False, True]),
+            (['root', 'C', 'c', 'E', 'a'], [True, False, False, True, False]),
+            (['root', 'C', 'c', 'E', 'b'], [True, False, False, True, False]),
+            (['root', 'C', 'c', 'E', 'c'], [True, False, False, True, False]),
+            (['root', 'C', 'c', 'E', 'd'], [True, False, False, True, True]), 
+            (['root', 'C', 'd'], [True, False, False]), 
+            (['root', 'C', 'e'], [True, False, True]),
+            (['root', 'D'], [True, True]), 
+            (['root', 'D', 'a'], [True, True, False]),
+            (['root', 'D', 'b'], [True, True, False]),
+            (['root', 'D', 'c'], [True, True, False]),
+            (['root', 'D', 'd'], [True, True, False]),
+            (['root', 'D', 'e'], [True, True, True])
+            ]
+    
+    
+    rows = [(['root'], [True]),
+            (['root', 'A'], [True, False]),
+            (['root', 'A', 'a'], [True, False, False]),
+            (['root', 'A', 'b'], [True, False, True]),
+            (['root', 'B'], [True, True]),
+            (['root', 'B', 'a'], [True, True, False]),
+            (['root', 'B', 'b'], [True, True, True]),
+            ]
+    
+    assert all((len(i) == len(j) for i, j in rows))
+    
+    RIGHT = '├──'
+    DOWN = '│  '
+    LAST = '└──'
+    BLANK = '   '
+    
+    
+    
+    def prow(iterator, depth=0, print_stack=None):
+        print_stack = print_stack or []
+        
+        print(f"log: prow(iterator, depth={depth}, print_stack={print_stack})")
+        
+        stack, final_node_at_depth = (iterator).peek((False, False))
+        if not stack and not final_node_at_depth:
+            return
+        
+        if len(stack) == 1:
+            print(stack[0])
+            next(iterator)
+            prow(iterator, depth=depth+1, print_stack=print_stack)
+            return
+        
+        
+        # print_stack.append(RIGHT)
+        # Iterate over every child at this level
+        while True:
+            print('start of loop')
+            
+            stack, final_node_at_depth = next(iterator, (False, False))
+            if not stack and not final_node_at_depth:
+                print('got false on both, returning')
+                return
+            
+            print('popped', stack)
+            *_, last = stack
+            
+            symbol = LAST if final_node_at_depth[depth] else RIGHT
+            print_stack.append(symbol)
+            print(' '.join(print_stack), last)
+            
+            
+            next_stack, next_final_node_at_depth = iterator.peek((False, False))
+            
+            
+            
+            rec_symbol = BLANK if final_node_at_depth[depth] else DOWN
+                
+            
+            if next_stack and (len(next_stack) > len(stack)):
+                print('log: different lengths - we recurse')
+                
+                before = print_stack[-1]
+                print_stack.pop()
+                print_stack.append(rec_symbol)
+                prow(iterator, depth=depth+1, print_stack=print_stack)
+                print_stack.pop()
+                print_stack.append(before)
+            if next_stack and (len(next_stack) < len(stack)):
+                print_stack.pop()
+                break
+            else:
+                print('log: we do not recurse')
+                
+                
+            print_stack.pop()
+                
 
-    import pytest
+            
+            
+            
+           
+        print(f"finished: prow(iterator, depth={depth}, print_stack={print_stack})")
+        #print_stack.pop()
+            
 
-    pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
-
-    import subprocess
-
-    subprocess.call(["treedoc", "list"])
-    subprocess.call(["treedoc", "collections"])
-    subprocess.call(["treedoc", "pandas"])
+        
+        
+        
+        
+        
+        
+    from more_itertools import peekable
+    
+    iterator = peekable(iter(rows))
+    
+    prow(iterator)
+    
+    
+        

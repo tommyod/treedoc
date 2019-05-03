@@ -59,6 +59,23 @@ def inspect_classify(obj):
     ['generator']
     >>> inspect_classify(max)
     ['builtin', 'routine']
+    
+    
+    Common findings:
+        []
+        ['abstract', 'class']
+        ['builtin', 'routine']
+        ['class']
+        ['datadescriptor']
+        ['datadescriptor', 'getsetdescriptor']
+        ['datadescriptor', 'memberdescriptor']
+        ['function', 'generatorfunction', 'routine']
+        ['function', 'routine']
+        ['methoddescriptor', 'routine']
+        ['method', 'routine']
+        ['module']
+        
+        Numpy ufuncs not found.
     """
     classes = list()
 

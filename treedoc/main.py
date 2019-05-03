@@ -15,7 +15,7 @@ from treedoc.utils import resolve_object
 
 def treedoc(
     obj,
-    depth=999,
+    level=999,
     subpackages=True,
     submodules=False,
     private=False,
@@ -39,14 +39,17 @@ def treedoc(
 
     printer = printer(signature=signature, docstring=docstring)
     traverser = ObjectTraverser(
-        depth=depth, private=private, magic=magic, stream=stream
+        level=level, private=private, magic=magic, stream=stream
     )
 
     for row, final_node_at_depth in traverser.search(obj):
         row = printer.format_row(row)
         if row is not None:
-            print(row, file=sys.stdout)
-            print(final_node_at_depth)
+            first = row
+            second = (first.ljust(100) + ', '.join((str(i) for i in final_node_at_depth)).rjust(50))
+            print(second)
+            # print(row, file=sys.stdout, end='')
+            # print(''.join((str(i) for i in final_node_at_depth)).rjust(100))
 
 
 def main():
@@ -57,7 +60,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
         description="Minimalistic documentation in a tree structure.",
-        epilog="Report issues and contribute on https://github.com/tommyod/treedoc.",  # Text following the argument descriptions
+        epilog="Report issues and contribute on https://github.com/tommyod/treedoc.",
         allow_abbrev=True,
         # add_help=True,
     )
@@ -68,9 +71,10 @@ def main():
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
     # =============================================================================
 
-    traversal = parser.add_argument_group("traversal")
+    traversal = parser.add_argument_group("traversal", "The arguments are common to every printer.")
     traversal.add_argument(
-        "--depth", default=999, dest="depth", nargs="?", type=int, help="the depth"
+        "--level", default=999, dest="level", nargs="?", type=int, 
+        help="descend only level directories deep."
     )
 
     traversal.add_argument(
@@ -78,7 +82,7 @@ def main():
         default=False,
         dest="subpackages",
         action="store_true",
-        help="recurse into subpackages.",
+        help="descend into subpackages, i.e. numpy -> numpy.linalg",
     )
 
     traversal.add_argument(
@@ -86,7 +90,7 @@ def main():
         default=False,
         dest="submodules",
         action="store_true",
-        help="recurse into subpackages and submodules.",
+        help="descend into every module in a package.",
     )
 
     traversal.add_argument(
@@ -106,14 +110,14 @@ def main():
     )
 
     traversal.add_argument(
-        "--tests", default=False, dest="tests", action="store_true", help="show tests."
+        "--tests", default=False, dest="tests", action="store_true", help="show tests, i.e. test_func()."
     )
 
     # =============================================================================
     #     OPTIONS RELATED TO PRINTING THE RESULTS
     # =============================================================================
 
-    printing = parser.add_argument_group("printing")
+    printing = parser.add_argument_group("printing", "The meaning of the arguments varies depending on the printer.")
 
     printers = {"simple": SimplePrinter, "dense": lambda x: x ** 2}
     printing.add_argument(
@@ -122,7 +126,7 @@ def main():
         dest="printer",
         nargs="?",
         choices=list(printers.keys()),
-        help="Printer to use.",
+        help="printer to use, defaults to 'simple'",
     )
 
     printing.add_argument(
@@ -132,7 +136,7 @@ def main():
         dest="signature",
         type=int,
         choices=[0, 1, 2],
-        help="How much signature information to show.",
+        help="how much signature information to show.",
     )
 
     printing.add_argument(
@@ -142,7 +146,7 @@ def main():
         dest="docstring",
         type=int,
         choices=[0, 1, 2, 3, 4],
-        help="How much docstring information to show.",
+        help="how much docstring information to show.",
     )
 
     printing.add_argument(
@@ -152,7 +156,7 @@ def main():
         dest="info",
         type=int,
         choices=[0, 1, 2, 3, 4],
-        help="How much general information to show.",
+        help="how much general information to show.",
     )
 
     args = parser.parse_args()

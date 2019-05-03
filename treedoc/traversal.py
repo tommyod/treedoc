@@ -25,9 +25,9 @@ class ObjectTraverser:
     _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
 
     def __init__(
-        self, *, depth=999, private=False, magic=False, stream=sys.stdout, **kwargs
+        self, *, level=999, private=False, magic=False, stream=sys.stdout, **kwargs
     ):
-        self.depth = depth
+        self.level = level
         self.sort_key = None
         self.private = private
         self.magic = magic
@@ -59,7 +59,7 @@ class ObjectTraverser:
 
         self._p(f"yield_data({obj}, stack={stack})")
 
-        if len(stack) > self.depth + 1:
+        if len(stack) > self.level + 1:
             return
 
         stack.append(obj)
