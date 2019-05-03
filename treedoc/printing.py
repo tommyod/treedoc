@@ -165,14 +165,29 @@ if __name__ == "__main__":
             ]
     
     
-    rows = [(['root'], [True]),
-            (['root', 'A'], [True, False]),
-            (['root', 'A', 'a'], [True, False, False]),
-            (['root', 'A', 'b'], [True, False, True]),
-            (['root', 'B'], [True, True]),
-            (['root', 'B', 'a'], [True, True, False]),
-            (['root', 'B', 'b'], [True, True, True]),
-            ]
+# =============================================================================
+#     rows = [(['root'], [True]),
+#             (['root', 'A'], [True, False]),
+#             (['root', 'A', 'a'], [True, False, False]),
+#             (['root', 'A', 'b'], [True, False, False]),
+#             (['root', 'A', 'c'], [True, False, True]),
+#             (['root', 'B'], [True, True]),
+#             (['root', 'B', 'a'], [True, True, False]),
+#             (['root', 'B', 'b'], [True, True, True]),
+#             ]
+#     
+#     rows = [(['root'], [True]),
+#             (['root', 'A'], [True, False]),
+#             (['root', 'A', 'a'], [True, False, False]),
+#             (['root', 'A', 'b'], [True, False, True]),
+#             (['root', 'A', 'b', 'A'], [True, False, True, False]),
+#             (['root', 'A', 'b', 'B'], [True, False, True, False]),
+#             (['root', 'A', 'b', 'C'], [True, False, True, True]),
+#             (['root', 'B'], [True, True]),
+#             (['root', 'B', 'a'], [True, True, False]),
+#             (['root', 'B', 'b'], [True, True, True]),
+#             ]
+# =============================================================================
     
     assert all((len(i) == len(j) for i, j in rows))
     
@@ -184,14 +199,17 @@ if __name__ == "__main__":
     
     
     def prow(iterator, depth=0, print_stack=None):
-        print_stack = print_stack or []
+        
+        print_stack = print_stack or ['']
         
         print(f"log: prow(iterator, depth={depth}, print_stack={print_stack})")
         
-        stack, final_node_at_depth = (iterator).peek((False, False))
+        # Peek to see if this is the final note. If it is, return
+        stack, final_node_at_depth = iterator.peek((False, False))
         if not stack and not final_node_at_depth:
             return
         
+        # Special case for the root note
         if len(stack) == 1:
             print(stack[0])
             next(iterator)
@@ -199,48 +217,49 @@ if __name__ == "__main__":
             return
         
         
-        # print_stack.append(RIGHT)
+        
         # Iterate over every child at this level
         while True:
-            print('start of loop')
             
             stack, final_node_at_depth = next(iterator, (False, False))
             if not stack and not final_node_at_depth:
-                print('got false on both, returning')
+                print('End of graph, going up in the structure')
                 return
             
-            print('popped', stack)
+            print(f"Popped ({stack}, {final_node_at_depth}) at depth {depth}")
             *_, last = stack
             
             symbol = LAST if final_node_at_depth[depth] else RIGHT
-            print_stack.append(symbol)
-            print(' '.join(print_stack), last)
+            print(' '.join(print_stack + [symbol]), last)
             
             
             next_stack, next_final_node_at_depth = iterator.peek((False, False))
             
-            
-            
             rec_symbol = BLANK if final_node_at_depth[depth] else DOWN
-                
             
-            if next_stack and (len(next_stack) > len(stack)):
+                
+            if isinstance(next_stack, list):
+                diff  = len(next_stack) - len(stack)
+            if next_stack and diff == 1:
                 print('log: different lengths - we recurse')
                 
-                before = print_stack[-1]
-                print_stack.pop()
-                print_stack.append(rec_symbol)
-                prow(iterator, depth=depth+1, print_stack=print_stack)
-                print_stack.pop()
-                print_stack.append(before)
-            if next_stack and (len(next_stack) < len(stack)):
-                print_stack.pop()
+                #before = print_stack[-1]
+                #print_stack.pop()
+                #print_stack.append(rec_symbol)
+                prow(iterator, depth=depth + 1, print_stack=print_stack.copy() + [rec_symbol])
+                #print_stack.pop()
+                print(f'popped print stack: {print_stack}')
+                if final_node_at_depth[depth]:
+                    break
+                #print_stack.append(before)
+            if next_stack and diff < 0:
+                for i in range(abs(diff)):
+                    print_stack.pop()
+                print(f'popped print stack: {print_stack}')
                 break
             else:
                 print('log: we do not recurse')
-                
-                
-            print_stack.pop()
+                continue
                 
 
             
