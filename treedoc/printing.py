@@ -159,6 +159,11 @@ class TreePrinter(Printer, PrinterABC):
         
         iterable = more_itertools.peekable(iter(iterable))
         
+        for print_stack, stack in self.format_row(iterable, depth=0, print_stack=None):
+            yield (' '.join(print_stack) + ' '+ '.'.join([s.__name__ for s in stack]))
+            
+        
+        
         yield from self.format_row(iterable, depth=0, print_stack=None)
 
     def format_row(self, iterator, depth=0, print_stack=None):
@@ -179,7 +184,7 @@ class TreePrinter(Printer, PrinterABC):
         
         # Special case for the root note
         if len(stack) == 1:
-            print(stack[0].__name__)
+            yield [''], stack
             next(iterator)
             yield from self.format_row(iterator, depth=depth+1, print_stack=print_stack)
             return
@@ -207,7 +212,7 @@ class TreePrinter(Printer, PrinterABC):
             *_, last = stack
             
             symbol = self.LAST if final_node_at_depth[depth] else self.RIGHT
-            yield (' '.join(print_stack + [symbol]) + ' '+ '.'.join([s.__name__ for s in stack]))
+            yield print_stack + [symbol], stack
             
             len_stack = len(stack)
             
