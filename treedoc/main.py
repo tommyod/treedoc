@@ -30,7 +30,7 @@ def treedoc(
     """
     Print minimalistic tree-like documentation.
     """
-    
+
     printer = TreePrinter
 
     if isinstance(obj, str):
@@ -43,10 +43,10 @@ def treedoc(
     traverser = ObjectTraverser(
         level=level, private=private, magic=magic, stream=stream
     )
-    
+
     iterable = traverser.search(obj)
     iterable = iter(iterable)
-    
+
     for row in printer.format_iterable(iterable):
         if row is not None:
             print(row)
@@ -71,10 +71,16 @@ def main():
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
     # =============================================================================
 
-    traversal = parser.add_argument_group("traversal", "The arguments are common to every printer.")
+    traversal = parser.add_argument_group(
+        "traversal", "The arguments are common to every printer."
+    )
     traversal.add_argument(
-        "--level", default=999, dest="level", nargs="?", type=int, 
-        help="descend only level directories deep."
+        "--level",
+        default=999,
+        dest="level",
+        nargs="?",
+        type=int,
+        help="descend only level directories deep.",
     )
 
     traversal.add_argument(
@@ -110,14 +116,20 @@ def main():
     )
 
     traversal.add_argument(
-        "--tests", default=False, dest="tests", action="store_true", help="show tests, i.e. test_func()."
+        "--tests",
+        default=False,
+        dest="tests",
+        action="store_true",
+        help="show tests, i.e. test_func().",
     )
 
     # =============================================================================
     #     OPTIONS RELATED TO PRINTING THE RESULTS
     # =============================================================================
 
-    printing = parser.add_argument_group("printing", "The meaning of the arguments varies depending on the printer.")
+    printing = parser.add_argument_group(
+        "printing", "The meaning of the arguments varies depending on the printer."
+    )
 
     printers = {"simple": SimplePrinter, "dense": lambda x: x ** 2}
     printing.add_argument(
