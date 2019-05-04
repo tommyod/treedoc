@@ -4,34 +4,33 @@
 Utility functions for traversal and printing.
 """
 
+import collections
 import functools
 import importlib
 import inspect
 import os
-import collections
 import pkgutil
 import pydoc
-
 
 _marker = object()
 
 
-class peekable:
+class Peekable:
     """Wrap an iterator to allow a lookahead.
     
-    Call :meth:`peek` on the result to get the value that will be returned
-    by :func:`next`. This won't advance the iterator:
+    Call `peek` on the result to get the value that will be returned by `next`. 
+    This won't advance the iterator:
         
-    >>> p = peekable(['a', 'b'])
+    >>> p = Peekable(['a', 'b'])
     >>> p.peek()
     'a'
     >>> next(p)
     'a'
         
-    Pass :meth:`peek` a default value to return that instead of raising
-    ``StopIteration`` when the iterator is exhausted.
+    Pass `peek` a default value to return that instead of raising ``StopIteration`` 
+    when the iterator is exhausted.
     
-    >>> p = peekable([])
+    >>> p = Peekable([])
     >>> p.peek('hi')
     'hi'
 

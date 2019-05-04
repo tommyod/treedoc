@@ -8,9 +8,8 @@ import abc
 import collections
 import inspect
 import pydoc
-import copy
 
-from treedoc.utils import inspect_classify, peekable
+from treedoc.utils import Peekable, inspect_classify
 
 
 class PrinterABC(abc.ABC):
@@ -27,9 +26,9 @@ class PrinterABC(abc.ABC):
         
         Parameters:
         -----------
-        row (Sequence): typically a list with objects, each having the __name__ attr
+        iterator (Iterator): an iterator yielding (objects, final_node)
         
-        Returns
+        Yields
         -------
         output (string) : a string for printer, or None if something went wrong
         """
@@ -122,6 +121,7 @@ class SimplePrinter(Printer, PrinterABC):
 
 class TreePrinter(Printer, PrinterABC):
 
+    # Class attributes used for printing
     RIGHT = "├──"
     DOWN = "│  "
     LAST = "└──"
@@ -157,17 +157,17 @@ class TreePrinter(Printer, PrinterABC):
 
     def format_iterable(self, iterable):
 
-        iterable = peekable(iter(iterable))
+        iterable = Peekable(iter(iterable))
 
-        for print_stack, stack in self._format_row(iterable, depth=0, print_stack=None):
+        for print_stack, stack in self._format_row(iterable):
             joined_print_stack = " ".join(print_stack)
             obj_names = ".".join([s.__name__ for s in stack])
             yield " ".join([joined_print_stack, obj_names])
 
     def _format_row(self, iterator, depth=0, print_stack=None):
-        """Print a row."""
+        """Format a row."""
 
-        if not isinstance(iterator, peekable):
+        if not isinstance(iterator, Peekable):
             raise TypeError("The iterator must be peekable.")
         iterator = iter(iterator)
         print_stack = print_stack or [""]
@@ -211,7 +211,7 @@ class TreePrinter(Printer, PrinterABC):
             symbol = self.LAST if final_at_depth else self.RIGHT
             yield print_stack + [symbol], stack
 
-            # TODO: IMPORTANT: Calling `peek` will override the `stack` and 
+            # TODO: IMPORTANT: Calling `peek` will override the `stack` and
             # `final_node_at_depth` variables. I am not sure why.
             # But we need to get all information from these before the `peek` call.
             len_stack = len(stack)
@@ -224,7 +224,7 @@ class TreePrinter(Printer, PrinterABC):
 
             # The next stack has more elements, so it's a child of the current node
             if len(next_stack) > len_stack:
-                
+
                 # Find the appropriate recursion symbol and then recurse
                 rec_symbol = self.BLANK if final_at_depth else self.DOWN
 

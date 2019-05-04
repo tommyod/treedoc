@@ -5,16 +5,15 @@ Test the printers and their functionality.
 """
 
 from treedoc.printing import TreePrinter
-from treedoc.utils import peekable
+from treedoc.utils import Peekable
 
 
 class TestTreePrinter:
-    
     def test_row_formatting_ex1(self):
         """Test on an example drawn by hand."""
 
         printer = TreePrinter()
-              
+
         # These can be substituted for further generalization.
         # TODO
         # =============================================================================
@@ -35,7 +34,7 @@ class TestTreePrinter:
             (["root", "B", "b"], [True, True, True]),
         ]
 
-        rows = peekable(iter(rows))
+        rows = Peekable(iter(rows))
         formatted_rows = list(printer._format_row(rows))
 
         assert formatted_rows == [
@@ -67,7 +66,7 @@ class TestTreePrinter:
             (["root", "B", "b"], [True, True, True]),
         ]
 
-        rows = peekable(iter(rows))
+        rows = Peekable(iter(rows))
         formatted_rows = list(printer._format_row(rows))
 
         assert formatted_rows == [
@@ -140,7 +139,7 @@ class TestTreePrinter:
             (["root", "D", "e"], [True, True, True]),
         ]
 
-        rows = peekable(iter(rows))
+        rows = Peekable(iter(rows))
         formatted_rows = list(printer._format_row(rows))
 
         assert formatted_rows == [
@@ -198,4 +197,5 @@ class TestTreePrinter:
 
 if __name__ == "__main__":
     import pytest
+
     pytest.main(args=[__file__, "--doctest-modules", "-v", "--capture=sys"])

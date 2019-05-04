@@ -8,13 +8,8 @@ import inspect
 import sys
 import time
 
-from treedoc.utils import (
-    is_inspectable,
-    is_magic_method,
-    is_private,
-    ispropersubpackage,
-    recurse_on,
-)
+from treedoc.utils import (is_inspectable, is_magic_method, is_private,
+                           ispropersubpackage, recurse_on)
 
 time = time
 
