@@ -8,7 +8,7 @@ Entrypoint for command line interface.
 import argparse
 import sys
 
-from treedoc.printing import SimplePrinter
+from treedoc.printing import SimplePrinter, TreePrinter
 from treedoc.traversal import ObjectTraverser
 from treedoc.utils import resolve_object
 
@@ -30,6 +30,8 @@ def treedoc(
     """
     Print minimalistic tree-like documentation.
     """
+    
+    printer = TreePrinter
 
     if isinstance(obj, str):
         obj = resolve_object(obj)
@@ -41,15 +43,13 @@ def treedoc(
     traverser = ObjectTraverser(
         level=level, private=private, magic=magic, stream=stream
     )
-
-    for row, final_node_at_depth in traverser.search(obj):
-        row = printer.format_row(row)
+    
+    iterable = traverser.search(obj)
+    iterable = iter(iterable)
+    
+    for row in printer.format_iterable(iterable):
         if row is not None:
-            first = row
-            second = (first.ljust(100) + ', '.join((str(i) for i in final_node_at_depth)).rjust(50))
-            print(second)
-            # print(row, file=sys.stdout, end='')
-            # print(''.join((str(i) for i in final_node_at_depth)).rjust(100))
+            print(row)
 
 
 def main():

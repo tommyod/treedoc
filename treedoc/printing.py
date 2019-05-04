@@ -8,6 +8,7 @@ import abc
 import collections
 import inspect
 import pydoc
+import more_itertools
 
 from treedoc.utils import inspect_classify
 
@@ -88,6 +89,11 @@ class SimplePrinter(Printer, PrinterABC):
             pass
         # TODO: Add more options here
 
+    def format_iterable(self, iterable):
+        
+        for stack, final_node_at_depth in iterable:
+            yield self.format_row(stack)
+
     def format_row(self, row):
         # No docstring here, it's inherited from the method PrinterABC.print_row.
         self._validate_row(row)
@@ -112,6 +118,125 @@ class SimplePrinter(Printer, PrinterABC):
             + str(inspect_classify(leaf_object))
             # + ("\n\t" + docstring if docstring else "")
         )  # + '\n'
+        
+        
+class TreePrinter(Printer, PrinterABC):
+
+    RIGHT = '├──'
+    DOWN = '│  '
+    LAST = '└──'
+    BLANK = '   '
+
+    def _get_docstring(self, leaf_object):
+        """Get and format docstring from the leaf object in the tree path."""
+
+        first_line, rest_lines = pydoc.splitdoc(pydoc.getdoc(leaf_object))
+
+        if self.docstring == 0:
+            return ""
+        elif self.docstring == 1:
+            return first_line
+        elif self.docstring == 2:
+            return first_line
+        else:
+            pass
+        # TODO: Add more options here
+
+    def _format_argspec(self, leaf_object):
+        """Get and format argspec from the leaf object in the tree path."""
+
+        if self.signature == 0:
+            return "()"
+        elif self.signature == 1:
+            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
+        elif self.signature == 2:
+            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
+        else:
+            pass
+        # TODO: Add more options here
+        
+    def format_iterable(self, iterable):
+        
+        iterable = more_itertools.peekable(iter(iterable))
+        
+        yield from self.format_row(iterable, depth=0, print_stack=None)
+
+    def format_row(self, iterator, depth=0, print_stack=None):
+        """Print a row."""
+        
+# =============================================================================
+#         BOUNDARY CONDITIONS - For the root node and leaf nodes
+# =============================================================================
+        
+        print_stack = print_stack or ['']
+        
+        #print(f"log: prow(iterator, depth={depth}, print_stack={print_stack})")
+        
+        # Peek to see if this is the final note. If it is, return
+        stack, final_node_at_depth = iterator.peek((False, False))
+        if not stack and not final_node_at_depth:
+            return
+        
+        # Special case for the root note
+        if len(stack) == 1:
+            print(stack[0].__name__)
+            next(iterator)
+            yield from self.format_row(iterator, depth=depth+1, print_stack=print_stack)
+            return
+        
+        
+# =============================================================================
+#         ITERATE OVER NODES - Iteration and recursion if needed
+# =============================================================================
+        
+        
+        # Iterate over every child at this level
+        while True:
+            
+            import copy
+            stack, final_node_at_depth = next(iterator, (False, False))
+
+            
+            if not stack and not final_node_at_depth:
+                #print('End of graph, going up in the structure')
+                return
+            
+            final_node_at_depth = copy.deepcopy(final_node_at_depth)
+            
+            # print(f"Popped ({stack}, {final_node_at_depth}) at depth {depth}")
+            *_, last = stack
+            
+            symbol = self.LAST if final_node_at_depth[depth] else self.RIGHT
+            yield (' '.join(print_stack + [symbol]) + ' '+ '.'.join([s.__name__ for s in stack]))
+            
+            len_stack = len(stack)
+            
+            next_stack, next_final_node_at_depth = iterator.peek((False, False))
+
+            if not next_stack and not next_final_node_at_depth:
+                #print('End of graph, going up in the structure')
+                return
+            
+            #print('.'.join([s.__name__ for s in next_stack]),  '.'.join([s.__name__ for s in stack]))
+                
+
+            if len(next_stack) > len_stack:
+                #print('log: different lengths - we recurse')
+                
+                #print_stack.append(rec_symbol)
+                rec_symbol = self.BLANK if final_node_at_depth[depth] else self.DOWN
+
+                yield from self.format_row(iterator, depth=depth + 1, print_stack=print_stack.copy() + [rec_symbol])
+
+                #print(f'popped print stack: {print_stack}')
+                if final_node_at_depth[depth]:
+                    break
+            elif len(next_stack) < len_stack:
+                #print(f'popped print stack: {print_stack}')
+                break
+            else:
+                #print('log: we do not recurse')
+                continue
 
 
 if __name__ == "__main__":
@@ -199,10 +324,15 @@ if __name__ == "__main__":
     
     
     def prow(iterator, depth=0, print_stack=None):
+        """Print a row."""
+        
+# =============================================================================
+#         BOUNDARY CONDITIONS - For the root node and leaf nodes
+# =============================================================================
         
         print_stack = print_stack or ['']
         
-        print(f"log: prow(iterator, depth={depth}, print_stack={print_stack})")
+        #print(f"log: prow(iterator, depth={depth}, print_stack={print_stack})")
         
         # Peek to see if this is the final note. If it is, return
         stack, final_node_at_depth = iterator.peek((False, False))
@@ -217,48 +347,48 @@ if __name__ == "__main__":
             return
         
         
+# =============================================================================
+#         ITERATE OVER NODES - Iteration and recursion if needed
+# =============================================================================
+        
         
         # Iterate over every child at this level
         while True:
             
             stack, final_node_at_depth = next(iterator, (False, False))
             if not stack and not final_node_at_depth:
-                print('End of graph, going up in the structure')
+                #print('End of graph, going up in the structure')
                 return
             
-            print(f"Popped ({stack}, {final_node_at_depth}) at depth {depth}")
+            #print(f"Popped ({stack}, {final_node_at_depth}) at depth {depth}")
             *_, last = stack
             
             symbol = LAST if final_node_at_depth[depth] else RIGHT
             print(' '.join(print_stack + [symbol]), last)
             
-            
             next_stack, next_final_node_at_depth = iterator.peek((False, False))
+            if not next_stack and not next_final_node_at_depth:
+                #print('End of graph, going up in the structure')
+                return
             
-            rec_symbol = BLANK if final_node_at_depth[depth] else DOWN
             
                 
-            if isinstance(next_stack, list):
-                diff  = len(next_stack) - len(stack)
-            if next_stack and diff == 1:
-                print('log: different lengths - we recurse')
+
+            if len(next_stack) > len(stack):
+                #print('log: different lengths - we recurse')
                 
-                #before = print_stack[-1]
-                #print_stack.pop()
                 #print_stack.append(rec_symbol)
+                rec_symbol = BLANK if final_node_at_depth[depth] else DOWN
                 prow(iterator, depth=depth + 1, print_stack=print_stack.copy() + [rec_symbol])
-                #print_stack.pop()
-                print(f'popped print stack: {print_stack}')
+
+                #print(f'popped print stack: {print_stack}')
                 if final_node_at_depth[depth]:
                     break
-                #print_stack.append(before)
-            if next_stack and diff < 0:
-                for i in range(abs(diff)):
-                    print_stack.pop()
-                print(f'popped print stack: {print_stack}')
+            elif len(next_stack) < len(stack):
+                #print(f'popped print stack: {print_stack}')
                 break
             else:
-                print('log: we do not recurse')
+                #print('log: we do not recurse')
                 continue
                 
 
@@ -266,7 +396,7 @@ if __name__ == "__main__":
             
             
            
-        print(f"finished: prow(iterator, depth={depth}, print_stack={print_stack})")
+        #print(f"finished: prow(iterator, depth={depth}, print_stack={print_stack})")
         #print_stack.pop()
             
 
