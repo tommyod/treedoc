@@ -191,5 +191,4 @@ if __name__ == "__main__":
 
     subprocess.call(["treedoc", "collections"])
     subprocess.call(["treedoc", "pandas"])
-
     subprocess.call(["treedoc", "list"])

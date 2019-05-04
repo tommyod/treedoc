@@ -145,6 +145,12 @@ class TreePrinter(Printer, PrinterABC):
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
 
+        # Attempt to get a signature for the leaf object
+        try:
+            inspect.getfullargspec(leaf_object)
+        except TypeError:
+            return ""
+
         if self.signature == 0:
             return "()"
         elif self.signature == 1:
@@ -162,7 +168,11 @@ class TreePrinter(Printer, PrinterABC):
         for print_stack, stack in self._format_row(iterable):
             joined_print_stack = " ".join(print_stack)
             obj_names = ".".join([s.__name__ for s in stack])
-            yield " ".join([joined_print_stack, obj_names])
+
+            *_, last_obj = stack
+            signature = self._format_argspec(last_obj)
+
+            yield " ".join([joined_print_stack, obj_names]) + signature
 
     def _format_row(self, iterator, depth=0, print_stack=None):
         """Format a row."""
