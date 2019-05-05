@@ -12,6 +12,15 @@ import pkgutil
 import pydoc
 
 
+def get_docstring(object):
+    """Get a docstring summary from an object."""
+
+    # pydoc.getdoc is slightly more general than inspect.getdoc,see:
+    # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
+    first_line, _ = pydoc.splitdoc(pydoc.getdoc(object))
+    return first_line
+
+
 def pprint(*args, **kwargs):
     return None
     print(*args, **kwargs)

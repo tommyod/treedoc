@@ -9,7 +9,7 @@ Created on Sun Apr 28 20:20:49 2019
 import operator
 
 import treedoctestpackage
-from treedoc.utils import descend_from_package, ispackage, resolve_object
+from treedoc.utils import descend_from_package, ispackage, resolve_object, get_docstring
 
 
 def map_itemgetter(iterable, index):
@@ -35,6 +35,33 @@ def test_ispackage():
     from treedoctestpackage.subpackage import subpackagemodule
 
     assert not ispackage(subpackagemodule)
+    
+    
+
+def test_get_docstring():
+    """
+    """
+    
+    def func():
+        pass
+    
+    return_val = "This is the docstring."
+    
+    func.__doc__ = """This is the docstring."""
+    assert get_docstring(func) == return_val
+    
+    func.__doc__ = """
+    This is the docstring.
+    """
+    assert get_docstring(func) == return_val
+    
+    func.__doc__ = """
+    This is the docstring.
+    
+    This is more stuff.
+    """
+    assert get_docstring(func) == return_val
+    
 
 
 class TestDescentFromPackage:
