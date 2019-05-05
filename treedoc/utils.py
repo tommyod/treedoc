@@ -82,7 +82,7 @@ def get_docstring(object, width=88):
     --------
     >>> get_docstring(set.intersection)
     'Return the intersection of two sets as a new set.'
-    >>> get_docstring(list.append, width=16)
+    >>> get_docstring(set.intersection, width=16)
     'Return the...'
     """
     # pydoc.getdoc is slightly more general than inspect.getdoc,see:
