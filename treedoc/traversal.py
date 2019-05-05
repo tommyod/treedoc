@@ -95,9 +95,14 @@ class ObjectTraverser:
 
         # The objects we will recurse on
         filtered = []
+        
+        try:
+            generator = sorted(inspect.getmembers(obj), key=self.sort_key)
+        except:
+            return
 
         # Iterate through children
-        for name, child_obj in sorted(inspect.getmembers(obj), key=self.sort_key):
+        for name, child_obj in generator:
 
             # time.sleep(0.001)
             self._p(f"Looking at {name}, {type(child_obj)}")
@@ -113,7 +118,10 @@ class ObjectTraverser:
                     obj_name = name
                     obj_name = obj_name
                     continue
-
+                
+            if not (hasattr(child_obj, "__name__") and isinstance(child_obj.__name__, str)):
+                continue
+            
             # Only consider magic methods and private objects if the user wants to
             if is_private(child_obj) and not self.private:
                 self._p(

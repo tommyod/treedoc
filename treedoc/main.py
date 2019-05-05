@@ -4,9 +4,10 @@
 Entrypoint for command line interface.
 """
 
-
+import pkgutil
 import argparse
 import sys
+import importlib
 
 from treedoc.printing import TreePrinter, DensePrinter
 from treedoc.traversal import ObjectTraverser
@@ -31,13 +32,7 @@ def treedoc(
     """
     Print minimalistic tree-like documentation.
     """
-
-    if isinstance(object, str):
-        object = resolve_object(object)
-
-    if object is None:
-        raise ValueError("Could not resolve object")
-
+    
     printer = printer(signature=signature, docstring=docstring)
     traverser = ObjectTraverser(
         depth=depth,
@@ -48,12 +43,38 @@ def treedoc(
         tests=tests,
         stream=stream,
     )
+    
+    if isinstance(object, str) and object.lower().strip() == 'python':
+        for (importer, object_name, ispkg) in pkgutil.iter_modules():
+            
+            if not ispkg:
+                continue
+            
+            try:
+                object = importlib.import_module(object_name)
+            except:
+                continue
+            
+            iterable = iter(traverser.search(object))
+            for row in printer.format_iterable(iterable):
+                if row is not None:
+                    print(row)
+        
+    else:
 
-    iterable = iter(traverser.search(object))
-
-    for row in printer.format_iterable(iterable):
-        if row is not None:
-            print(row)
+        if isinstance(object, str):
+            object = resolve_object(object)
+    
+        if object is None:
+            raise ValueError("Could not resolve object")
+    
+    
+    
+        iterable = iter(traverser.search(object))
+    
+        for row in printer.format_iterable(iterable):
+            if row is not None:
+                print(row)
 
 
 def setup_argumentparser(printers):
