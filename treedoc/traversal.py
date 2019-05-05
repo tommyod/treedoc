@@ -25,13 +25,24 @@ class ObjectTraverser:
     _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
 
     def __init__(
-        self, *, level=999, private=False, magic=False, stream=sys.stdout, **kwargs
+        self,
+        *,
+        depth=999,
+        subpackages=False,
+        modules=False,
+        private=False,
+        magic=False,
+        tests=False,
+        stream=sys.stdout,
     ):
-        self.level = level
-        self.sort_key = None
+        self.depth = depth
+        self.subpackages = subpackages
+        self.modules = modules
         self.private = private
         self.magic = magic
+        self.tests = tests
         self.stream = stream
+        self.sort_key = None
 
     def search(self, obj):
         """DFS search from an object."""
@@ -59,7 +70,7 @@ class ObjectTraverser:
 
         self._p(f"yield_data({obj}, stack={stack})")
 
-        if len(stack) > self.level + 1:
+        if len(stack) > self.depth + 1:
             return
 
         stack.append(obj)

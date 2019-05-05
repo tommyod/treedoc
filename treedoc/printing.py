@@ -55,7 +55,7 @@ class Printer:
         assert all((hasattr(obj, "__name__") for obj in row))
 
 
-class SimplePrinter(Printer, PrinterABC):
+class DensePrinter(Printer, PrinterABC):
 
     SEP = " -> "
     END = "\n"
