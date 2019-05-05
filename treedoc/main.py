@@ -6,7 +6,6 @@ Entrypoint for command line interface.
 
 import argparse
 import importlib
-import operator
 import pkgutil
 import sys
 
