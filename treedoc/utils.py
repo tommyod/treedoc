@@ -4,12 +4,72 @@
 Utility functions for traversal and printing.
 """
 
+import collections
 import functools
 import importlib
 import inspect
 import os
 import pkgutil
 import pydoc
+
+_marker = object()
+
+
+class Peekable:
+    """Wrap an iterator to allow a lookahead.
+    
+    Call `peek` on the result to get the value that will be returned by `next`. 
+    This won't advance the iterator:
+        
+    >>> p = Peekable(['a', 'b'])
+    >>> p.peek()
+    'a'
+    >>> next(p)
+    'a'
+        
+    Pass `peek` a default value to return that instead of raising ``StopIteration`` 
+    when the iterator is exhausted.
+    
+    >>> p = Peekable([])
+    >>> p.peek('hi')
+    'hi'
+
+    """
+
+    def __init__(self, iterable):
+        self._it = iter(iterable)
+        self._cache = collections.deque()
+
+    def __iter__(self):
+        return self
+
+    def __bool__(self):
+        try:
+            self.peek()
+        except StopIteration:
+            return False
+        return True
+
+    def peek(self, default=_marker):
+        """Return the item that will be next returned from ``next()``.
+        
+        Return ``default`` if there are no items left. If ``default`` is not
+        provided, raise ``StopIteration``.
+        """
+        if not self._cache:
+            try:
+                self._cache.append(next(self._it))
+            except StopIteration:
+                if default is _marker:
+                    raise
+                return default
+        return self._cache[0]
+
+    def __next__(self):
+        if self._cache:
+            return self._cache.popleft()
+
+        return next(self._it)
 
 
 def get_docstring(object):
@@ -45,9 +105,66 @@ def is_bound_method(obj):
     return condition1 and condition2
 
 
+def inspect_classify(obj):
+    """
+    Classify an object according to the inspect module. Not disjoint.
+    
+    Examples
+    --------
+    >>> inspect_classify(list)
+    ['class']
+    >>> f = lambda x : x * x
+    >>> inspect_classify(f)
+    ['function', 'routine']
+    >>> class Vector:
+    ...     def add(self, other):
+    ...         pass
+    >>> inspect_classify(Vector)
+    ['class']
+    >>> inspect_classify(Vector.add)
+    ['function', 'routine']
+    >>> gen = (i for i in range(10))
+    >>> inspect_classify(gen)
+    ['generator']
+    >>> inspect_classify(max)
+    ['builtin', 'routine']
+    
+    
+    Common findings:
+        []
+        ['abstract', 'class']
+        ['builtin', 'routine']
+        ['class']
+        ['datadescriptor']
+        ['datadescriptor', 'getsetdescriptor']
+        ['datadescriptor', 'memberdescriptor']
+        ['function', 'generatorfunction', 'routine']
+        ['function', 'routine']
+        ['methoddescriptor', 'routine']
+        ['method', 'routine']
+        ['module']
+        
+        Numpy ufuncs not found.
+    """
+    classes = list()
+
+    for function_name in sorted(dir(inspect)):
+
+        if not function_name.startswith("is"):
+            continue
+
+        function = getattr(inspect, function_name)
+
+        if function(obj):
+            classes.append(function_name[2:])
+
+    return classes
+
+
 def is_inspectable(obj):
     """An object is inspectable if it returns True for any of the inspect.is.. functions."""
-    funcs = (getattr(inspect, method) for method in dir(inspect) if "is" == method[:2])
+    funcs = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
+    funcs = (getattr(inspect, func_name) for func_name in funcs)
     return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
 
 
