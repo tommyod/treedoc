@@ -35,33 +35,58 @@ def test_ispackage():
     from treedoctestpackage.subpackage import subpackagemodule
 
     assert not ispackage(subpackagemodule)
-    
-    
+
 
 def test_get_docstring():
-    """
-    """
-    
+    """Test retrieval of docstrings."""
+
     def func():
         pass
-    
+
     return_val = "This is the docstring."
-    
+
     func.__doc__ = """This is the docstring."""
     assert get_docstring(func) == return_val
-    
+
     func.__doc__ = """
+    
+    
     This is the docstring.
+    
+    
     """
     assert get_docstring(func) == return_val
-    
+
     func.__doc__ = """
     This is the docstring.
     
     This is more stuff.
     """
     assert get_docstring(func) == return_val
+
+    func.__doc__ = """
+    This is the docstring. More information here.
     
+    Even more stuff.
+    """
+    assert get_docstring(func) == "This is the docstring. More information here."
+    assert get_docstring(func, 12) == "This is..."
+
+    delattr(func, "__doc__")
+    assert get_docstring(func) == ""
+
+    func.__doc__ = """
+    Lorem Ipsum is simply dummy text of the printing and typesetting industry. 
+    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
+    when an unknown printer took a galley of type and scrambled it to make a type 
+    specimen book. It has survived not only five centuries, but also the leap into 
+    electronic typesetting, remaining essentially unchanged. It was popularised 
+    in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, 
+    and more recently with desktop publishing software like Aldus PageMaker 
+    including versions of Lorem Ipsum.
+    """
+
+    assert get_docstring(func, 16) == "Lorem Ipsum..."
 
 
 class TestDescentFromPackage:

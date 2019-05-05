@@ -11,6 +11,7 @@ import inspect
 import os
 import pkgutil
 import pydoc
+import textwrap
 
 _marker = object()
 
@@ -72,13 +73,33 @@ class Peekable:
         return next(self._it)
 
 
-def get_docstring(object):
-    """Get a docstring summary from an object."""
-
+def get_docstring(object, width=88):
+    """Get a docstring summary from an object.
+    
+    If no docstring is available, an empty string is returned.
+    
+    Examples
+    --------
+    >>> get_docstring(list.append)
+    'Append object to the end of the list.'
+    >>> get_docstring(list.append, width=16)
+    'Append object...'
+    """
     # pydoc.getdoc is slightly more general than inspect.getdoc,see:
     # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
-    first_line, _ = pydoc.splitdoc(pydoc.getdoc(object))
-    return first_line
+    doc = pydoc.getdoc(object)
+    first_line, _ = pydoc.splitdoc(doc)
+
+    return_value = textwrap.shorten(first_line, width=width, placeholder="...")
+    if return_value:
+        return return_value
+
+    # If the docstring is a long paragraph, pydoc.splitdoc will return ''
+    # We change this behavior to include the start of the string.
+    if not return_value and doc:
+        return textwrap.shorten(doc, width=width, placeholder="...")
+
+    return ""
 
 
 def pprint(*args, **kwargs):
@@ -279,4 +300,4 @@ if __name__ == "__main__":
     import pytest
 
     # --durations=10  <- May be used to show potentially slow tests
-    pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
+    pytest.main(args=[__file__, "--doctest-modules", "-v", "--capture=sys"])
