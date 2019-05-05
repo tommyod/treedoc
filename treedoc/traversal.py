@@ -95,7 +95,7 @@ class ObjectTraverser:
 
         # The objects we will recurse on
         filtered = []
-        
+
         try:
             generator = sorted(inspect.getmembers(obj), key=self.sort_key)
         except:
@@ -118,10 +118,12 @@ class ObjectTraverser:
                     obj_name = name
                     obj_name = obj_name
                     continue
-                
-            if not (hasattr(child_obj, "__name__") and isinstance(child_obj.__name__, str)):
+
+            if not (
+                hasattr(child_obj, "__name__") and isinstance(child_obj.__name__, str)
+            ):
                 continue
-            
+
             # Only consider magic methods and private objects if the user wants to
             if is_private(child_obj) and not self.private:
                 self._p(
