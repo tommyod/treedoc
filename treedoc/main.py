@@ -52,10 +52,8 @@ def treedoc(
             print(row)
 
 
-def main():
-    """
-    Endpoint for CLI implementation.
-    """
+def setup_argumentparser():
+    """Set up the argument parser and return it before parsing arguments."""
 
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
@@ -63,6 +61,7 @@ def main():
         epilog="Report issues and contribute on https://github.com/tommyod/treedoc.",
         allow_abbrev=True,
         # add_help=True,
+        formatter_class=argparse.RawTextHelpFormatter,
     )
 
     parser.add_argument("obj", default=None, nargs="?", help=("The object"))
@@ -75,15 +74,17 @@ def main():
         "traversal", "The arguments are common to every printer."
     )
     traversal.add_argument(
-        "--level",
+        "-d",
+        "--depth",
         default=999,
-        dest="level",
+        dest="depth",
         nargs="?",
         type=int,
-        help="descend only level directories deep.",
+        help="descend no more than DEPTH levels in the object tree.",
     )
 
     traversal.add_argument(
+        "-sub",
         "--subpackages",
         default=False,
         dest="subpackages",
@@ -92,6 +93,7 @@ def main():
     )
 
     traversal.add_argument(
+        "-mod",
         "--modules",
         default=False,
         dest="submodules",
@@ -100,6 +102,7 @@ def main():
     )
 
     traversal.add_argument(
+        "-p",
         "--private",
         default=False,
         dest="private",
@@ -108,6 +111,7 @@ def main():
     )
 
     traversal.add_argument(
+        "-m",
         "--magic",
         default=False,
         dest="magic",
@@ -116,6 +120,7 @@ def main():
     )
 
     traversal.add_argument(
+        "-t",
         "--tests",
         default=False,
         dest="tests",
@@ -128,7 +133,7 @@ def main():
     # =============================================================================
 
     printing = parser.add_argument_group(
-        "printing", "The meaning of the arguments varies depending on the printer."
+        "printing", "The meaning of the arguments varies depending on the printer.\nNumeric arguments default to their middle value."
     )
 
     printers = {"simple": SimplePrinter, "dense": lambda x: x ** 2}
@@ -138,20 +143,25 @@ def main():
         dest="printer",
         nargs="?",
         choices=list(printers.keys()),
-        help="printer to use, defaults to 'simple'",
+                help="how much signature information to show.\noptions = {}. default = {}".format(
+            list(printers.keys()), "tree"
+        ),
     )
 
+    choices = (0, 1, 2)
     printing.add_argument(
+        "-s",
         "--signature",
         action="store",
         default=1,
         dest="signature",
         type=int,
         choices=[0, 1, 2],
-        help="how much signature information to show.",
+        help="how much signature information to show."
     )
 
     printing.add_argument(
+        "-doc",
         "--docstring",
         action="store",
         default=2,
@@ -162,6 +172,7 @@ def main():
     )
 
     printing.add_argument(
+            "-i",
         "--info",
         action="store",
         default=2,
@@ -170,6 +181,17 @@ def main():
         choices=[0, 1, 2, 3, 4],
         help="how much general information to show.",
     )
+
+    return parser
+
+
+def main():
+    """
+    Endpoint for CLI implementation.
+    """
+    parser = setup_argumentparser()
+
+    printers = {"simple": SimplePrinter, "dense": lambda x: x ** 2}
 
     args = parser.parse_args()
     args_to_func = {k: w for (k, w) in args._get_kwargs()}
