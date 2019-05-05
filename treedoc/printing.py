@@ -7,9 +7,8 @@ Printers: objects that format rows in the tree.
 import abc
 import collections
 import inspect
-import pydoc
 
-from treedoc.utils import Peekable, inspect_classify, get_docstring
+from treedoc.utils import Peekable, get_docstring, inspect_classify
 
 
 class PrinterABC(abc.ABC):

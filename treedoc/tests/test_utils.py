@@ -9,7 +9,8 @@ Created on Sun Apr 28 20:20:49 2019
 import operator
 
 import treedoctestpackage
-from treedoc.utils import descend_from_package, ispackage, resolve_object, get_docstring
+from treedoc.utils import (descend_from_package, get_docstring, ispackage,
+                           resolve_object)
 
 
 def map_itemgetter(iterable, index):
