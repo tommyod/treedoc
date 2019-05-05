@@ -80,10 +80,10 @@ def get_docstring(object, width=88):
     
     Examples
     --------
-    >>> get_docstring(list.append)
-    'Append object to the end of the list.'
+    >>> get_docstring(set.intersection)
+    'Return the intersection of two sets as a new set.'
     >>> get_docstring(list.append, width=16)
-    'Append object...'
+    'Return the...'
     """
     # pydoc.getdoc is slightly more general than inspect.getdoc,see:
     # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
