@@ -109,6 +109,3 @@ class SimplePrinter(Printer, PrinterABC):
             + signature
             # + ("\n\t" + docstring if docstring else "")
         )  # + '\n'
-    
-    def format_signature(self):
-        pass
