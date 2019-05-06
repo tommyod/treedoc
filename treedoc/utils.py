@@ -11,6 +11,96 @@ import inspect
 import os
 import pkgutil
 import pydoc
+import textwrap
+
+_marker = object()
+
+
+class Peekable:
+    """Wrap an iterator to allow a lookahead.
+    
+    Call `peek` on the result to get the value that will be returned by `next`. 
+    This won't advance the iterator:
+        
+    >>> p = Peekable(['a', 'b'])
+    >>> p.peek()
+    'a'
+    >>> next(p)
+    'a'
+        
+    Pass `peek` a default value to return that instead of raising ``StopIteration`` 
+    when the iterator is exhausted.
+    
+    >>> p = Peekable([])
+    >>> p.peek('hi')
+    'hi'
+
+    """
+
+    def __init__(self, iterable):
+        self._it = iter(iterable)
+        self._cache = collections.deque()
+
+    def __iter__(self):
+        return self
+
+    def __bool__(self):
+        try:
+            self.peek()
+        except StopIteration:
+            return False
+        return True
+
+    def peek(self, default=_marker):
+        """Return the item that will be next returned from ``next()``.
+        
+        Return ``default`` if there are no items left. If ``default`` is not
+        provided, raise ``StopIteration``.
+        """
+        if not self._cache:
+            try:
+                self._cache.append(next(self._it))
+            except StopIteration:
+                if default is _marker:
+                    raise
+                return default
+        return self._cache[0]
+
+    def __next__(self):
+        if self._cache:
+            return self._cache.popleft()
+
+        return next(self._it)
+
+
+def get_docstring(object, width=88):
+    """Get a docstring summary from an object.
+    
+    If no docstring is available, an empty string is returned.
+    
+    Examples
+    --------
+    >>> get_docstring(set.intersection)
+    'Return the intersection of two sets as a new set.'
+    >>> get_docstring(set.intersection, width=18)
+    'Return the...'
+    """
+    # pydoc.getdoc is slightly more general than inspect.getdoc,see:
+    # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
+    doc = pydoc.getdoc(object)
+    first_line, _ = pydoc.splitdoc(doc)
+
+    return_value = textwrap.shorten(first_line, width=width, placeholder="...")
+    if return_value:
+        return return_value
+
+    # If the docstring is a long paragraph, pydoc.splitdoc will return ''
+    # We change this behavior to include the start of the string.
+    if not return_value and doc:
+        return textwrap.shorten(doc, width=width, placeholder="...")
+
+    return ""
+
 
 _marker = object()
 
@@ -270,4 +360,4 @@ if __name__ == "__main__":
     import pytest
 
     # --durations=10  <- May be used to show potentially slow tests
-    pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
+    pytest.main(args=[__file__, "--doctest-modules", "-v", "--capture=sys"])
