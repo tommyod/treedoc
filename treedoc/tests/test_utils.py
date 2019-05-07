@@ -120,13 +120,18 @@ def test_signature():
     '''
     
     def myfunc(a: float=4.2, b: int=42, *args, **kwargs):
-        return None    
+        return None
     
-    assert format_signature(myfunc, verbosity=0) == ''
-    assert format_signature(myfunc, verbosity=1) == '(...)'
-    assert format_signature(myfunc, verbosity=2) == '(a, b, *args, **kwargs)'
-    assert format_signature(myfunc, verbosity=3) == '(a=4.2, b=42, *args, **kwargs)'
-    assert format_signature(myfunc, verbosity=4) == '(a: float=4.2, b: int=42, *args, **kwargs)'
+    assert format_signature(myfunc, 0) == ""
+    assert format_signature(myfunc, 1) == "(...)"
+    assert format_signature(myfunc, 2) == "(a, b, *args, **kwargs)"
+    assert format_signature(myfunc, 3) == "(a=4.2, b=42, *args, **kwargs)"
+    assert format_signature(myfunc, 4) == "(a: float=4.2, b: int=42, *args, **kwargs)"
+    
+    def myfunc1(a, b, *rest):
+        return None
+    
+    assert format_signature(myfunc1, 2) == "(a, b, *rest)"
     
     import collections import Counter
    
