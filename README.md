@@ -38,4 +38,8 @@ $ treedoc --help
 
 ## Contributing
 
-Contributions are very wel
+Contributions are welcome. If you wish to work on a problem, please create a Work In Progress (WIP) pull request to get feedback. We aim for:
+
+- Zero dependencies, but dependencies for testing are ok.
+- Idiomatic, clean Python code. Readability matters.
+- We use TravisCI for testing, see `.travis.yml` for commands run when testing.
