@@ -2,6 +2,7 @@
 
 - Tommy O. (@tommyod)
 - Sean M. (@smu095)
+- Gunvor L. (@glemvik)
 
 
 ## Contributors
