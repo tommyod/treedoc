@@ -109,7 +109,7 @@ def format_signature(obj, verbosity=2):
         else:
             raise
     
-    # Check if signature has annotations, defaults, *args or **kwargs
+    # Check if signature has annotations or defaults
     annotated = any(param.annotation is not param.empty for param in sig.parameters.values())
     has_defaults = any(param.default is not param.empty for param in sig.parameters.values())
 
