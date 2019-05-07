@@ -2,10 +2,21 @@
 
 Minimalistic Python documentation in a tree structure.
 
-The `help` command gives much detailed about a single object, while `dir` gives little information about many objects.
-The `treedoc` command aims to hit the sweet spot between the two, and you can use it to:
-- Explore the Python standard library.
-- Get an overview of a package without clicking through dozens of websites.
+```bash
+$ treedoc collections
+collections
+ ├── collections.ChainMap(self)
+ │   ├── collections.ChainMap.copy(self)
+ │   ├── collections.ChainMap.clear(self)
+ │   ├── collections.ChainMap.copy(self)
+ │   ├── collections.ChainMap.fromkeys(cls, iterable)
+<142 lines omitted>
+```
+
+The built-in`help` command gives detailed about a single object, while `dir` gives superficial information about object attributes.
+`treedoc` aims to hit the sweet spot between the two, and is great for:
+- Exploring the Python standard library.
+- Getting an overview of a package without clicking through a website.
 - Perform searches and output minimalistic documentation.
 
 ## Installation
@@ -38,8 +49,10 @@ $ treedoc --help
 
 ## Contributing
 
-Contributions are welcome. If you wish to work on a problem, please create a Work In Progress (WIP) pull request to get feedback. We aim for:
+Contributions are welcome.
+If you wish to work on a problem, please create a Work In Progress (WIP) pull request to get feedback.
+We aim for:
 
 - Zero dependencies, but dependencies for testing are ok.
 - Idiomatic, clean Python code. Readability matters.
-- We use TravisCI for testing, see `.travis.yml` for commands run when testing.
+- Thorough testing and code formatting, see `.travis.yml` for commands run by continuous integration.
