@@ -82,11 +82,21 @@ def ispackage(obj):
     return obj.__file__.endswith("__init__.py")
 
 
-def format_signature(obj, verbosity=2):
-    # TODO: Figure out how to handle *args, **kwargs and *
+def _get_name(param):
+    ''' Checks if signature.Parameter corresponds to *args or **kwargs type input.'''
+    if (param.kind == param.KEYWORD_ONLY or param.VAR_KEYWORD) and param.default is param.empty:
+        return str(param)
+    else:
+        return param.name
     
-    assert verbosity in (0, 1, 2, 3, 4)
+
+def format_signature(obj, verbosity=2):
+    ''' Format a function signature for printing.'''
+    # TODO: Figure out how to handle *
+    # TODO: What to return if functions have no arguments?
+    
     max_verbosity = 4
+    assert 0 <= verbosity <= max_verbosity
     SEP = ', '
     
     # Check if object has signature
@@ -98,11 +108,12 @@ def format_signature(obj, verbosity=2):
             return
         else:
             raise
-
-    # Dial down verbosity if user has provided a more verbose alternative than is available
+    
+    # Check if signature has annotations, defaults, *args or **kwargs
     annotated = any(param.annotation is not param.empty for param in sig.parameters.values())
     has_defaults = any(param.default is not param.empty for param in sig.parameters.values())
 
+    # Dial down verbosity if user has provided a more verbose alternative than is available
     if not annotated:
         max_verbosity = 3
     
@@ -110,7 +121,8 @@ def format_signature(obj, verbosity=2):
         max_verbosity = 2
         
     if verbosity > max_verbosity:
-        print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
+        # TODO: Give user warning if verbosity needs to be adjusted, e.g.
+        # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
         verbosity = max_verbosity
     
     # Return formatted signature based on verbosity
@@ -121,10 +133,15 @@ def format_signature(obj, verbosity=2):
         return '(...)'
     
     elif verbosity == 2:
-        return '(' + SEP.join(sig.parameters.keys()) + ')'
+        return '(' + SEP.join(_get_name(param) for param in sig.parameters.values()) + ')'
 
     elif verbosity == 3:
-        return '(' + SEP.join(str(param) for param in sig.parameters.values()) + ')'
+        return '(' + SEP.join(
+            param.name + '=' + str(param.default) 
+            if param.default is not param.empty
+            else _get_name(param)
+            for param in sig.parameters.values()
+        ) + ')'
     
     else:
         return str(sig)
