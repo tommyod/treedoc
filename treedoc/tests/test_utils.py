@@ -9,7 +9,7 @@ Created on Sun Apr 28 20:20:49 2019
 import operator
 
 import treedoctestpackage
-from treedoc.utils import descend_from_package, ispackage, resolve_object
+from treedoc.utils import descend_from_package, ispackage, resolve_object, format_signature
 
 
 def map_itemgetter(iterable, index):
@@ -112,6 +112,29 @@ def test_resolve_object():
     import collections.abc as module
 
     assert resolve_object("collections.abc") == module
+    
+    
+def test_signature():
+    ''' 
+    Test that formatting signature works.
+    '''
+    
+    def myfunc(a: float=4.2, b: int=42, *args, **kwargs):
+        return None    
+    
+    assert format_signature(myfunc, verbosity=0) == ''
+    assert format_signature(myfunc, verbosity=1) == '(...)'
+    assert format_signature(myfunc, verbosity=2) == '(a, b, *args, **kwargs)'
+    assert format_signature(myfunc, verbosity=3) == '(a=4.2, b=42, *args, **kwargs)'
+    assert format_signature(myfunc, verbosity=4) == '(a: float=4.2, b: int=42, *args, **kwargs)'
+    
+    import collections import Counter
+   
+    assert format_signature(Counter.most_common, 0) == ""
+    assert format_signature(Counter.most_common, 1) == "(...)"
+    assert format_signature(Counter.most_common, 2) == "(self, n)"
+    assert format_signature(Counter.most_common, 3) == "(self, n=None)"
+    assert format_signature(Counter.most_common, 4) == "(self, n=None)"
 
 
 if __name__ == "__main__":
