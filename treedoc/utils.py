@@ -300,7 +300,6 @@ def _get_name(param):
 def format_signature(obj, verbosity=2):
     ''' Format a function signature for printing.'''
     # TODO: Figure out how to handle *
-    # TODO: What to return if functions have no arguments?
     
     max_verbosity = 4
     assert 0 <= verbosity <= max_verbosity
@@ -309,12 +308,15 @@ def format_signature(obj, verbosity=2):
     # Check if object has signature
     try:
         sig = inspect.signature(obj)
-    except (ValueError, TypeError) as error:
-        if isinstance(error, ValueError):
-            print(error)
-            return
-        else:
-            raise
+    except ValueError as error:
+        print(error)
+        return
+    except TypeError:
+        raise
+        
+    # If function as no arguments, return
+    if str(sig) == '()' and verbosity > 0:
+        return str(sig)
     
     # Check if signature has annotations or defaults
     annotated = any(param.annotation is not param.empty for param in sig.parameters.values())
