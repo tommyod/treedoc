@@ -176,59 +176,60 @@ def test_resolve_object():
 
 
 class TestSignature:
-    '''
+    """
     Class for gathering format_signature() tests. 
     Note the stripping of whitespaces in some of the tests. More info on this in PR #9.
-    '''
-    
-    parameters = [(0, ""),
-                  (1, "(...)"),
-                  (2, "(a,b,*args,c,d,**kwargs)"),
-                  (3, "(a,b,*args,c=4.2,d=42,**kwargs)"),
-                  (4, "(a,b:int,*args,c=4.2,d:int=42,**kwargs)")]
-    
+    """
+
+    parameters = [
+        (0, ""),
+        (1, "(...)"),
+        (2, "(a,b,*args,c,d,**kwargs)"),
+        (3, "(a,b,*args,c=4.2,d=42,**kwargs)"),
+        (4, "(a,b:int,*args,c=4.2,d:int=42,**kwargs)"),
+    ]
+
     @staticmethod
-    @pytest.mark.parametrize(
-            "verbosity, expected",
-            parameters,
-    )
+    @pytest.mark.parametrize("verbosity, expected", parameters)
     def test_keywords_annotated_defaults_args_kwargs(verbosity, expected):
         """ 
         Test that formatting signature works on a user defined function.
         """
+
         def myfunc1(a, b: int, *args, c=4.2, d: int = 42, **kwargs):
             return None
 
-        assert ''.join(char for char in format_signature(myfunc1, verbosity) if char != ' ') == expected
-
+        assert (
+            "".join(
+                char for char in format_signature(myfunc1, verbosity) if char != " "
+            )
+            == expected
+        )
 
     @staticmethod
     @pytest.mark.parametrize(
-            "verbosity, expected",
-            [(0, ""),
-             (1, "()"),
-             (2, "()"),
-             (3, "()"),
-             (4, "()")],
+        "verbosity, expected", [(0, ""), (1, "()"), (2, "()"), (3, "()"), (4, "()")]
     )
     def test_empty_signature(verbosity, expected):
         """ 
         Test that formatting signature works on a user defined function with no arguments.
         """
+
         def myfunc2():
             return None
 
         assert format_signature(myfunc2, verbosity) == expected
-    
-    
+
     @staticmethod
     @pytest.mark.parametrize(
-            "verbosity, expected",
-            [(0, ""),
-             (1, "(...)"),
-             (2, "(self, n)"),
-             (3, "(self, n=None)"),
-             (4, "(self, n=None)")],
+        "verbosity, expected",
+        [
+            (0, ""),
+            (1, "(...)"),
+            (2, "(self, n)"),
+            (3, "(self, n=None)"),
+            (4, "(self, n=None)"),
+        ],
     )
     def test_builtin_class(verbosity, expected):
         """ 
@@ -237,52 +238,70 @@ class TestSignature:
         from collections import Counter
 
         assert format_signature(Counter.most_common, verbosity) == expected
-    
-    
+
     @staticmethod
-    @pytest.mark.parametrize(
-            "verbosity, expected",
-            parameters,
-    )
+    @pytest.mark.parametrize("verbosity, expected", parameters)
     def test_method(verbosity, expected):
         """
         Test that formatting signature works on a method.
         """
         myclass = treedoctestpackage.MyClass()
-        
-        assert ''.join(char for char in format_signature(myclass.method_bound_to_myclass, verbosity) if char != ' ') == expected
-    
-    
+
+        assert (
+            "".join(
+                char
+                for char in format_signature(myclass.method_bound_to_myclass, verbosity)
+                if char != " "
+            )
+            == expected
+        )
+
     @staticmethod
     @pytest.mark.parametrize(
-            "verbosity, expected",
-            [(0, ""),
-             (1, "(...)"),
-             (2, "(self,a,b,*args,c,d,**kwargs)"),
-             (3, "(self,a,b,*args,c=4.2,d=42,**kwargs)"),
-             (4, "(self,a,b:int,*args,c=4.2,d:int=42,**kwargs)")],
-    ) 
+        "verbosity, expected",
+        [
+            (0, ""),
+            (1, "(...)"),
+            (2, "(self,a,b,*args,c,d,**kwargs)"),
+            (3, "(self,a,b,*args,c=4.2,d=42,**kwargs)"),
+            (4, "(self,a,b:int,*args,c=4.2,d:int=42,**kwargs)"),
+        ],
+    )
     def test_static_method(verbosity, expected):
         """
         Test that formatting signature works on a static method.
         """
         myclass = treedoctestpackage.MyClass()
-        
-        assert ''.join(char for char in format_signature(myclass.static_method_bound_to_myclass, verbosity) if char != ' ') == expected
-    
-    
+
+        assert (
+            "".join(
+                char
+                for char in format_signature(
+                    myclass.static_method_bound_to_myclass, verbosity
+                )
+                if char != " "
+            )
+            == expected
+        )
+
     @staticmethod
-    @pytest.mark.parametrize(
-            "verbosity, expected",
-            parameters,
-    )
+    @pytest.mark.parametrize("verbosity, expected", parameters)
     def test_class_method(verbosity, expected):
         """
         Test that formatting signature works on a class method.
         """
         myclass = treedoctestpackage.MyClass()
-        
-        assert ''.join(char for char in format_signature(myclass.classmethod_bound_to_myclass, verbosity) if char != ' ') == expected
+
+        assert (
+            "".join(
+                char
+                for char in format_signature(
+                    myclass.classmethod_bound_to_myclass, verbosity
+                )
+                if char != " "
+            )
+            == expected
+        )
 
 
 if __name__ == "__main__":

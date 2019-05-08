@@ -300,7 +300,7 @@ def _get_name(param):
         return str(param)
     else:
         return param.name
-    
+
 
 def format_signature(obj, verbosity=2):
     """ 
