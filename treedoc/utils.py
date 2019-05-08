@@ -290,15 +290,25 @@ def ispackage(obj):
 
 
 def _get_name(param):
-    ''' Checks if signature.Parameter corresponds to *args or **kwargs type input.'''
+    ''' 
+    Checks if signature.Parameter corresponds to *args or **kwargs type input.
+    '''
     if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD) and param.default is param.empty:
         return str(param)
     else:
         return param.name
     
+def _strip_whitespace(string):
+    ''' 
+    Temporary fix for whitespace problem in format_signature() causing build to fail in Travis.
+    '''
+    string = string.replace(" = ", "=")
+    return string
 
 def format_signature(obj, verbosity=2):
-    ''' Format a function signature for printing.'''
+    ''' 
+    Format a function signature for printing.
+    '''
     # TODO: Figure out how to handle *
     
     max_verbosity = 4
@@ -353,7 +363,7 @@ def format_signature(obj, verbosity=2):
         ) + ')'
     
     else:
-        return str(sig)
+        return _strip_whitespace(str(sig))
 
 
 def descend_from_package(
