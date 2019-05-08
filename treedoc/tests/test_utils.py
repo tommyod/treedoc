@@ -10,7 +10,13 @@ import operator
 
 import treedoctestpackage
 
-from treedoc.utils import descend_from_package, get_docstring, ispackage, resolve_object, format_signature
+from treedoc.utils import (
+    descend_from_package,
+    get_docstring,
+    ispackage,
+    resolve_object,
+    format_signature,
+)
 
 
 def map_itemgetter(iterable, index):
@@ -165,22 +171,24 @@ def test_resolve_object():
     import collections.abc as module
 
     assert resolve_object("collections.abc") == module
-    
-    
+
+
 def test_signature():
-    ''' 
+    """ 
     Test that formatting signature works.
-    '''
-    
-    def myfunc1(a, b: int, *args, c=4.2, d: int=42, **kwargs):
+    """
+
+    def myfunc1(a, b: int, *args, c=4.2, d: int = 42, **kwargs):
         return None
-    
+
     assert format_signature(myfunc1, 0) == ""
     assert format_signature(myfunc1, 1) == "(...)"
     assert format_signature(myfunc1, 2) == "(a, b, *args, c, d, **kwargs)"
     assert format_signature(myfunc1, 3) == "(a, b, *args, c=4.2, d=42, **kwargs)"
-    assert format_signature(myfunc1, 4) == "(a, b: int, *args, c=4.2, d: int=42, **kwargs)"
-    
+    assert (
+        format_signature(myfunc1, 4) == "(a, b: int, *args, c=4.2, d: int=42, **kwargs)"
+    )
+
     def myfunc2():
         return None
 
@@ -189,9 +197,9 @@ def test_signature():
     assert format_signature(myfunc2, 2) == "()"
     assert format_signature(myfunc2, 3) == "()"
     assert format_signature(myfunc2, 4) == "()"
-            
+
     from collections import Counter
-   
+
     assert format_signature(Counter.most_common, 0) == ""
     assert format_signature(Counter.most_common, 1) == "(...)"
     assert format_signature(Counter.most_common, 2) == "(self, n)"
