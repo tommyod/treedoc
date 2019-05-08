@@ -172,21 +172,25 @@ def test_signature():
     Test that formatting signature works.
     '''
     
-    def myfunc(a: float=4.2, b: int=42, *args, **kwargs):
+    def myfunc1(a, b: int, *args, c=4.2, d: int=42, **kwargs):
         return None
     
-    assert format_signature(myfunc, 0) == ""
-    assert format_signature(myfunc, 1) == "(...)"
-    assert format_signature(myfunc, 2) == "(a, b, *args, **kwargs)"
-    assert format_signature(myfunc, 3) == "(a=4.2, b=42, *args, **kwargs)"
-    assert format_signature(myfunc, 4) == "(a: float=4.2, b: int=42, *args, **kwargs)"
+    assert format_signature(myfunc1, 0) == ""
+    assert format_signature(myfunc1, 1) == "(...)"
+    assert format_signature(myfunc1, 2) == "(a, b, *args, c, d, **kwargs)"
+    assert format_signature(myfunc1, 3) == "(a, b, *args, c=4.2, d=42, **kwargs)"
+    assert format_signature(myfunc1, 4) == "(a, b: int, *args, c=4.2, d: int=42, **kwargs)"
     
-    def myfunc1(a, b, *rest):
+    def myfunc2():
         return None
-    
-    assert format_signature(myfunc1, 2) == "(a, b, *rest)"
-    
-    import collections import Counter
+
+    assert format_signature(myfunc2, 0) == ""
+    assert format_signature(myfunc2, 1) == "()"
+    assert format_signature(myfunc2, 2) == "()"
+    assert format_signature(myfunc2, 3) == "()"
+    assert format_signature(myfunc2, 4) == "()"
+            
+    from collections import Counter
    
     assert format_signature(Counter.most_common, 0) == ""
     assert format_signature(Counter.most_common, 1) == "(...)"
