@@ -13,7 +13,7 @@ collections
 <142 lines omitted>
 ```
 
-The built-in`help` command gives detailed about a single object, while `dir` gives superficial information about object attributes.
+The built-in`help` command gives detailed information about a single object, while `dir` gives superficial information about object attributes.
 `treedoc` aims to hit the sweet spot between the two, and is great for:
 - Exploring the Python standard library.
 - Getting an overview of a package without clicking through a website.
