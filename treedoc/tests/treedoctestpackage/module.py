@@ -45,17 +45,17 @@ class MyClass:
     def __init__(self):
         pass
 
-    def method_bound_to_myclass(self, a):
+    def method_bound_to_myclass(self, a, b: int, *args, c=4.2, d: int = 42, **kwargs):
         """Method docstring."""
         return a
 
     @classmethod
-    def classmethod_bound_to_myclass(cls, a):
+    def classmethod_bound_to_myclass(cls, a, b: int, *args, c=4.2, d: int = 42, **kwargs):
         """Class method docstring."""
         return a
 
     @staticmethod
-    def static_method_bound_to_myclass(self, a):
+    def static_method_bound_to_myclass(self, a, b: int, *args, c=4.2, d: int = 42, **kwargs):
         """Static method docstring."""
         return a
 
