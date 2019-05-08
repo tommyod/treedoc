@@ -291,7 +291,7 @@ def ispackage(obj):
 
 def _get_name(param):
     ''' Checks if signature.Parameter corresponds to *args or **kwargs type input.'''
-    if (param.kind == param.KEYWORD_ONLY or param.VAR_KEYWORD) and param.default is param.empty:
+    if param.kind in (param.KEYWORD_ONLY, param.VAR_KEYWORD) and param.default is param.empty:
         return str(param)
     else:
         return param.name
