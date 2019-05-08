@@ -304,6 +304,7 @@ def _strip_whitespace(string):
     '''
     string = string.replace(" ", "")
     string = string.replace(",", ", ")
+    string = string.replace(":", ": ")
     return string
 
 def format_signature(obj, verbosity=2):
