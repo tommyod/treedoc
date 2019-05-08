@@ -302,7 +302,8 @@ def _strip_whitespace(string):
     ''' 
     Temporary fix for whitespace problem in format_signature() causing build to fail in Travis.
     '''
-    string = string.replace(" = ", "=")
+    string = string.replace(" ", "")
+    string = string.replace(",", ", ")
     return string
 
 def format_signature(obj, verbosity=2):
