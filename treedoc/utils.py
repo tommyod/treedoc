@@ -300,17 +300,7 @@ def _get_name(param):
         return str(param)
     else:
         return param.name
-
-
-def _strip_whitespace(string):
-    """ 
-    Temporary fix for whitespace problem in format_signature() causing build to fail in Travis.
-    """
-    string = string.replace(" ", "")
-    string = string.replace(",", ", ")
-    string = string.replace(":", ": ")
-    return string
-
+    
 
 def format_signature(obj, verbosity=2):
     """ 
@@ -325,10 +315,20 @@ def format_signature(obj, verbosity=2):
     # Check if object has signature
     try:
         sig = inspect.signature(obj)
-    except ValueError as error:
-        print(error)
+    except ValueError:
+        # inspect.signature raises ValueError if no signature can be provided.
+        # Example:
+        # -------
+        # >>> inspect.signature(math.log)
+        # 'ValueError: no signature found for builtin <built-in function log>'
         return
     except TypeError:
+        # inspect.signature raises TypeError if type of object is not supported.
+        # Example:
+        # -------
+        # >>> x = 1
+        # >>> inspect.signature(x)
+        # 'TypeError: 1 is not a callable object'
         raise
 
     # If function as no arguments, return
@@ -380,7 +380,7 @@ def format_signature(obj, verbosity=2):
         )
 
     else:
-        return _strip_whitespace(str(sig))
+        return str(sig)
 
 
 def descend_from_package(
