@@ -113,13 +113,13 @@ def setup_argumentparser(printers):
         "traversal", "The arguments below are common to every printer."
     )
     traversal.add_argument(
-        "-d",
-        "--depth",
+        "-l",
+        "--levels",
         default=999,
-        dest="depth",
+        dest="levels",
         nargs="?",
         type=int,
-        help="descend no more than DEPTH levels in the object tree.",
+        help="descend no more than LEVELS in the object tree.",
     )
 
     traversal.add_argument(
@@ -132,7 +132,7 @@ def setup_argumentparser(printers):
     )
 
     traversal.add_argument(
-        "-mod",
+        "-m",
         "--modules",
         default=False,
         dest="modules",
@@ -150,12 +150,12 @@ def setup_argumentparser(printers):
     )
 
     traversal.add_argument(
-        "-m",
-        "--magic",
+        "-d",
+        "--dunders",
         default=False,
-        dest="magic",
+        dest="dunders",
         action="store_true",
-        help="show magic methods, e.g. __add(self, other)__.",
+        help="show double underscore methods, e.g. __add(self, other)__.",
     )
 
     traversal.add_argument(
@@ -177,6 +177,7 @@ def setup_argumentparser(printers):
     )
 
     printing.add_argument(
+        "-P",
         "--printer",
         default="tree",
         dest="printer",
@@ -186,7 +187,7 @@ def setup_argumentparser(printers):
     )
 
     printing.add_argument(
-        "-sig",
+        "-S",
         "--signature",
         action="store",
         default=1,
@@ -197,7 +198,7 @@ def setup_argumentparser(printers):
     )
 
     printing.add_argument(
-        "-doc",
+        "-D",
         "--docstring",
         action="store",
         default=2,
@@ -208,7 +209,7 @@ def setup_argumentparser(printers):
     )
 
     printing.add_argument(
-        "-i",
+        "-I",
         "--info",
         action="store",
         default=2,
