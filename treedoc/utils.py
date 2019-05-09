@@ -289,6 +289,100 @@ def ispackage(obj):
     return obj.__file__.endswith("__init__.py")
 
 
+def _get_name(param):
+    """ 
+    Checks if signature.Parameter corresponds to *args or **kwargs type input.
+    """
+    if (
+        param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD)
+        and param.default is param.empty
+    ):
+        return str(param)
+    else:
+        return param.name
+
+
+def format_signature(obj, verbosity=2):
+    """ 
+    Format a function signature for printing.
+    """
+    # TODO: Figure out how to handle *
+
+    max_verbosity = 4
+    assert 0 <= verbosity <= max_verbosity
+    SEP = ", "
+
+    # Check if object has signature
+    try:
+        sig = inspect.signature(obj)
+    except ValueError:
+        # inspect.signature raises ValueError if no signature can be provided.
+        # Example:
+        # -------
+        # >>> inspect.signature(math.log)
+        # 'ValueError: no signature found for builtin <built-in function log>'
+        return
+    except TypeError:
+        # inspect.signature raises TypeError if type of object is not supported.
+        # Example:
+        # -------
+        # >>> x = 1
+        # >>> inspect.signature(x)
+        # 'TypeError: 1 is not a callable object'
+        raise
+
+    # If function as no arguments, return
+    if str(sig) == "()" and verbosity > 0:
+        return str(sig)
+
+    # Check if signature has annotations or defaults
+    annotated = any(
+        param.annotation is not param.empty for param in sig.parameters.values()
+    )
+    has_defaults = any(
+        param.default is not param.empty for param in sig.parameters.values()
+    )
+
+    # Dial down verbosity if user has provided a more verbose alternative than is available
+    if not annotated:
+        max_verbosity = 3
+
+    if not has_defaults and not annotated:
+        max_verbosity = 2
+
+    if verbosity > max_verbosity:
+        # TODO: Give user warning if verbosity needs to be adjusted, e.g.
+        # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
+        verbosity = max_verbosity
+
+    # Return formatted signature based on verbosity
+    if verbosity == 0:
+        return ""
+
+    elif verbosity == 1:
+        return "(...)"
+
+    elif verbosity == 2:
+        return (
+            "(" + SEP.join(_get_name(param) for param in sig.parameters.values()) + ")"
+        )
+
+    elif verbosity == 3:
+        return (
+            "("
+            + SEP.join(
+                param.name + "=" + str(param.default)
+                if param.default is not param.empty
+                else _get_name(param)
+                for param in sig.parameters.values()
+            )
+            + ")"
+        )
+
+    else:
+        return str(sig)
+
+
 def descend_from_package(
     package, types="package", include_tests=False, include_hidden=False
 ):
