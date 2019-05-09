@@ -270,8 +270,8 @@ def signature_from_docstring(obj):
     `dict.pop`. This method will retrieve the docstring, and return None if it cannot.
     
     >>> import math
-    >>> signature_from_docstring(math.log)
-    'x, [base=math.e]'
+    >>> signature_from_docstring(math.log) in ('x[, base]', 'x, [base=math.e]')
+    True
     >>> signature_from_docstring(dict.pop)
     'k[,d]'
     """
@@ -309,7 +309,7 @@ def format_signature(obj, verbosity=2):
     Examples
     --------
     >>> import collections
-    >>> # Work on functions with well-defined signature
+    >>> # Works on functions with well-defined signature
     >>> format_signature(collections.defaultdict.fromkeys, verbosity=2)
     '(iterable, value)'
     >>> # Built-ins with signature information in the docs
