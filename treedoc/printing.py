@@ -7,9 +7,8 @@ Printers: objects that format rows in the tree.
 import abc
 import collections
 import inspect
-import pydoc
 
-from treedoc.utils import Peekable, inspect_classify
+from treedoc.utils import Peekable, get_docstring, inspect_classify
 
 
 class PrinterABC(abc.ABC):
@@ -60,20 +59,12 @@ class DensePrinter(Printer, PrinterABC):
     SEP = " -> "
     END = "\n"
 
-    def _get_docstring(self, leaf_object):
-        """Get and format docstring from the leaf object in the tree path."""
-
-        first_line, rest_lines = pydoc.splitdoc(pydoc.getdoc(leaf_object))
+    def _get_docstring(self, object):
+        """Get and format docstring from the object."""
 
         if self.docstring == 0:
             return ""
-        elif self.docstring == 1:
-            return first_line
-        elif self.docstring == 2:
-            return first_line
-        else:
-            pass
-        # TODO: Add more options here
+        return get_docstring(object)
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
@@ -127,20 +118,12 @@ class TreePrinter(Printer, PrinterABC):
     LAST = "└──"
     BLANK = "   "
 
-    def _get_docstring(self, leaf_object):
-        """Get and format docstring from the leaf object in the tree path."""
-
-        first_line, rest_lines = pydoc.splitdoc(pydoc.getdoc(leaf_object))
+    def _get_docstring(self, object):
+        """Get and format docstring from the object."""
 
         if self.docstring == 0:
             return ""
-        elif self.docstring == 1:
-            return first_line
-        elif self.docstring == 2:
-            return first_line
-        else:
-            pass
-        # TODO: Add more options here
+        return get_docstring(object)
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
