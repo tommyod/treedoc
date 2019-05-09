@@ -12,6 +12,7 @@ import os
 import pkgutil
 import pydoc
 import textwrap
+import collections.abc
 
 _marker = object()
 
@@ -243,8 +244,8 @@ def _get_name(param):
         return str(param)
     else:
         return param.name
-    
-    
+
+
 def _between(string, start, end):
     """Returns what's between `start` and `end`, exclusive.
     
@@ -257,13 +258,16 @@ def _between(string, start, end):
     ValueError: substring not found
     """
     i = string.index(start)
-    part = string[i + len(start):]
-    j = part.index(')')
+    part = string[i + len(start) :]
+    j = part.index(")")
     return part[:j]
-    
-    
+
+
 def signature_from_docstring(obj):
-    """
+    """Extract signature from built-in object docstring.
+    
+    Some of the built-in methods have signature info in the docstring. One example is
+    `dict.pop`. This method will retrieve the docstring, and return None if it cannot.
     
     >>> import math
     >>> signature_from_docstring(math.log)
@@ -276,12 +280,18 @@ def signature_from_docstring(obj):
     docstring_line = get_docstring(obj)
     if not docstring_line:
         return None
-    
+
+    # If it's not callable, return
+    if not isinstance(obj, collections.abc.Callable):
+        return None
+
+    # Look for the name of the object, i.e. func(x)
     assert hasattr(obj, "__name__")
     if not obj.__name__ in docstring_line:
         return None
-    
-    signature_part = docstring_line[len(obj.__name__):]
+
+    # Attempt to get the signature
+    signature_part = docstring_line[len(obj.__name__) :]
     try:
         return _between(signature_part, "(", ")")
     except ValueError:
@@ -291,13 +301,30 @@ def signature_from_docstring(obj):
 def format_signature(obj, verbosity=2):
     """ 
     Format a function signature for printing.
+    
+    This function tries first to use inspect.signature, if that fails it will look for
+    signature information in the first line of the docstring, and if that fails it will
+    return a generic sigature if the object is callable.
+    
+    Examples
+    --------
+    >>> import collections
+    >>> # Work on functions with well-defined signature
+    >>> format_signature(collections.defaultdict.fromkeys, verbosity=2)
+    '(iterable, value)'
+    >>> # Built-ins with signature information in the docs
+    >>> format_signature(collections.defaultdict.update, verbosity=2)
+    '([E, ]**F)'
+    >>> # Built-ins with signature no signature information at all
+    >>> format_signature(collections.deque.append, verbosity=2)
+    '(...)'
     """
     # TODO: Figure out how to handle *
 
     max_verbosity = 4
     assert 0 <= verbosity <= max_verbosity
     SEP = ", "
-    
+
     # Return formatted signature based on verbosity
     if verbosity == 0:
         return ""
@@ -311,11 +338,26 @@ def format_signature(obj, verbosity=2):
         # -------
         # >>> inspect.signature(math.log)
         # 'ValueError: no signature found for builtin <built-in function log>'
+
         signature_in_docs = signature_from_docstring(obj)
-        if signature_in_docs is not None:
-            return '(' + signature_in_docs + ')'
-        return ''
-        
+
+        # Failed to find a signature in the docstring
+        if signature_in_docs is None:
+
+            # inspect.signature and docstring info has failed, still return if callable
+            if isinstance(obj, collections.abc.Callable) and verbosity >= 1:
+                return "(...)"
+            return ""
+
+        # Found a signature in the docstring
+        else:
+            if verbosity == 1:
+                return "(...)"
+            else:
+                # TODO: Format this more depending on verbosity
+                return "(" + signature_in_docs + ")"
+        return ""
+
     except TypeError:
         # inspect.signature raises TypeError if type of object is not supported.
         # Example:
@@ -323,8 +365,7 @@ def format_signature(obj, verbosity=2):
         # >>> x = 1
         # >>> inspect.signature(x)
         # 'TypeError: 1 is not a callable object'
-        print('TypeError')
-        return ''
+        return ""
 
     # If function as no arguments, return
     if str(sig) == "()" and verbosity > 0:
@@ -349,6 +390,9 @@ def format_signature(obj, verbosity=2):
         # TODO: Give user warning if verbosity needs to be adjusted, e.g.
         # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
         verbosity = max_verbosity
+
+        # Fails for instance on collections.ChainMap without this
+        return str(sig)
 
     elif verbosity == 1:
         return "(...)"

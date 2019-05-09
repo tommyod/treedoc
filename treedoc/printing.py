@@ -68,16 +68,8 @@ class SimplePrinter(Printer, PrinterABC):
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
-
-        if self.signature == 0:
-            return "()"
-        elif self.signature == 1:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        elif self.signature == 2:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        else:
-            pass
-        # TODO: Add more options here
+        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
+        return format_signature(leaf_object, verbosity=self.signature)
 
     def format_iterable(self, iterable):
 
@@ -127,24 +119,9 @@ class TreePrinter(Printer, PrinterABC):
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
-        
+
+        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
         return format_signature(leaf_object, verbosity=self.signature)
-
-        # Attempt to get a signature for the leaf object
-        try:
-            inspect.getfullargspec(leaf_object)
-        except TypeError:
-            return ""
-
-        if self.signature == 0:
-            return "()"
-        elif self.signature == 1:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        elif self.signature == 2:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        else:
-            pass
-        # TODO: Add more options here
 
     def format_iterable(self, iterable):
 
@@ -152,12 +129,38 @@ class TreePrinter(Printer, PrinterABC):
 
         for print_stack, stack in self._format_row(iterable):
             joined_print_stack = " ".join(print_stack)
-            obj_names = ".".join([s.__name__ for s in stack])
+
+            if self.info == 0:
+                obj_names = stack[
+                    -1
+                ].__name__  # ".".join([s.__name__ for s in stack[-1]])
+            else:
+                obj_names = ".".join([s.__name__ for s in stack])
 
             *_, last_obj = stack
             signature = self._format_argspec(last_obj)
+            docstring = self._get_docstring(last_obj)
 
-            yield " ".join([joined_print_stack, obj_names]) + signature
+            if self.docstring == 0 or docstring == "":
+                yield " ".join([joined_print_stack, obj_names]) + signature
+                continue
+
+            # Want to print with docstring on the new line. Logic to switch up symbols
+            last_in_stack = print_stack[-1]
+            if last_in_stack == self.RIGHT:
+                symbol1 = self.RIGHT
+                symbol2 = self.DOWN
+            elif last_in_stack == self.LAST:
+                symbol1 = self.LAST
+                symbol2 = self.BLANK
+            else:
+                symbol1 = print_stack[-1]
+                symbol2 = ""
+
+            print_stack[-1] = symbol1
+            yield " ".join([" ".join(print_stack), obj_names]) + signature
+            print_stack[-1] = symbol2
+            yield " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
 
     def _format_row(self, iterator, depth=0, print_stack=None):
         """Format a row."""

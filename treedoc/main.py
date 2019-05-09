@@ -39,7 +39,7 @@ def treedoc(
     if obj is None:
         raise ValueError("Could not resolve object")
 
-    printer = printer(signature=signature, docstring=docstring)
+    printer = printer(signature=signature, docstring=docstring, info=info)
     traverser = ObjectTraverser(
         level=level, private=private, magic=magic, stream=stream
     )
