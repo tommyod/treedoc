@@ -8,7 +8,7 @@ import abc
 import collections
 import inspect
 
-from treedoc.utils import Peekable, get_docstring, inspect_classify
+from treedoc.utils import Peekable, get_docstring, inspect_classify, format_signature
 
 
 class PrinterABC(abc.ABC):
@@ -41,8 +41,8 @@ class Printer:
         """
         Initialize a printer.
         """
-        assert signature in (0, 1, 2)
-        assert docstring in (0, 1, 2, 3, 4)
+        assert signature in (0, 1, 2, 3, 4)
+        assert docstring in (0, 1, 2)
         assert info in (0, 1, 2, 3, 4)
         self.signature = signature
         self.docstring = docstring
@@ -127,6 +127,8 @@ class TreePrinter(Printer, PrinterABC):
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
+        
+        return format_signature(leaf_object, verbosity=self.signature)
 
         # Attempt to get a signature for the leaf object
         try:

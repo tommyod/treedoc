@@ -16,63 +16,6 @@ import textwrap
 _marker = object()
 
 
-class Peekable:
-    """Wrap an iterator to allow a lookahead.
-    
-    Call `peek` on the result to get the value that will be returned by `next`. 
-    This won't advance the iterator:
-        
-    >>> p = Peekable(['a', 'b'])
-    >>> p.peek()
-    'a'
-    >>> next(p)
-    'a'
-        
-    Pass `peek` a default value to return that instead of raising ``StopIteration`` 
-    when the iterator is exhausted.
-    
-    >>> p = Peekable([])
-    >>> p.peek('hi')
-    'hi'
-
-    """
-
-    def __init__(self, iterable):
-        self._it = iter(iterable)
-        self._cache = collections.deque()
-
-    def __iter__(self):
-        return self
-
-    def __bool__(self):
-        try:
-            self.peek()
-        except StopIteration:
-            return False
-        return True
-
-    def peek(self, default=_marker):
-        """Return the item that will be next returned from ``next()``.
-        
-        Return ``default`` if there are no items left. If ``default`` is not
-        provided, raise ``StopIteration``.
-        """
-        if not self._cache:
-            try:
-                self._cache.append(next(self._it))
-            except StopIteration:
-                if default is _marker:
-                    raise
-                return default
-        return self._cache[0]
-
-    def __next__(self):
-        if self._cache:
-            return self._cache.popleft()
-
-        return next(self._it)
-
-
 def get_docstring(object, width=88):
     """Get a docstring summary from an object.
     
@@ -300,6 +243,49 @@ def _get_name(param):
         return str(param)
     else:
         return param.name
+    
+    
+def _between(string, start, end):
+    """Returns what's between `start` and `end`, exclusive.
+    
+    Examples
+    >>> _between("im a nice (person) to all", "(", ")")
+    'person'
+    >>> _between("im a nice (person to all", "(", ")")
+    Traceback (most recent call last):
+        ...
+    ValueError: substring not found
+    """
+    i = string.index(start)
+    part = string[i + len(start):]
+    j = part.index(')')
+    return part[:j]
+    
+    
+def signature_from_docstring(obj):
+    """
+    
+    >>> import math
+    >>> signature_from_docstring(math.log)
+    'x, [base=math.e]'
+    >>> signature_from_docstring(dict.pop)
+    'k[,d]'
+    """
+
+    # If not docstring is available, return
+    docstring_line = get_docstring(obj)
+    if not docstring_line:
+        return None
+    
+    assert hasattr(obj, "__name__")
+    if not obj.__name__ in docstring_line:
+        return None
+    
+    signature_part = docstring_line[len(obj.__name__):]
+    try:
+        return _between(signature_part, "(", ")")
+    except ValueError:
+        return None
 
 
 def format_signature(obj, verbosity=2):
@@ -311,6 +297,10 @@ def format_signature(obj, verbosity=2):
     max_verbosity = 4
     assert 0 <= verbosity <= max_verbosity
     SEP = ", "
+    
+    # Return formatted signature based on verbosity
+    if verbosity == 0:
+        return ""
 
     # Check if object has signature
     try:
@@ -321,7 +311,11 @@ def format_signature(obj, verbosity=2):
         # -------
         # >>> inspect.signature(math.log)
         # 'ValueError: no signature found for builtin <built-in function log>'
-        return
+        signature_in_docs = signature_from_docstring(obj)
+        if signature_in_docs is not None:
+            return '(' + signature_in_docs + ')'
+        return ''
+        
     except TypeError:
         # inspect.signature raises TypeError if type of object is not supported.
         # Example:
@@ -329,7 +323,8 @@ def format_signature(obj, verbosity=2):
         # >>> x = 1
         # >>> inspect.signature(x)
         # 'TypeError: 1 is not a callable object'
-        raise
+        print('TypeError')
+        return ''
 
     # If function as no arguments, return
     if str(sig) == "()" and verbosity > 0:
@@ -354,10 +349,6 @@ def format_signature(obj, verbosity=2):
         # TODO: Give user warning if verbosity needs to be adjusted, e.g.
         # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
         verbosity = max_verbosity
-
-    # Return formatted signature based on verbosity
-    if verbosity == 0:
-        return ""
 
     elif verbosity == 1:
         return "(...)"
