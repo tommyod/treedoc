@@ -272,8 +272,8 @@ def signature_from_docstring(obj):
     >>> import math
     >>> signature_from_docstring(math.log) in ('x[, base]', 'x, [base=math.e]')
     True
-    >>> signature_from_docstring(dict.pop)
-    'k[,d]'
+    >>> signature_from_docstring(dict.pop) in ('k[,d]', None)
+    True
     """
 
     # If not docstring is available, return
