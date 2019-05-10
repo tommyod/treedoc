@@ -118,11 +118,6 @@ def pprint(*args, **kwargs):
     print(*args, **kwargs)
 
 
-def recurse_on(obj):
-    """The objects we recurse on."""
-    return inspect.ismodule(obj) or inspect.isclass(obj)
-
-
 def is_method(obj):
     """Whether an object is a method or not."""
     return inspect.ismethoddescriptor(obj) or inspect.ismethod(obj)

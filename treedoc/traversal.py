@@ -22,9 +22,7 @@ class ObjectTraverser(PrintMixin):
 
     _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
 
-    def __init__(
-        self, *, level=999, private=False, magic=False, stream=sys.stdout, **kwargs
-    ):
+    def __init__(self, *, level=999, private=False, magic=False, stream=sys.stdout):
         self.level = level
         self.sort_key = None
         self.private = private
@@ -40,6 +38,29 @@ class ObjectTraverser(PrintMixin):
         # TODO: set up proper logging
         return None
         print(*args, file=self.stream)
+
+    def recurse_to_child_object(self, obj, child_obj):
+        """Given an object, should we recurse down to the child?"""
+        pass
+
+    def recurse_to_object(self, obj):
+        """Given an object, should we recurse down to it?"""
+
+        name = obj.__name__
+
+        if name in self._ignored_names:
+            return False
+
+        if is_private(obj) and not self.private:
+            return False
+
+        if is_magic_method(obj) and not self.magic:
+            return False
+
+        if not is_inspectable(obj):
+            return False
+
+        return True
 
     def _search(self, obj, stack=None, final_node_at_depth=None):
         """
@@ -65,7 +86,7 @@ class ObjectTraverser(PrintMixin):
         assert len(stack) == len(final_node_at_depth)
         yield stack, final_node_at_depth
 
-        if not recurse_on(obj):
+        if not (inspect.ismodule(obj) or inspect.isclass(obj)):
             stack.pop()
             final_node_at_depth.pop()
             return
@@ -86,7 +107,6 @@ class ObjectTraverser(PrintMixin):
         # Iterate through children
         for name, child_obj in sorted(inspect.getmembers(obj), key=self.sort_key):
 
-            # time.sleep(0.001)
             self._p(f"Looking at {name}, {type(child_obj)}")
 
             try:
@@ -97,30 +117,13 @@ class ObjectTraverser(PrintMixin):
                 except AttributeError:
                     # This is for everything to work with properties, df.DataFrame.T
                     # TODO: Figure out how to deal with properties
-                    obj_name = name
-                    obj_name = obj_name
                     continue
 
-            # Only consider magic methods and private objects if the user wants to
-            if is_private(child_obj) and not self.private:
-                self._p(
-                    f"Skipping because {obj.__name__} is private and we're not showing those."
-                )
-                continue
+            assert hasattr(child_obj, "__name__")
 
-            if is_magic_method(child_obj) and not self.magic:
-                self._p(
-                    f"Skipping because {obj.__name__} is magic and we're not showing those."
-                )
+            # Check if we should skip the object by virtue of it's properties
+            if not self.recurse_to_object(child_obj):
                 continue
-
-            if name in self._ignored_names:
-                continue
-
-            if not is_inspectable(child_obj):
-                self._p(f" {name} was not interesting")
-                pass
-                # continue
 
             # Prevent recursing into modules
             # TODO: Generalize this
