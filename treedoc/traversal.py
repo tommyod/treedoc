@@ -6,9 +6,9 @@ Recursive traversal of objects.
 
 import inspect
 import sys
-import time
 
 from treedoc.utils import (
+    PrintMixin,
     is_inspectable,
     is_magic_method,
     is_private,
@@ -16,10 +16,8 @@ from treedoc.utils import (
     recurse_on,
 )
 
-time = time
 
-
-class ObjectTraverser:
+class ObjectTraverser(PrintMixin):
     """Traverse Python objects, modules and packages recursively."""
 
     _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
@@ -192,3 +190,6 @@ if __name__ == "__main__":
     subprocess.call(["treedoc", "collections"])
     subprocess.call(["treedoc", "pandas"])
     subprocess.call(["treedoc", "list"])
+
+    t = ObjectTraverser()
+    print(t)

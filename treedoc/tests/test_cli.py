@@ -50,7 +50,7 @@ def _generate_cli_args(n):
     "arg_string",
     [
         " ".join([i, j])
-        for i, j in itertools.product(object_strings, _generate_cli_args(5))
+        for i, j in itertools.product(object_strings, _generate_cli_args(2))
     ],
 )
 def test_cli_smoketests_w_args(arg_string):

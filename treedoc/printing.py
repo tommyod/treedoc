@@ -8,7 +8,13 @@ import abc
 import collections
 import inspect
 
-from treedoc.utils import Peekable, get_docstring, inspect_classify, format_signature
+from treedoc.utils import (
+    Peekable,
+    get_docstring,
+    inspect_classify,
+    format_signature,
+    PrintMixin,
+)
 
 
 class PrinterABC(abc.ABC):
@@ -34,7 +40,7 @@ class PrinterABC(abc.ABC):
         pass
 
 
-class Printer:
+class Printer(PrintMixin):
     """Base class for printers used for input validation."""
 
     def __init__(self, *, signature=1, docstring=2, info=2):
@@ -250,3 +256,6 @@ if __name__ == "__main__":
     subprocess.call(["treedoc", "list"])
     subprocess.call(["treedoc", "collections"])
     subprocess.call(["treedoc", "pandas"])
+
+    t = TreePrinter()
+    print(t)
