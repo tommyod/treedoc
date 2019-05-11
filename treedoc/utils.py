@@ -229,7 +229,7 @@ def is_inspectable(obj):
 
 def ispropersubpackage(package_a, package_b):
     """
-    Is A a subpackage or submodule of B?
+    Is A a proper subpackage or submodule of B?
     """
     try:
         path_a, _ = os.path.split(inspect.getfile(package_a))
@@ -239,6 +239,19 @@ def ispropersubpackage(package_a, package_b):
         return False
     
     return (path_b in path_a) and not (path_b == path_a)
+
+def issubpackage(package_a, package_b):
+    """
+    Is A a subpackage or submodule of B?
+    """
+    try:
+        path_a, _ = os.path.split(inspect.getfile(package_a))
+        path_b, _ = os.path.split(inspect.getfile(package_b))
+        # is a built-in module
+    except TypeError:
+        return False
+    
+    return (path_b in path_a)
 
 
 def is_magic_method(obj):

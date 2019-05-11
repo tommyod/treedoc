@@ -15,6 +15,7 @@ from treedoc.utils import (
     is_private,
     ispropersubpackage,
     descend_from_package,
+    issubpackage,
 )
 
 
@@ -148,10 +149,13 @@ class ObjectTraverser(PrintMixin):
 
         # We're dealing with a class imported from another library, skip it
         if inspect.isclass(child_obj):
-            if not ispropersubpackage(inspect.getmodule(child_obj), obj):
+            
+            
+            
+            
+            if not issubpackage(inspect.getmodule(child_obj), obj):
                 self._p(f"Failed on condition 3.1")
                 return False
-                pass
 
             if obj in inspect.getmro(child_obj):
                 self._p(f"Failed on condition 3.2")
