@@ -45,8 +45,8 @@ class ObjectTraverser(PrintMixin):
 
     def _p(self, *args):
         """Printing/logging method."""
+        # return None
         # TODO: set up proper logging
-        return None
         print(*args, file=self.stream)
 
     def recurse_to_child_object(self, *, obj, child_obj):
@@ -54,13 +54,27 @@ class ObjectTraverser(PrintMixin):
 
         if inspect.ismodule(obj) and inspect.ismodule(child_obj):
 
-            if not ispropersubpackage(child_obj, obj):
+            # The order is wrong, i.e. `main` in `main.subpackage` implies going up
+            different_packages = child_obj.__package__ != obj.__package__
+            child_package_wrong = child_obj.__package__ in obj.__package__
+            if different_packages and child_package_wrong:
                 return False
 
-            if obj.__package__ == child_obj.__package__:
+            if ispropersubpackage(child_obj, obj) and not self.subpackages:
+                self._p("Failing condition 1")
                 return False
 
-            if child_obj.__package__ in obj.__package__:
+            try:
+                file = inspect.getfile(child_obj)
+                if (not file.endswith("__init__.py")) and not self.modules:
+                    self._p("Failing condition 2")
+                    return False
+            except TypeError:
+                # TypeError: <module 'sys' (built-in)> is a built-in module
+                pass
+
+            if obj.__package__ == child_obj.__package__ and not self.modules:
+                self._p("Failing condition 4")
                 return False
 
         return True
