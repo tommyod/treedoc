@@ -17,6 +17,12 @@ matrix:
       services: docker
       python: '3.7'
 
+    - os: linux
+      dist: xenial    
+      sudo: required
+      services: docker
+      python: '3.8-dev'
+
 # The Travis CI job lifecycle specifies the order of the commands below phases.
 # https://docs.travis-ci.com/user/job-lifecycle/#the-job-lifecycle
 

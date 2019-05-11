@@ -39,7 +39,7 @@ def treedoc(
     if obj is None:
         raise ValueError("Could not resolve object")
 
-    printer = printer(signature=signature, docstring=docstring)
+    printer = printer(signature=signature, docstring=docstring, info=info)
     traverser = ObjectTraverser(
         level=level, private=private, magic=magic, stream=stream
     )
@@ -144,20 +144,20 @@ def main():
     printing.add_argument(
         "--signature",
         action="store",
-        default=1,
+        default=2,
         dest="signature",
         type=int,
-        choices=[0, 1, 2],
+        choices=[0, 1, 2, 3, 4],
         help="how much signature information to show.",
     )
 
     printing.add_argument(
         "--docstring",
         action="store",
-        default=2,
+        default=1,
         dest="docstring",
         type=int,
-        choices=[0, 1, 2, 3, 4],
+        choices=[0, 1, 2],
         help="how much docstring information to show.",
     )
 

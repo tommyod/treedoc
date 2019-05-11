@@ -8,7 +8,7 @@ import abc
 import collections
 import inspect
 
-from treedoc.utils import Peekable, get_docstring, inspect_classify
+from treedoc.utils import Peekable, get_docstring, inspect_classify, format_signature
 
 
 class PrinterABC(abc.ABC):
@@ -41,8 +41,8 @@ class Printer:
         """
         Initialize a printer.
         """
-        assert signature in (0, 1, 2)
-        assert docstring in (0, 1, 2, 3, 4)
+        assert signature in (0, 1, 2, 3, 4)
+        assert docstring in (0, 1, 2)
         assert info in (0, 1, 2, 3, 4)
         self.signature = signature
         self.docstring = docstring
@@ -68,16 +68,8 @@ class SimplePrinter(Printer, PrinterABC):
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
-
-        if self.signature == 0:
-            return "()"
-        elif self.signature == 1:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        elif self.signature == 2:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        else:
-            pass
-        # TODO: Add more options here
+        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
+        return format_signature(leaf_object, verbosity=self.signature)
 
     def format_iterable(self, iterable):
 
@@ -128,41 +120,50 @@ class TreePrinter(Printer, PrinterABC):
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
 
-        # Attempt to get a signature for the leaf object
-        try:
-            inspect.getfullargspec(leaf_object)
-        except TypeError:
-            return ""
-
-        if self.signature == 0:
-            return "()"
-        elif self.signature == 1:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        elif self.signature == 2:
-            return "(" + ", ".join(inspect.getfullargspec(leaf_object).args) + ")"
-        else:
-            pass
-        # TODO: Add more options here
+        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
+        return format_signature(leaf_object, verbosity=self.signature)
 
     def format_iterable(self, iterable):
-
-        iterable = Peekable(iter(iterable))
+        """Formats rows and print stack yielded by iterable."""
 
         for print_stack, stack in self._format_row(iterable):
             joined_print_stack = " ".join(print_stack)
-            obj_names = ".".join([s.__name__ for s in stack])
 
-            *_, last_obj = stack
+            # Infor determines how much to show
+            if self.info == 0:
+                obj_names = stack[-1].__name__
+            else:
+                obj_names = ".".join([s.__name__ for s in stack])
+            # TODO: Differentiate between INFO = 1 AND INFO = 2
+
+            last_obj = stack[-1]
             signature = self._format_argspec(last_obj)
+            docstring = self._get_docstring(last_obj)
 
             yield " ".join([joined_print_stack, obj_names]) + signature
+
+            # No need to show docstring, or no docstring to show, simply continue
+            if self.docstring == 0 or docstring == "":
+                continue
+
+            # Want to print with docstring on the new line. Logic to switch up symbols
+            last_in_stack = print_stack[-1]
+            if last_in_stack == self.RIGHT:
+                symbol = self.DOWN
+            elif last_in_stack == self.LAST:
+                symbol = self.BLANK
+            else:
+                symbol = ""
+
+            print_stack[-1] = symbol
+            yield " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
 
     def _format_row(self, iterator, depth=0, print_stack=None):
         """Format a row."""
 
         if not isinstance(iterator, Peekable):
-            raise TypeError("The iterator must be peekable.")
-        iterator = iter(iterator)
+            iterator = Peekable(iter(iterator))
+
         print_stack = print_stack or [""]
 
         # =============================================================================

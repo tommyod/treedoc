@@ -12,65 +12,9 @@ import os
 import pkgutil
 import pydoc
 import textwrap
+import collections.abc
 
 _marker = object()
-
-
-class Peekable:
-    """Wrap an iterator to allow a lookahead.
-    
-    Call `peek` on the result to get the value that will be returned by `next`. 
-    This won't advance the iterator:
-        
-    >>> p = Peekable(['a', 'b'])
-    >>> p.peek()
-    'a'
-    >>> next(p)
-    'a'
-        
-    Pass `peek` a default value to return that instead of raising ``StopIteration`` 
-    when the iterator is exhausted.
-    
-    >>> p = Peekable([])
-    >>> p.peek('hi')
-    'hi'
-
-    """
-
-    def __init__(self, iterable):
-        self._it = iter(iterable)
-        self._cache = collections.deque()
-
-    def __iter__(self):
-        return self
-
-    def __bool__(self):
-        try:
-            self.peek()
-        except StopIteration:
-            return False
-        return True
-
-    def peek(self, default=_marker):
-        """Return the item that will be next returned from ``next()``.
-        
-        Return ``default`` if there are no items left. If ``default`` is not
-        provided, raise ``StopIteration``.
-        """
-        if not self._cache:
-            try:
-                self._cache.append(next(self._it))
-            except StopIteration:
-                if default is _marker:
-                    raise
-                return default
-        return self._cache[0]
-
-    def __next__(self):
-        if self._cache:
-            return self._cache.popleft()
-
-        return next(self._it)
 
 
 def get_docstring(object, width=88):
@@ -302,15 +246,88 @@ def _get_name(param):
         return param.name
 
 
+def _between(string, start, end):
+    """Returns what's between `start` and `end`, exclusive.
+    
+    Examples
+    >>> _between("im a nice (person) to all", "(", ")")
+    'person'
+    >>> _between("im a nice (person to all", "(", ")")
+    Traceback (most recent call last):
+        ...
+    ValueError: substring not found
+    """
+    i = string.index(start)
+    part = string[i + len(start) :]
+    j = part.index(")")
+    return part[:j]
+
+
+def signature_from_docstring(obj):
+    """Extract signature from built-in object docstring.
+    
+    Some of the built-in methods have signature info in the docstring. One example is
+    `dict.pop`. This method will retrieve the docstring, and return None if it cannot.
+    
+    >>> import math
+    >>> signature_from_docstring(math.log) in ('x[, base]', 'x, [base=math.e]')
+    True
+    >>> signature_from_docstring(dict.pop) in ('k[,d]', None)
+    True
+    """
+
+    # If not docstring is available, return
+    docstring_line = get_docstring(obj)
+    if not docstring_line:
+        return None
+
+    # If it's not callable, return
+    if not isinstance(obj, collections.abc.Callable):
+        return None
+
+    # Look for the name of the object, i.e. func(x)
+    assert hasattr(obj, "__name__")
+    if not obj.__name__ in docstring_line:
+        return None
+
+    # Attempt to get the signature
+    signature_part = docstring_line[len(obj.__name__) :]
+    try:
+        return _between(signature_part, "(", ")")
+    except ValueError:
+        return None
+
+
 def format_signature(obj, verbosity=2):
     """ 
     Format a function signature for printing.
+    
+    This function tries first to use inspect.signature, if that fails it will look for
+    signature information in the first line of the docstring, and if that fails it will
+    return a generic sigature if the object is callable.
+    
+    Examples
+    --------
+    >>> import collections
+    >>> # Works on functions with well-defined signature
+    >>> format_signature(collections.defaultdict.fromkeys, verbosity=2)
+    '(iterable, value)'
+    >>> # Built-ins with signature information in the docs
+    >>> format_signature(collections.defaultdict.update, verbosity=2)
+    '([E, ]**F)'
+    >>> # Built-ins with signature no signature information at all
+    >>> format_signature(collections.deque.append, verbosity=2)
+    '(...)'
     """
     # TODO: Figure out how to handle *
 
     max_verbosity = 4
     assert 0 <= verbosity <= max_verbosity
     SEP = ", "
+
+    # Return formatted signature based on verbosity
+    if verbosity == 0:
+        return ""
 
     # Check if object has signature
     try:
@@ -321,7 +338,26 @@ def format_signature(obj, verbosity=2):
         # -------
         # >>> inspect.signature(math.log)
         # 'ValueError: no signature found for builtin <built-in function log>'
-        return
+
+        signature_in_docs = signature_from_docstring(obj)
+
+        # Failed to find a signature in the docstring
+        if signature_in_docs is None:
+
+            # inspect.signature and docstring info has failed, still return if callable
+            if isinstance(obj, collections.abc.Callable) and verbosity >= 1:
+                return "(...)"
+            return ""
+
+        # Found a signature in the docstring
+        else:
+            if verbosity == 1:
+                return "(...)"
+            else:
+                # TODO: Format this more depending on verbosity
+                return "(" + signature_in_docs + ")"
+        return ""
+
     except TypeError:
         # inspect.signature raises TypeError if type of object is not supported.
         # Example:
@@ -329,7 +365,7 @@ def format_signature(obj, verbosity=2):
         # >>> x = 1
         # >>> inspect.signature(x)
         # 'TypeError: 1 is not a callable object'
-        raise
+        return ""
 
     # If function as no arguments, return
     if str(sig) == "()" and verbosity > 0:
@@ -355,9 +391,8 @@ def format_signature(obj, verbosity=2):
         # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
         verbosity = max_verbosity
 
-    # Return formatted signature based on verbosity
-    if verbosity == 0:
-        return ""
+        # Fails for instance on collections.ChainMap without this
+        return str(sig)
 
     elif verbosity == 1:
         return "(...)"
