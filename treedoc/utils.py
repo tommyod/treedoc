@@ -188,6 +188,38 @@ def inspect_classify(obj):
     return classes
 
 
+def clean_object_stack(stack):
+    """
+    Join an object stack so that consequtive modules are merged into the last one.
+    
+    This avoids the stack [collections, collections.abc] as being named
+    'collections.collections.abc'.
+    
+    >>> import collections
+    >>> from collections import abc
+    >>> clean_object_stack([collections, abc]) == [abc]
+    True
+    >>> from collections import Counter
+    >>> input_stack = [collections, Counter, Counter.most_common]
+    >>> clean_object_stack(input_stack) == input_stack
+    True
+    """
+    assert isinstance(stack, list)
+
+    stack = stack.copy()
+    new_stack = []
+    for obj in stack:
+        # This one is a module, and the last one is a module
+        # Therefore it must be a submodule, get rid of the first one
+        # to avoid [collections, collections.abc]
+        if new_stack and inspect.ismodule(obj) and inspect.ismodule(new_stack[-1]):
+            new_stack.pop()
+        new_stack.append(obj)
+
+    assert len(new_stack) > 0
+    return new_stack
+
+
 def is_inspectable(obj):
     """An object is inspectable if it returns True for any of the inspect.is.. functions."""
     funcs = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
@@ -201,12 +233,11 @@ def ispropersubpackage(package_a, package_b):
     """
     try:
         path_a, _ = os.path.split(inspect.getfile(package_a))
-
+        path_b, _ = os.path.split(inspect.getfile(package_b))
         # is a built-in module
     except TypeError:
         return False
-
-    path_b, _ = os.path.split(inspect.getfile(package_b))
+    
     return (path_b in path_a) and not (path_b == path_a)
 
 
@@ -428,11 +459,18 @@ def descend_from_package(
     
     Yields a tuple of (object, object_name) one level down.
     """
+    if not inspect.ismodule(package):
+        return None
 
-    path = package.__path__
+    try:
+        path, _ = os.path.split(inspect.getfile(package))
+        # TypeError: <module 'itertools' (built-in)> is a built-in module
+    except TypeError:
+        return None
+        
     prefix = package.__name__ + "."
 
-    generator = pkgutil.iter_modules(path=path, prefix=prefix)
+    generator = pkgutil.iter_modules(path=[path], prefix=prefix)
 
     for (importer, object_name, ispkg) in generator:
 

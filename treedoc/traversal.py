@@ -3,9 +3,10 @@
 """
 Recursive traversal of objects.
 """
-
 import inspect
 import sys
+import os
+import itertools
 
 from treedoc.utils import (
     PrintMixin,
@@ -13,7 +14,11 @@ from treedoc.utils import (
     is_magic_method,
     is_private,
     ispropersubpackage,
+    descend_from_package,
 )
+
+
+
 
 
 class ObjectTraverser(PrintMixin):
@@ -45,36 +50,111 @@ class ObjectTraverser(PrintMixin):
 
     def _p(self, *args):
         """Printing/logging method."""
-        # return None
+        return None
         # TODO: set up proper logging
-        print(*args, file=self.stream)
+        #print(*args, file=self.stream)
 
     def recurse_to_child_object(self, *, obj, child_obj):
         """Given an object, should we recurse down to the child?"""
 
+        self._p(f"obj = {obj.__name__}, child_obj = {child_obj.__name__}")
+
+        # =============================================================================
+        #  (1) CASE: Parent is a module, and child is not a module
+        # =============================================================================
+
+        if inspect.ismodule(obj) and not inspect.ismodule(child_obj):
+
+            # Prevent `collections.eq` / `collections._eq`
+            if inspect.isbuiltin(child_obj):
+                if inspect.getmodule(child_obj) != obj:
+                    self._p(f"Failed on condition 1.1")
+                    return False
+
+            # Prevent `collections.recursive_repr` / `collections._recursive_repr`
+            if inspect.isfunction(child_obj):
+                if not ispropersubpackage(inspect.getmodule(child_obj), obj):
+                    self._p(f"Failed on condition 1.2")
+                    return False
+
+        # =============================================================================
+        #  (2) CASE: Both parent and child are modules, i.e. __init__.py or module.py
+        # =============================================================================
+
         if inspect.ismodule(obj) and inspect.ismodule(child_obj):
 
             # The order is wrong, i.e. `main` in `main.subpackage` implies going up
+
             different_packages = child_obj.__package__ != obj.__package__
-            child_package_wrong = child_obj.__package__ in obj.__package__
+            # pytest.collect has __package__ == None
+            if child_obj.__package__ is None:
+                child_package_wrong = False
+            else:
+                child_package_wrong = child_obj.__package__ in obj.__package__
             if different_packages and child_package_wrong:
+                self._p(f"Failed on condition 2.1")
                 return False
 
+            if child_obj.__package__ is not None:
+                # Prevents for instance `pandas` to recurse into `numpy`
+                if not obj.__package__ in child_obj.__package__:
+                    self._p(f"Failed on condition 2.2")
+                    return False
+
+            # Another fail safe to prevent `mysubpackage` to recurse into `subpack`
+            if hasattr(obj, "__path__") and hasattr(child_obj, "__path__"):
+                # TODO
+                pass
+
+            # Fail safe to prevent recursing from `pkg/file.py` to `pkg/__init__.py`
+            if hasattr(obj, "__file__") and hasattr(child_obj, "__file__"):
+
+                obj_pth, obj_py_file = os.path.split(inspect.getfile(obj))
+                child_obj_pth, child_obj_py_file = os.path.split(
+                    inspect.getfile(child_obj)
+                )
+                if not obj_pth in child_obj_pth:
+                    self._p(f"Failed on condition 2.3")
+                    return False
+
+                if inspect.getfile(obj) == inspect.getfile(child_obj):
+                    self._p(f"Failed on condition 2.4")
+                    return False
+
+                if child_obj_py_file == "__init__.py" and obj_py_file != "__init__.py":
+                    self._p(f"Failed on condition 2.5")
+                    return False
+
             if ispropersubpackage(child_obj, obj) and not self.subpackages:
-                self._p("Failing condition 1")
+                self._p(f"Failed on condition 2.6")
                 return False
 
             try:
                 file = inspect.getfile(child_obj)
                 if (not file.endswith("__init__.py")) and not self.modules:
-                    self._p("Failing condition 2")
+                    self._p(f"Failed on condition 2.7")
                     return False
             except TypeError:
                 # TypeError: <module 'sys' (built-in)> is a built-in module
                 pass
 
             if obj.__package__ == child_obj.__package__ and not self.modules:
-                self._p("Failing condition 4")
+                self._p(f"Failed on condition 2.8")
+                return False
+
+        # =============================================================================
+        #  (3) CASE: The child is a class
+        # =============================================================================
+
+        # We're dealing with a class imported from another library, skip it
+        if inspect.isclass(child_obj):
+            if not ispropersubpackage(inspect.getmodule(child_obj), obj):
+                self._p(f"Failed on condition 3.1")
+                return False
+                pass
+
+            if obj in inspect.getmro(child_obj):
+                self._p(f"Failed on condition 3.2")
                 return False
 
         return True
@@ -139,9 +219,22 @@ class ObjectTraverser(PrintMixin):
 
         # The objects we will recurse on
         filtered = []
+        
+        
+        generator1 = descend_from_package(obj)
+        generator2 = inspect.getmembers(obj)
+        generator = itertools.chain(generator1, generator2)
+        
+        seen = set()
 
         # Iterate through children
-        for name, child_obj in sorted(inspect.getmembers(obj), key=self.sort_key):
+        for name, child_obj in sorted(generator2, key=self.sort_key):
+            
+# =============================================================================
+#             if name in seen:
+#                 continue
+#             seen.add(name)
+# =============================================================================
 
             self._p(f"Looking at {name}, {type(child_obj)}")
 
@@ -166,24 +259,17 @@ class ObjectTraverser(PrintMixin):
             if not self.recurse_to_child_object(obj=obj, child_obj=child_obj):
                 continue
 
-            # We're dealing with a class imported from another library, skip it
-            if inspect.isclass(child_obj) and not inspect.getmodule(
-                child_obj
-            ).__name__.startswith(obj.__name__):
-                self._p(
-                    f"{name} - {child_obj.__module__} - {inspect.getmodule(child_obj).__name__} - {obj.__name__}"
-                )
-                continue
-
-            # This prevent recursing to superclasses
-            if inspect.isclass(child_obj):
-                self._p(
-                    f" The MRO of {name} is {inspect.getmro(child_obj)}. Parent is {obj.__name__}"
-                )
-                self._p(f"{name} is a class: {inspect.isclass(child_obj)}")
-                self._p(f"{obj.__name__} is a class: {inspect.isclass(obj)}")
-            if inspect.isclass(child_obj) and obj in inspect.getmro(child_obj):
-                continue
+            # =============================================================================
+            #             # This prevent recursing to superclasses
+            #             if inspect.isclass(child_obj):
+            #                 self._p(
+            #                     f" The MRO of {name} is {inspect.getmro(child_obj)}. Parent is {obj.__name__}"
+            #                 )
+            #                 self._p(f"{name} is a class: {inspect.isclass(child_obj)}")
+            #                 self._p(f"{obj.__name__} is a class: {inspect.isclass(obj)}")
+            #             if inspect.isclass(child_obj) and obj in inspect.getmro(child_obj):
+            #                 continue
+            # =============================================================================
 
             filtered.append((name, child_obj))
 
@@ -211,8 +297,12 @@ if __name__ == "__main__":
 
     pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
 
-    import subprocess
+    import collections
 
-    subprocess.call(["treedoc", "collections"])
-    subprocess.call(["treedoc", "pandas"])
-    subprocess.call(["treedoc", "list"])
+# =============================================================================
+#     import subprocess
+#
+#     subprocess.call(["treedoc", "collections"])
+#     subprocess.call(["treedoc", "pandas"])
+#     subprocess.call(["treedoc", "list"])
+# =============================================================================

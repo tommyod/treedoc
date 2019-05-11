@@ -13,7 +13,9 @@ from treedoc.utils import (
     get_docstring,
     inspect_classify,
     format_signature,
+    clean_object_stack,
     PrintMixin,
+    resolve_object,
 )
 
 
@@ -139,7 +141,13 @@ class TreePrinter(Printer, PrinterABC):
             if self.info == 0:
                 obj_names = stack[-1].__name__
             else:
-                obj_names = ".".join([s.__name__ for s in stack])
+                obj_names = ".".join([s.__name__ for s in clean_object_stack(stack)])
+
+                # TODO: Remove this
+                if resolve_object(obj_names) is None:
+                    print("FAILED TO LOAD")
+                    print(obj_names)
+                # assert resolve_object(obj_names) is not None
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
             last_obj = stack[-1]

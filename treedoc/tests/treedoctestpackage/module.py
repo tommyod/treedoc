@@ -8,11 +8,16 @@ Created on Sun Apr 21 21:13:23 2019
 
 import functools
 import operator
+from treedoctestpackage.module2 import function_nested_outer as imported_function
 
 
 def func_addition(a, b):
     """Permforms addition."""
     return operator.add(a, b)
+
+
+def func_using_imported(x):
+    return imported_function(x)
 
 
 add_five_partial = functools.partial(func_addition, a=5)
