@@ -13,25 +13,35 @@ from treedoc.utils import (
     is_magic_method,
     is_private,
     ispropersubpackage,
-    recurse_on,
 )
 
 
 class ObjectTraverser(PrintMixin):
     """Traverse Python objects, modules and packages recursively."""
 
-    _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins"])
+    _ignored_names = set(["__class__", "__doc__", "__hash__", "builtins", "__cached__"])
 
-    def __init__(self, *, level=999, private=False, magic=False, stream=sys.stdout):
+    def __init__(
+        self,
+        *,
+        level=999,
+        subpackages=False,
+        modules=False,
+        private=False,
+        magic=False,
+        stream=sys.stdout,
+    ):
         self.level = level
+        self.subpackages = subpackages
+        self.modules = modules
         self.sort_key = None
         self.private = private
         self.magic = magic
         self.stream = stream
 
-    def search(self, obj):
+    def search(self, *, obj):
         """DFS search from an object."""
-        yield from self._search(obj, stack=None)
+        yield from self._search(obj=obj, stack=None)
 
     def _p(self, *args):
         """Printing/logging method."""
@@ -39,11 +49,23 @@ class ObjectTraverser(PrintMixin):
         return None
         print(*args, file=self.stream)
 
-    def recurse_to_child_object(self, obj, child_obj):
+    def recurse_to_child_object(self, *, obj, child_obj):
         """Given an object, should we recurse down to the child?"""
-        pass
 
-    def recurse_to_object(self, obj):
+        if inspect.ismodule(obj) and inspect.ismodule(child_obj):
+
+            if not ispropersubpackage(child_obj, obj):
+                return False
+
+            if obj.__package__ == child_obj.__package__:
+                return False
+
+            if child_obj.__package__ in obj.__package__:
+                return False
+
+        return True
+
+    def recurse_to_object(self, *, obj):
         """Given an object, should we recurse down to it?"""
 
         name = obj.__name__
@@ -62,7 +84,7 @@ class ObjectTraverser(PrintMixin):
 
         return True
 
-    def _search(self, obj, stack=None, final_node_at_depth=None):
+    def _search(self, *, obj, stack=None, final_node_at_depth=None):
         """
         """
 
@@ -122,26 +144,13 @@ class ObjectTraverser(PrintMixin):
             assert hasattr(child_obj, "__name__")
 
             # Check if we should skip the object by virtue of it's properties
-            if not self.recurse_to_object(child_obj):
+            if not self.recurse_to_object(obj=child_obj):
                 continue
 
-            # Prevent recursing into modules
-            # TODO: Generalize this
-            if inspect.ismodule(obj) and inspect.ismodule(child_obj):
-
-                if not ispropersubpackage(child_obj, obj):
-                    continue
-
-                self._p(f" Both {name} and {obj.__name__} are modules")
-                self._p(
-                    f" Packages: {child_obj.__package__} and {obj.__package__} are modules"
-                )
-
-                if obj.__package__ == child_obj.__package__:
-                    continue
-
-                if child_obj.__package__ in obj.__package__:
-                    continue
+            # Check if we should skip the child object by virtue of it's relationship
+            # to the parent object
+            if not self.recurse_to_child_object(obj=obj, child_obj=child_obj):
+                continue
 
             # We're dealing with a class imported from another library, skip it
             if inspect.isclass(child_obj) and not inspect.getmodule(
@@ -193,6 +202,3 @@ if __name__ == "__main__":
     subprocess.call(["treedoc", "collections"])
     subprocess.call(["treedoc", "pandas"])
     subprocess.call(["treedoc", "list"])
-
-    t = ObjectTraverser()
-    print(t)
