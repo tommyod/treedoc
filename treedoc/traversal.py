@@ -29,6 +29,7 @@ from treedoc.utils import (
     is_private,
     ispropersubpackage,
     issubpackage,
+    ispackage,
 )
 
 
@@ -82,21 +83,34 @@ class ObjectTraverser(PrintMixin):
                     self._p(f"Failed on condition 1.1")
                     return False
 
-            # Prevent `collections.recursive_repr` / `collections._recursive_repr`
-            if inspect.isfunction(child_obj):
-                if not issubpackage(inspect.getmodule(child_obj), obj):
-                    self._p(f"Failed on condition 1.2")
-                    return False
-
-            # Prevent `collections.recursive_repr` / `collections._recursive_repr`
-            if inspect.isclass(child_obj):
-                if inspect.getmodule(child_obj) != obj:
-                    self._p(f"Failed on condition 1.3")
-                    return False
-
+            # The object is defined in a different file
             if inspect.getmodule(child_obj) != obj:
-                self._p(f"Failed on condition 1.4")
-                return False
+
+                # If the object is not __init__.py,
+                # never include anything imported to it
+                if not ispackage(obj):
+                    return False
+
+                # At this point the object is __init__.py, and we *might* include
+                # a file imported into it (depending on settings below)
+
+                # The object is defined at a lower level
+                if ispropersubpackage(inspect.getmodule(child_obj), obj):
+
+                    if self.subpackages:
+                        # will find it later, so skip it now
+                        self._p(f"Failed on condition 1.2")
+                        return False
+
+                # If the object is defined at the same level
+                if issubpackage(inspect.getmodule(child_obj), obj) and issubpackage(
+                    obj, inspect.getmodule(child_obj)
+                ):
+
+                    if self.modules:
+                        # will find it later, so skip it now
+                        self._p(f"Failed on condition 1.3")
+                        return False
 
         # =============================================================================
         #  (2) CASE: Both parent and child are modules, i.e. __init__.py or module.py

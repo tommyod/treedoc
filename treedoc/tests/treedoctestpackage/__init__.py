@@ -8,5 +8,7 @@ Created on Sun Apr 21 21:14:43 2019
 
 from treedoctestpackage.module import MyClass, func_addition
 
+from treedoctestpackage.subpackage.subpackagemodule import func_subtraction
+
 MyClass = MyClass
-func_addition = func_addition
+func_subtraction = func_subtraction
