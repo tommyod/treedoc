@@ -148,6 +148,7 @@ class TreePrinter(Printer, PrinterABC):
                     print("FAILED TO LOAD")
                     print(obj_names)
                 # assert resolve_object(obj_names) is not None
+
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
             last_obj = stack[-1]
