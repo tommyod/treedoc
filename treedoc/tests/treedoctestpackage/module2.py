@@ -21,9 +21,15 @@ def function_with_inner_class(x):
     return x
 
 
+def function_which_will_become_staticmethod():
+    pass
+
+
 class SuperClass:
     def superclass_method(self):
         return 1
+
+    static_method = staticmethod(function_which_will_become_staticmethod)
 
 
 class SubClass(SuperClass):

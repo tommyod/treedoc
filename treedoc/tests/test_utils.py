@@ -106,7 +106,7 @@ class TestDescentFromPackage:
         """
 
         sub_packages = descend_from_package(treedoctestpackage, types="package")
-        sub_packages = set(map_itemgetter(sub_packages, 0))
+        sub_packages = set(map_itemgetter(sub_packages, 1))
 
         from treedoctestpackage import subpackage, subpackage2
 
@@ -122,7 +122,7 @@ class TestDescentFromPackage:
         from treedoctestpackage import subpackage
 
         sub_packages = descend_from_package(subpackage, types="package")
-        sub_packages = set(map_itemgetter(sub_packages, 0))
+        sub_packages = set(map_itemgetter(sub_packages, 1))
         assert set([subsubpackage]) == sub_packages
 
     @staticmethod
@@ -132,7 +132,7 @@ class TestDescentFromPackage:
         """
 
         modules = descend_from_package(treedoctestpackage, types="module")
-        modules = set(map_itemgetter(modules, 0))
+        modules = set(map_itemgetter(modules, 1))
 
         from treedoctestpackage import module, module2
 
@@ -147,7 +147,7 @@ class TestDescentFromPackage:
         modules = descend_from_package(
             treedoctestpackage, types="module", include_hidden=True
         )
-        modules = set(map_itemgetter(modules, 0))
+        modules = set(map_itemgetter(modules, 1))
 
         from treedoctestpackage import module, module2, _hidden_module
 

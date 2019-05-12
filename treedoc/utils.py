@@ -237,8 +237,9 @@ def ispropersubpackage(package_a, package_b):
         # is a built-in module
     except TypeError:
         return False
-    
+
     return (path_b in path_a) and not (path_b == path_a)
+
 
 def issubpackage(package_a, package_b):
     """
@@ -250,8 +251,8 @@ def issubpackage(package_a, package_b):
         # is a built-in module
     except TypeError:
         return False
-    
-    return (path_b in path_a)
+
+    return path_b in path_a
 
 
 def is_magic_method(obj):
@@ -468,7 +469,7 @@ def descend_from_package(
     package, types="package", include_tests=False, include_hidden=False
 ):
     """
-    Descent from a package to either a subpackage or modules on level down.
+    Descent from a package to either a subpackage or modules one level down.
     
     Yields a tuple of (object, object_name) one level down.
     """
@@ -480,7 +481,7 @@ def descend_from_package(
         # TypeError: <module 'itertools' (built-in)> is a built-in module
     except TypeError:
         return None
-        
+
     prefix = package.__name__ + "."
 
     generator = pkgutil.iter_modules(path=[path], prefix=prefix)
@@ -498,16 +499,20 @@ def descend_from_package(
 
         try:
             obj = importlib.import_module(object_name)
-        except (ModuleNotFoundError, ImportError) as error:
+        except ModuleNotFoundError:
             # TODO: Replace this with logging
-            print(f"Could not import {object_name}. Error: {error}")
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+        except ImportError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
 
         if types.lower() == "package" and ispkg:
-            yield obj, object_name
+            yield object_name, obj
         elif types.lower() == "module" and ismodule:
-            yield obj, object_name
+            yield object_name, obj
         elif types.lower() == "both":
-            yield obj, object_name
+            yield object_name, obj
         elif types.lower() not in ("package", "module", "both"):
             raise ValueError("Parameter `types` must be 'package', 'module' or 'both'.")
 

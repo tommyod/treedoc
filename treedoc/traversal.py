@@ -1,7 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Recursive traversal of objects.
+Module for traversal of objects.
+
+
+
+                   +---+                  
+      -------------|obj|--------------    
+      |            +---+             |    
+      |              |               |    
+      v              v               v    
++----------+   +----------+   +----------+
+|child_obj1|   |child_obj2|   |child_obj3|
++----------+   +----------+   +----------+
+
+
 """
 import inspect
 import sys
@@ -17,9 +30,6 @@ from treedoc.utils import (
     descend_from_package,
     issubpackage,
 )
-
-
-
 
 
 class ObjectTraverser(PrintMixin):
@@ -46,14 +56,14 @@ class ObjectTraverser(PrintMixin):
         self.stream = stream
 
     def search(self, *, obj):
-        """DFS search from an object."""
+        """DFS search starting at an object `obj` and recursing down to its children."""
         yield from self._search(obj=obj, stack=None)
 
     def _p(self, *args):
         """Printing/logging method."""
         return None
         # TODO: set up proper logging
-        #print(*args, file=self.stream)
+        print(*args, file=self.stream)
 
     def recurse_to_child_object(self, *, obj, child_obj):
         """Given an object, should we recurse down to the child?"""
@@ -74,7 +84,7 @@ class ObjectTraverser(PrintMixin):
 
             # Prevent `collections.recursive_repr` / `collections._recursive_repr`
             if inspect.isfunction(child_obj):
-                if not ispropersubpackage(inspect.getmodule(child_obj), obj):
+                if not issubpackage(inspect.getmodule(child_obj), obj):
                     self._p(f"Failed on condition 1.2")
                     return False
 
@@ -85,7 +95,6 @@ class ObjectTraverser(PrintMixin):
         if inspect.ismodule(obj) and inspect.ismodule(child_obj):
 
             # The order is wrong, i.e. `main` in `main.subpackage` implies going up
-
             different_packages = child_obj.__package__ != obj.__package__
             # pytest.collect has __package__ == None
             if child_obj.__package__ is None:
@@ -149,10 +158,7 @@ class ObjectTraverser(PrintMixin):
 
         # We're dealing with a class imported from another library, skip it
         if inspect.isclass(child_obj):
-            
-            
-            
-            
+
             if not issubpackage(inspect.getmodule(child_obj), obj):
                 self._p(f"Failed on condition 3.1")
                 return False
@@ -178,6 +184,7 @@ class ObjectTraverser(PrintMixin):
             return False
 
         if not is_inspectable(obj):
+            self._p(f"Failed on condition 4.1")
             return False
 
         return True
@@ -199,6 +206,7 @@ class ObjectTraverser(PrintMixin):
         self._p(f"yield_data({obj}, stack={stack})")
 
         if len(stack) > self.level + 1:
+            self._p(f"Max level reached. Aborting.")
             return
 
         stack.append(obj)
@@ -223,22 +231,22 @@ class ObjectTraverser(PrintMixin):
 
         # The objects we will recurse on
         filtered = []
-        
-        
+
         generator1 = descend_from_package(obj)
         generator2 = inspect.getmembers(obj)
-        generator = itertools.chain(generator1, generator2)
-        
-        seen = set()
+
+        def unique_first(gen1, gen2):
+            """Chain generators, but only one unique name."""
+            seen = set()
+            for a, b in itertools.chain(generator1, generator2):
+                if a not in seen:
+                    seen.add(a)
+                    yield a, b
+
+        generator = unique_first(generator1, generator2)
 
         # Iterate through children
-        for name, child_obj in sorted(generator2, key=self.sort_key):
-            
-# =============================================================================
-#             if name in seen:
-#                 continue
-#             seen.add(name)
-# =============================================================================
+        for name, child_obj in sorted(generator, key=self.sort_key):
 
             self._p(f"Looking at {name}, {type(child_obj)}")
 
@@ -262,18 +270,6 @@ class ObjectTraverser(PrintMixin):
             # to the parent object
             if not self.recurse_to_child_object(obj=obj, child_obj=child_obj):
                 continue
-
-            # =============================================================================
-            #             # This prevent recursing to superclasses
-            #             if inspect.isclass(child_obj):
-            #                 self._p(
-            #                     f" The MRO of {name} is {inspect.getmro(child_obj)}. Parent is {obj.__name__}"
-            #                 )
-            #                 self._p(f"{name} is a class: {inspect.isclass(child_obj)}")
-            #                 self._p(f"{obj.__name__} is a class: {inspect.isclass(obj)}")
-            #             if inspect.isclass(child_obj) and obj in inspect.getmro(child_obj):
-            #                 continue
-            # =============================================================================
 
             filtered.append((name, child_obj))
 
@@ -301,12 +297,8 @@ if __name__ == "__main__":
 
     pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
 
-    import collections
+    import subprocess
 
-# =============================================================================
-#     import subprocess
-#
-#     subprocess.call(["treedoc", "collections"])
-#     subprocess.call(["treedoc", "pandas"])
-#     subprocess.call(["treedoc", "list"])
-# =============================================================================
+    subprocess.call(["treedoc", "collections"])
+    subprocess.call(["treedoc", "pandas"])
+    subprocess.call(["treedoc", "list"])
