@@ -6,15 +6,14 @@ Created on Mon Apr 22 21:38:59 2019
 @author: tommy
 """
 
-import pytest
 import itertools
 import operator
 
-
-from treedoc.traversal import ObjectTraverser
+import pytest
 
 import treedoctestpackage as testpackage
 import treedoctestpackage.subpackage as subtestpackage
+from treedoc.traversal import ObjectTraverser
 from treedoctestpackage import module
 
 

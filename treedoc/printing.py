@@ -10,11 +10,11 @@ import inspect
 
 from treedoc.utils import (
     Peekable,
+    PrintMixin,
+    clean_object_stack,
+    format_signature,
     get_docstring,
     inspect_classify,
-    format_signature,
-    clean_object_stack,
-    PrintMixin,
     resolve_object,
 )
 

@@ -8,16 +8,15 @@ Created on Sun Apr 28 20:20:49 2019
 
 import operator
 
-import treedoctestpackage
-
 import pytest
 
+import treedoctestpackage
 from treedoc.utils import (
     descend_from_package,
+    format_signature,
     get_docstring,
     ispackage,
     resolve_object,
-    format_signature,
 )
 
 

@@ -17,17 +17,17 @@ Module for traversal of objects.
 
 """
 import inspect
-import sys
-import os
 import itertools
+import os
+import sys
 
 from treedoc.utils import (
     PrintMixin,
+    descend_from_package,
     is_inspectable,
     is_magic_method,
     is_private,
     ispropersubpackage,
-    descend_from_package,
     issubpackage,
 )
 

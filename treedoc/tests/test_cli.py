@@ -3,11 +3,11 @@
 """
 Test the command line interface.
 """
-import subprocess
-import random
 import itertools
-import pytest
+import random
+import subprocess
 
+import pytest
 
 object_strings = [
     "list",

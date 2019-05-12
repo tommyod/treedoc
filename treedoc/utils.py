@@ -5,6 +5,7 @@ Utility functions for traversal and printing.
 """
 
 import collections
+import collections.abc
 import functools
 import importlib
 import inspect
@@ -12,7 +13,6 @@ import os
 import pkgutil
 import pydoc
 import textwrap
-import collections.abc
 
 _marker = object()
 
