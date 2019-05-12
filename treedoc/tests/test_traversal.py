@@ -150,6 +150,22 @@ def test_recursion_objs_lower_level(modules):
     )
 
 
+@pytest.mark.parametrize(
+    "subpackages, modules", itertools.product([True, False], [True, False])
+)
+def test_recursion_composite_classes(subpackages, modules):
+    """We do not recurse to composite classes, i.e. from Car to it's Wheel.
+    Instead we find the wheel class from it's module."""
+    from treedoctestpackage.module2 import Car, Wheel
+    from treedoctestpackage import module2
+
+    traverser = ObjectTraverser(subpackages=subpackages, modules=modules)
+    assert traverser.recurse_to_child_object(obj=module2, child_obj=Car)
+    assert traverser.recurse_to_child_object(obj=module2, child_obj=Wheel)
+
+    assert not traverser.recurse_to_child_object(obj=Car, child_obj=Wheel)
+
+
 if __name__ == "__main__":
     import pytest
 

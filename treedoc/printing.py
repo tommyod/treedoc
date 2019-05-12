@@ -145,8 +145,9 @@ class TreePrinter(Printer, PrinterABC):
 
                 # TODO: Remove this
                 if resolve_object(obj_names) is None:
-                    print("FAILED TO LOAD")
-                    print(obj_names)
+                    pass
+                    # print("FAILED TO LOAD")
+                    # print(obj_names)
                 # assert resolve_object(obj_names) is not None
 
             # TODO: Differentiate between INFO = 1 AND INFO = 2

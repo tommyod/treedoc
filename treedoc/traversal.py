@@ -198,6 +198,11 @@ class ObjectTraverser(PrintMixin):
                 self._p(f"Failed on condition 3.2")
                 return False
 
+            # We prefer going from modules to classes, not from classes to classes
+            if inspect.isclass(obj):
+                self._p(f"Failed on condition 3.3")
+                return False
+
         # =============================================================================
         #         if not issubpackage(inspect.getmodule(child_obj), obj):
         #             self._p(f"Failed on condition 4.1")
@@ -243,20 +248,20 @@ class ObjectTraverser(PrintMixin):
         stack = stack or []
         final_node_at_depth = final_node_at_depth or [True]
 
-        self._p(f"yield_data({obj}, stack={stack})")
+        self._p(
+            f"yield_data({obj}, stack={stack}), final_node_at_depth={final_node_at_depth}"
+        )
 
         if len(stack) > self.level + 1:
             self._p(f"Max level reached. Aborting.")
             return
 
-        stack.append(obj)
-
-        assert len(stack) == len(final_node_at_depth)
-        yield stack, final_node_at_depth
+        assert len(stack + [obj]) == len(final_node_at_depth)
+        yield stack + [obj], final_node_at_depth
 
         if not (inspect.ismodule(obj) or inspect.isclass(obj)):
-            stack.pop()
-            final_node_at_depth.pop()
+            # stack.pop()
+            # final_node_at_depth.pop()
             return
 
         # =============================================================================
@@ -323,12 +328,9 @@ class ObjectTraverser(PrintMixin):
             last = True if len(filtered) == num else False
             yield from self._search(
                 obj=child_obj,
-                stack=stack,
-                final_node_at_depth=final_node_at_depth + [last],
+                stack=stack.copy() + [obj],
+                final_node_at_depth=final_node_at_depth.copy() + [last],
             )
-
-        stack.pop()
-        final_node_at_depth.pop()
 
 
 if __name__ == "__main__":

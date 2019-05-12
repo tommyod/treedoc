@@ -25,6 +25,11 @@ def function_which_will_become_staticmethod():
     pass
 
 
+# =============================================================================
+# CLASSES AND INHERITANCE
+# =============================================================================
+
+
 class SuperClass:
     def superclass_method(self):
         return 1
@@ -40,3 +45,18 @@ class SubClass(SuperClass):
 class SubSubClass(SubClass):
     def subsubclass_method(self):
         return 1
+
+
+# =============================================================================
+# CLASSES WITH COMPOSITION
+# =============================================================================
+
+
+class Wheel:
+    pass
+
+
+class Car:
+
+    wheel_cls = Wheel
+    wheel = Wheel()
