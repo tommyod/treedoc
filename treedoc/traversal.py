@@ -83,12 +83,18 @@ class ObjectTraverser(PrintMixin):
                     self._p(f"Failed on condition 1.1")
                     return False
 
+            # Not defined in the sub-tree, skip it
+            if not issubpackage(inspect.getmodule(child_obj), obj):
+                self._p(f"Failed on condition 1.2")
+                return False
+
             # The object is defined in a different file
             if inspect.getmodule(child_obj) != obj:
 
                 # If the object is not __init__.py,
                 # never include anything imported to it
                 if not ispackage(obj):
+                    self._p(f"Failed on condition 1.3")
                     return False
 
                 # At this point the object is __init__.py, and we *might* include
@@ -99,7 +105,7 @@ class ObjectTraverser(PrintMixin):
 
                     if self.subpackages:
                         # will find it later, so skip it now
-                        self._p(f"Failed on condition 1.2")
+                        self._p(f"Failed on condition 1.4")
                         return False
 
                 # If the object is defined at the same level
@@ -109,7 +115,7 @@ class ObjectTraverser(PrintMixin):
 
                     if self.modules:
                         # will find it later, so skip it now
-                        self._p(f"Failed on condition 1.3")
+                        self._p(f"Failed on condition 1.5")
                         return False
 
         # =============================================================================
@@ -181,6 +187,7 @@ class ObjectTraverser(PrintMixin):
         # =============================================================================
 
         # We're dealing with a class imported from another library, skip it
+        # TODO: Extend this to other objects?
         if inspect.isclass(child_obj):
 
             if not issubpackage(inspect.getmodule(child_obj), obj):
@@ -191,6 +198,12 @@ class ObjectTraverser(PrintMixin):
                 self._p(f"Failed on condition 3.2")
                 return False
 
+        # =============================================================================
+        #         if not issubpackage(inspect.getmodule(child_obj), obj):
+        #             self._p(f"Failed on condition 4.1")
+        #             return False
+        # =============================================================================
+
         return True
 
     def recurse_to_object(self, *, obj):
@@ -199,6 +212,9 @@ class ObjectTraverser(PrintMixin):
         name = obj.__name__
 
         if name in self._ignored_names:
+            return False
+
+        if obj is type:
             return False
 
         if is_private(obj) and not self.private:
