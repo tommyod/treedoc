@@ -27,9 +27,9 @@ from treedoc.utils import (
     is_inspectable,
     is_magic_method,
     is_private,
+    ispackage,
     ispropersubpackage,
     issubpackage,
-    ispackage,
 )
 
 

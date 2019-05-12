@@ -6,11 +6,12 @@ Created on Mon Apr 22 21:38:59 2019
 @author: tommy
 """
 
+import inspect
 import itertools
 import operator
 
 import pytest
-import inspect
+
 import treedoctestpackage as testpackage
 import treedoctestpackage.subpackage as subtestpackage
 from treedoc.traversal import ObjectTraverser

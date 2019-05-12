@@ -9,8 +9,8 @@ Created on Sun Apr 21 21:13:23 2019
 import functools
 import operator
 
-from treedoctestpackage.module2 import function_nested_outer as imported_function
 from treedoctestpackage.module2 import SuperClass
+from treedoctestpackage.module2 import function_nested_outer as imported_function
 
 
 class SubClass(SuperClass):
