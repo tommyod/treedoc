@@ -88,6 +88,16 @@ class ObjectTraverser(PrintMixin):
                     self._p(f"Failed on condition 1.2")
                     return False
 
+            # Prevent `collections.recursive_repr` / `collections._recursive_repr`
+            if inspect.isclass(child_obj):
+                if inspect.getmodule(child_obj) != obj:
+                    self._p(f"Failed on condition 1.3")
+                    return False
+
+            if inspect.getmodule(child_obj) != obj:
+                self._p(f"Failed on condition 1.4")
+                return False
+
         # =============================================================================
         #  (2) CASE: Both parent and child are modules, i.e. __init__.py or module.py
         # =============================================================================

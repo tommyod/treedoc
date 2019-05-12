@@ -70,6 +70,19 @@ def test_recusion_modules(subpackages):
     assert not traverser.recurse_to_child_object(obj=testpackage, child_obj=module)
 
 
+@pytest.mark.parametrize(
+    "subpackages, modules", itertools.product([True, False], [True, False])
+)
+def test_recusion_to_superclass_only_where_defined(subpackages, modules):
+    """Do not recurse to superclasses defined elsewhere."""
+
+    traverser = ObjectTraverser(subpackages=subpackages, modules=modules)
+    from treedoctestpackage import module
+    from treedoctestpackage.module2 import SuperClass
+
+    assert not traverser.recurse_to_child_object(obj=module, child_obj=SuperClass)
+
+
 if __name__ == "__main__":
     import pytest
 

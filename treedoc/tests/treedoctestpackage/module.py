@@ -10,6 +10,14 @@ import functools
 import operator
 
 from treedoctestpackage.module2 import function_nested_outer as imported_function
+from treedoctestpackage.module2 import SuperClass
+
+
+class SubClass(SuperClass):
+    """Test that the SuperClass will not be found in this module, but in it's original."""
+
+    def subclass_method(self):
+        return 1
 
 
 def func_addition(a, b):
