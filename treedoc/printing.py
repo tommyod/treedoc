@@ -8,7 +8,15 @@ import abc
 import collections
 import inspect
 
-from treedoc.utils import Peekable, get_docstring, inspect_classify, format_signature
+from treedoc.utils import (
+    Peekable,
+    PrintMixin,
+    clean_object_stack,
+    format_signature,
+    get_docstring,
+    inspect_classify,
+    resolve_object,
+)
 
 
 class PrinterABC(abc.ABC):
@@ -34,7 +42,7 @@ class PrinterABC(abc.ABC):
         pass
 
 
-class Printer:
+class Printer(PrintMixin):
     """Base class for printers used for input validation."""
 
     def __init__(self, *, signature=1, docstring=2, info=2):
@@ -133,7 +141,15 @@ class TreePrinter(Printer, PrinterABC):
             if self.info == 0:
                 obj_names = stack[-1].__name__
             else:
-                obj_names = ".".join([s.__name__ for s in stack])
+                obj_names = ".".join([s.__name__ for s in clean_object_stack(stack)])
+
+                # TODO: Remove this
+                if resolve_object(obj_names) is None:
+                    pass
+                    # print("FAILED TO LOAD")
+                    # print(obj_names)
+                # assert resolve_object(obj_names) is not None
+
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
             last_obj = stack[-1]
@@ -250,3 +266,6 @@ if __name__ == "__main__":
     subprocess.call(["treedoc", "list"])
     subprocess.call(["treedoc", "collections"])
     subprocess.call(["treedoc", "pandas"])
+
+    t = TreePrinter()
+    print(t)

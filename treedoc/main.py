@@ -16,8 +16,8 @@ from treedoc.utils import resolve_object
 def treedoc(
     obj,
     level=999,
-    subpackages=True,
-    submodules=False,
+    subpackages=False,
+    modules=False,
     private=False,
     magic=False,
     tests=False,
@@ -41,10 +41,15 @@ def treedoc(
 
     printer = printer(signature=signature, docstring=docstring, info=info)
     traverser = ObjectTraverser(
-        level=level, private=private, magic=magic, stream=stream
+        level=level,
+        subpackages=subpackages,
+        modules=modules,
+        private=private,
+        magic=magic,
+        stream=stream,
     )
 
-    iterable = traverser.search(obj)
+    iterable = traverser.search(obj=obj)
     iterable = iter(iterable)
 
     for row in printer.format_iterable(iterable):
@@ -94,7 +99,7 @@ def main():
     traversal.add_argument(
         "--modules",
         default=False,
-        dest="submodules",
+        dest="modules",
         action="store_true",
         help="descend into every module in a package.",
     )

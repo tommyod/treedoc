@@ -5,6 +5,7 @@ Utility functions for traversal and printing.
 """
 
 import collections
+import collections.abc
 import functools
 import importlib
 import inspect
@@ -12,9 +13,15 @@ import os
 import pkgutil
 import pydoc
 import textwrap
-import collections.abc
 
 _marker = object()
+
+
+class PrintMixin:
+    def __repr__(self):
+        """Returns a string like ClassName(a=2, b=3)."""
+        args = ["{}={}".format(k, v) for k, v in self.__dict__.items()]
+        return type(self).__name__ + "({})".format(", ".join(args))
 
 
 def get_docstring(object, width=88):
@@ -111,11 +118,6 @@ def pprint(*args, **kwargs):
     print(*args, **kwargs)
 
 
-def recurse_on(obj):
-    """The objects we recurse on."""
-    return inspect.ismodule(obj) or inspect.isclass(obj)
-
-
 def is_method(obj):
     """Whether an object is a method or not."""
     return inspect.ismethoddescriptor(obj) or inspect.ismethod(obj)
@@ -186,6 +188,38 @@ def inspect_classify(obj):
     return classes
 
 
+def clean_object_stack(stack):
+    """
+    Join an object stack so that consequtive modules are merged into the last one.
+    
+    This avoids the stack [collections, collections.abc] as being named
+    'collections.collections.abc'.
+    
+    >>> import collections
+    >>> from collections import abc
+    >>> clean_object_stack([collections, abc]) == [abc]
+    True
+    >>> from collections import Counter
+    >>> input_stack = [collections, Counter, Counter.most_common]
+    >>> clean_object_stack(input_stack) == input_stack
+    True
+    """
+    assert isinstance(stack, list)
+
+    stack = stack.copy()
+    new_stack = []
+    for obj in stack:
+        # This one is a module, and the last one is a module
+        # Therefore it must be a submodule, get rid of the first one
+        # to avoid [collections, collections.abc]
+        if new_stack and inspect.ismodule(obj) and inspect.ismodule(new_stack[-1]):
+            new_stack.pop()
+        new_stack.append(obj)
+
+    assert len(new_stack) > 0
+    return new_stack
+
+
 def is_inspectable(obj):
     """An object is inspectable if it returns True for any of the inspect.is.. functions."""
     funcs = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
@@ -195,17 +229,30 @@ def is_inspectable(obj):
 
 def ispropersubpackage(package_a, package_b):
     """
-    Is A a subpackage or submodule of B?
+    Is A a proper subpackage or submodule of B?
     """
     try:
         path_a, _ = os.path.split(inspect.getfile(package_a))
-
+        path_b, _ = os.path.split(inspect.getfile(package_b))
         # is a built-in module
     except TypeError:
         return False
 
-    path_b, _ = os.path.split(inspect.getfile(package_b))
     return (path_b in path_a) and not (path_b == path_a)
+
+
+def issubpackage(package_a, package_b):
+    """
+    Is A a subpackage or submodule of B?
+    """
+    try:
+        path_a, _ = os.path.split(inspect.getfile(package_a))
+        path_b, _ = os.path.split(inspect.getfile(package_b))
+        # is a built-in module
+    except TypeError:
+        return False
+
+    return path_b in path_a
 
 
 def is_magic_method(obj):
@@ -422,15 +469,22 @@ def descend_from_package(
     package, types="package", include_tests=False, include_hidden=False
 ):
     """
-    Descent from a package to either a subpackage or modules on level down.
+    Descent from a package to either a subpackage or modules one level down.
     
     Yields a tuple of (object, object_name) one level down.
     """
+    if not inspect.ismodule(package):
+        return None
 
-    path = package.__path__
+    try:
+        path, _ = os.path.split(inspect.getfile(package))
+        # TypeError: <module 'itertools' (built-in)> is a built-in module
+    except TypeError:
+        return None
+
     prefix = package.__name__ + "."
 
-    generator = pkgutil.iter_modules(path=path, prefix=prefix)
+    generator = pkgutil.iter_modules(path=[path], prefix=prefix)
 
     for (importer, object_name, ispkg) in generator:
 
@@ -445,16 +499,20 @@ def descend_from_package(
 
         try:
             obj = importlib.import_module(object_name)
-        except (ModuleNotFoundError, ImportError) as error:
+        except ModuleNotFoundError:
             # TODO: Replace this with logging
-            print(f"Could not import {object_name}. Error: {error}")
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+        except ImportError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
 
         if types.lower() == "package" and ispkg:
-            yield obj, object_name
+            yield object_name, obj
         elif types.lower() == "module" and ismodule:
-            yield obj, object_name
+            yield object_name, obj
         elif types.lower() == "both":
-            yield obj, object_name
+            yield object_name, obj
         elif types.lower() not in ("package", "module", "both"):
             raise ValueError("Parameter `types` must be 'package', 'module' or 'both'.")
 

@@ -3,11 +3,11 @@
 """
 Test the command line interface.
 """
-import subprocess
-import random
 import itertools
-import pytest
+import random
+import subprocess
 
+import pytest
 
 object_strings = [
     "list",
@@ -50,7 +50,7 @@ def _generate_cli_args(n):
     "arg_string",
     [
         " ".join([i, j])
-        for i, j in itertools.product(object_strings, _generate_cli_args(5))
+        for i, j in itertools.product(object_strings, _generate_cli_args(2))
     ],
 )
 def test_cli_smoketests_w_args(arg_string):
