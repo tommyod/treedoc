@@ -16,9 +16,9 @@ from treedoc.utils import resolve_object
 
 def treedoc(
     *,
-    object,
-    depth=999,
-    subpackages=True,
+    obj,
+    level=999,
+    subpackages=False,
     modules=False,
     private=False,
     magic=False,
@@ -33,9 +33,18 @@ def treedoc(
     Print minimalistic tree-like documentation.
     """
 
-    printer = printer(signature=signature, docstring=docstring)
+
+    printer = TreePrinter
+
+    if isinstance(obj, str):
+        obj = resolve_object(obj)
+
+    if obj is None:
+        raise ValueError("Could not resolve object")
+
+    printer = printer(signature=signature, docstring=docstring, info=info)
     traverser = ObjectTraverser(
-        depth=depth,
+        level=level,
         subpackages=subpackages,
         modules=modules,
         private=private,
@@ -46,7 +55,10 @@ def treedoc(
 
     objects = []
 
-    if isinstance(object, str) and object.lower().strip() == "python":
+    iterable = traverser.search(obj=obj)
+    iterable = iter(iterable)
+
+    if isinstance(obj, str) and obj.lower().strip() == "python":
 
         for (importer, object_name, ispkg) in pkgutil.iter_modules():
 
@@ -155,7 +167,7 @@ def setup_argumentparser(printers):
         default=False,
         dest="dunders",
         action="store_true",
-        help="show double underscore methods, e.g. __add(self, other)__.",
+        help="show double underscore methods, e.g. __add__(self, other).",
     )
 
     traversal.add_argument(
@@ -190,10 +202,10 @@ def setup_argumentparser(printers):
         "-S",
         "--signature",
         action="store",
-        default=1,
+        default=2,
         dest="signature",
         type=int,
-        choices=[0, 1, 2],
+        choices=[0, 1, 2, 3, 4],
         help="how much signature information to show.",
     )
 
@@ -201,10 +213,10 @@ def setup_argumentparser(printers):
         "-D",
         "--docstring",
         action="store",
-        default=2,
+        default=1,
         dest="docstring",
         type=int,
-        choices=[0, 1, 2, 3, 4],
+        choices=[0, 1, 2],
         help="how much docstring information to show.",
     )
 

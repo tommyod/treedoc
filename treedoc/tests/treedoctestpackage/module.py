@@ -9,10 +9,24 @@ Created on Sun Apr 21 21:13:23 2019
 import functools
 import operator
 
+from treedoctestpackage.module2 import SuperClass
+from treedoctestpackage.module2 import function_nested_outer as imported_function
+
+
+class SubClass(SuperClass):
+    """Test that the SuperClass will not be found in this module, but in it's original."""
+
+    def subclass_method(self):
+        return 1
+
 
 def func_addition(a, b):
     """Permforms addition."""
     return operator.add(a, b)
+
+
+def func_using_imported(x):
+    return imported_function(x)
 
 
 add_five_partial = functools.partial(func_addition, a=5)
