@@ -25,8 +25,9 @@ from treedoc.utils import (
     PrintMixin,
     descend_from_package,
     is_inspectable,
-    is_magic_method,
+    is_dunder_method,
     is_private,
+    is_test,
     ispackage,
     ispropersubpackage,
     issubpackage,
@@ -45,7 +46,8 @@ class ObjectTraverser(PrintMixin):
         subpackages=False,
         modules=False,
         private=False,
-        magic=False,
+        dunders=False,
+        tests=False,
         stream=sys.stdout,
     ):
         self.level = level
@@ -53,7 +55,8 @@ class ObjectTraverser(PrintMixin):
         self.modules = modules
         self.sort_key = None
         self.private = private
-        self.magic = magic
+        self.dunders = dunders
+        self.tests = tests
         self.stream = stream
 
     def search(self, *, obj):
@@ -222,10 +225,13 @@ class ObjectTraverser(PrintMixin):
         if obj is type:
             return False
 
+        if is_test(obj) and not self.tests:
+            return False
+
         if is_private(obj) and not self.private:
             return False
 
-        if is_magic_method(obj) and not self.magic:
+        if is_dunder_method(obj) and not self.dunders:
             return False
 
         if not is_inspectable(obj):
@@ -277,7 +283,9 @@ class ObjectTraverser(PrintMixin):
         # The objects we will recurse on
         filtered = []
 
-        generator1 = descend_from_package(obj)
+        generator1 = descend_from_package(
+            package=obj, include_tests=self.tests, include_private=self.private
+        )
         generator2 = inspect.getmembers(obj)
 
         def unique_first(gen1, gen2):
@@ -339,8 +347,10 @@ if __name__ == "__main__":
 
     pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
 
-    import subprocess
-
-    subprocess.call(["treedoc", "collections"])
-    subprocess.call(["treedoc", "pandas"])
-    subprocess.call(["treedoc", "list"])
+# =============================================================================
+#     import subprocess
+#
+#     subprocess.call(["treedoc", "collections"])
+#     subprocess.call(["treedoc", "pandas"])
+#     subprocess.call(["treedoc", "list"])
+# =============================================================================

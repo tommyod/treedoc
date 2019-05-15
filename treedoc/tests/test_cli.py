@@ -15,6 +15,8 @@ object_strings = [
     "collections.Counter",
     "math",
     "collections.abc.Collection",
+    "list set dict",
+    "list   set dict  ",
 ]
 
 
@@ -29,6 +31,15 @@ def test_cli_smoketests(obj_string):
     assert exit_code == 0
 
 
+# =============================================================================
+# def test_cli_python_arg():
+#     """Ensure that `treedoc python` runs."""
+#
+#     exit_code, output = subprocess.getstatusoutput(" ".join(["treedoc", "python"]))
+#     assert exit_code == 0
+# =============================================================================
+
+
 def _generate_cli_args(n):
     """Generate n args."""
     random.seed(42)
@@ -39,8 +50,11 @@ def _generate_cli_args(n):
         info = "--info " + str(random.choice([0, 1, 2]))
         docstring = "--docstring " + str(random.choice([0, 1, 2]))
         signature = "--signature " + str(random.choice([0, 1, 2, 3, 4]))
+        modules = random.choice(["", "--modules"])
+        subpackages = random.choice(["", "--subpackages"])
+        dunders = random.choice(["", "--dunders"])
 
-        to_yield = " ".join([info, docstring, signature])
+        to_yield = " ".join([info, docstring, signature, modules, subpackages, dunders])
         if to_yield not in yielded:
             yielded.add(to_yield)
             yield to_yield
@@ -58,8 +72,6 @@ def test_cli_smoketests_w_args(arg_string):
     is performed apart from the non-existence of an error."""
 
     exit_code, output = subprocess.getstatusoutput(" ".join(["treedoc", arg_string]))
-
-    # Zero exit code means everything is OK
     assert exit_code == 0
 
 

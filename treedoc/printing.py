@@ -15,7 +15,7 @@ from treedoc.utils import (
     format_signature,
     get_docstring,
     inspect_classify,
-    resolve_object,
+    resolve_str_to_obj,
 )
 
 
@@ -45,16 +45,18 @@ class PrinterABC(abc.ABC):
 class Printer(PrintMixin):
     """Base class for printers used for input validation."""
 
-    def __init__(self, *, signature=1, docstring=2, info=2):
+    def __init__(self, *, signature=1, docstring=2, info=2, width=88):
         """
         Initialize a printer.
         """
         assert signature in (0, 1, 2, 3, 4)
         assert docstring in (0, 1, 2)
         assert info in (0, 1, 2, 3, 4)
+        assert width in range(2 ** 6, 2 ** 8 + 1)
         self.signature = signature
         self.docstring = docstring
         self.info = info
+        self.width = width
 
     def _validate_row(self, row):
         assert isinstance(row, collections.abc.Sequence)
@@ -62,7 +64,7 @@ class Printer(PrintMixin):
         assert all((hasattr(obj, "__name__") for obj in row))
 
 
-class SimplePrinter(Printer, PrinterABC):
+class DensePrinter(Printer, PrinterABC):
 
     SEP = " -> "
     END = "\n"
@@ -123,7 +125,7 @@ class TreePrinter(Printer, PrinterABC):
 
         if self.docstring == 0:
             return ""
-        return get_docstring(object)
+        return get_docstring(object, width=self.width)
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""
@@ -144,11 +146,15 @@ class TreePrinter(Printer, PrinterABC):
                 obj_names = ".".join([s.__name__ for s in clean_object_stack(stack)])
 
                 # TODO: Remove this
-                if resolve_object(obj_names) is None:
+                try:
+                    resolve_str_to_obj(obj_names)
+                except ImportError:
                     pass
-                    # print("FAILED TO LOAD")
-                    # print(obj_names)
-                # assert resolve_object(obj_names) is not None
+                # if resolve_str_to_obj(obj_names) is None:
+                #    pass
+                # print("FAILED TO LOAD")
+                # print(obj_names)
+                # assert resolve_str_to_obj(obj_names) is not None
 
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 

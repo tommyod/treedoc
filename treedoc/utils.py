@@ -13,6 +13,7 @@ import os
 import pkgutil
 import pydoc
 import textwrap
+import collections
 
 _marker = object()
 
@@ -36,19 +37,28 @@ def get_docstring(object, width=88):
     >>> get_docstring(set.intersection, width=18)
     'Return the...'
     """
+
+    # =============================================================================
+    #     TODO: This function needs to become smarter, i.e. more adaptible to
+    #     how docstrings are written "in the wild".
+    # =============================================================================
+
     # pydoc.getdoc is slightly more general than inspect.getdoc,see:
     # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
     doc = pydoc.getdoc(object)
     first_line, _ = pydoc.splitdoc(doc)
 
-    return_value = textwrap.shorten(first_line, width=width, placeholder="...")
-    if return_value:
-        return return_value
+    return_str = textwrap.shorten(first_line, width=width, placeholder="...")
+    if return_str:
+        return_str = return_str[:-3] if return_str.endswith("....") else return_str
+        return return_str
 
     # If the docstring is a long paragraph, pydoc.splitdoc will return ''
     # We change this behavior to include the start of the string.
-    if not return_value and doc:
-        return textwrap.shorten(doc, width=width, placeholder="...")
+    if not return_str and doc:
+        return_str = textwrap.shorten(doc, width=width, placeholder="...")
+        return_str = return_str[:-3] if return_str.endswith("....") else return_str
+        return return_str
 
     return ""
 
@@ -248,14 +258,20 @@ def issubpackage(package_a, package_b):
     try:
         path_a, _ = os.path.split(inspect.getfile(package_a))
         path_b, _ = os.path.split(inspect.getfile(package_b))
-        # is a built-in module
+
     except TypeError:
+        # is a built-in module
+
+        # For instance: issubpackage(builtins, builtins) should return True
+        if package_a == package_b:
+            return True
+
         return False
 
     return path_b in path_a
 
 
-def is_magic_method(obj):
+def is_dunder_method(obj):
     # if not inspect.ismethod(obj) or inspect.ismethoddescriptor(obj) or isinstance(obj, collections.abc.Callable):
     #    return False
 
@@ -270,6 +286,13 @@ def is_private(obj):
     typical_private = obj_name.startswith("_") and obj_name[1] != "_"
     private_subpackage = "._" in obj_name
     return typical_private or private_subpackage
+
+
+def is_test(obj):
+    assert hasattr(obj, "__name__")
+    obj_name = obj.__name__.lower()
+    patterns = ("test", "_test", "__test")
+    return any(obj_name.startswith(pattern) for pattern in patterns)
 
 
 def ispackage(obj):
@@ -466,7 +489,7 @@ def format_signature(obj, verbosity=2):
 
 
 def descend_from_package(
-    package, types="package", include_tests=False, include_hidden=False
+    package, *, types="package", include_tests=False, include_private=False
 ):
     """
     Descent from a package to either a subpackage or modules one level down.
@@ -494,7 +517,7 @@ def descend_from_package(
         if ".test" in object_name.lower() and not include_tests:
             continue
 
-        if "._" in object_name.lower() and not include_hidden:
+        if "._" in object_name.lower() and not include_private:
             continue
 
         try:
@@ -504,6 +527,16 @@ def descend_from_package(
             # print(f"Could not import {object_name}. Error: {error}")
             return
         except ImportError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
+        # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/ctypes/wintypes.py", line 20, in <module>
+        except ValueError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
+        # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/ctypes/wintypes.py", line 20, in <module>
+        except LookupError:
             # print(f"Could not import {object_name}. Error: {error}")
             return
 
@@ -517,7 +550,7 @@ def descend_from_package(
             raise ValueError("Parameter `types` must be 'package', 'module' or 'both'.")
 
 
-def resolve_object(object_string):
+def resolve_str_to_obj(object_string):
     """
     Resolve a string to a Python object.
     
@@ -528,19 +561,97 @@ def resolve_object(object_string):
     
     Examples
     --------
-    >>> resolve_object("list") == list
+    >>> resolve_str_to_obj("list") == list
     True
     >>> import collections
-    >>> resolve_object("collections") == collections
+    >>> resolve_str_to_obj("collections") == collections
     True
     >>> from collections import Counter
-    >>> resolve_object("collections.Counter") == Counter
+    >>> resolve_str_to_obj("collections.Counter") == Counter
     True
-    >>> resolve_object("gibberish.Counter") is None
-    True
+    >>> resolve_str_to_obj("gibberish.Counter")
+    Traceback (most recent call last):
+        ...
+    ImportError: Could not resolve 'gibberish.Counter'.
     """
     assert isinstance(object_string, str)
-    return pydoc.locate(object_string)
+    suggestion = pydoc.locate(object_string)
+
+    if suggestion is None and object_string != "None":
+        raise ImportError("Could not resolve '{}'.".format(object_string))
+    else:
+        return suggestion
+
+
+def resolve_input(obj):
+    """Resolve a general input (str, iterable, etc) to a list of Python objects.
+    
+    
+    Examples
+    --------
+    >>> resolve_input("list") == [list]
+    True
+    >>> resolve_input("list dict") == [list, dict]
+    True
+    >>> len(resolve_input(["python"])) > 10
+    True
+    >>> resolve_input(["list"]) == [list]
+    True
+    >>> resolve_input(["list", "dict"]) == [list, dict]
+    True
+    >>> resolve_input(list) == [list]
+    True
+    >>> from collections.abc import Collection
+    >>> resolve_input("collections.abc.Collection") == [Collection]
+    True
+    """
+    if isinstance(obj, str):
+        obj = obj.strip()
+
+    if isinstance(obj, str) and " " in obj:
+        # Parse "dict   str  " correctly, ignoring extra whitespace
+        obj = [o for o in obj.split(" ") if o != ""]
+
+    # Special handling if "python" is passed
+    if isinstance(obj, list) and len(obj) == 1 and obj[0].lower().strip() == "python":
+        objects = []
+
+        for (importer, object_name, ispkg) in pkgutil.iter_modules():
+
+            if not ispkg:
+                continue
+
+            try:
+                obj = importlib.import_module(object_name)
+            except:
+                continue
+
+            # =============================================================================
+            #             is_standard_lib = False
+            #             try:
+            #                 fname = inspect.getfile(obj)
+            #                 if not 'site-packages' in fname:
+            #                     is_standard_lib = False
+            #             except (ValueError, TypeError):
+            #                 is_standard_lib = False
+            #
+            #             if is_standard_lib:
+            # =============================================================================
+            objects.append(obj)
+
+        return objects
+
+    elif isinstance(obj, str):
+        assert " " not in obj
+        return [resolve_str_to_obj(obj)]
+
+    elif isinstance(obj, (list, set, tuple)):
+        attempt = [resolve_str_to_obj(o) if isinstance(o, str) else o for o in obj]
+        return [obj for obj in attempt if obj is not None]
+    else:
+        return [obj]
+
+    raise ValueError("Could not resolve object")
 
 
 if __name__ == "__main__":
