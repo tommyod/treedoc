@@ -125,7 +125,7 @@ class TreePrinter(Printer, PrinterABC):
 
         if self.docstring == 0:
             return ""
-        return get_docstring(object)
+        return get_docstring(object, width=self.width)
 
     def _format_argspec(self, leaf_object):
         """Get and format argspec from the leaf object in the tree path."""

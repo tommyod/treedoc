@@ -37,6 +37,12 @@ def get_docstring(object, width=88):
     >>> get_docstring(set.intersection, width=18)
     'Return the...'
     """
+
+    # =============================================================================
+    #     TODO: This function needs to become smarter, i.e. more adaptible to
+    #     how docstrings are written "in the wild".
+    # =============================================================================
+
     # pydoc.getdoc is slightly more general than inspect.getdoc,see:
     # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
     doc = pydoc.getdoc(object)
