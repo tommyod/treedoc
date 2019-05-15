@@ -42,14 +42,17 @@ def get_docstring(object, width=88):
     doc = pydoc.getdoc(object)
     first_line, _ = pydoc.splitdoc(doc)
 
-    return_value = textwrap.shorten(first_line, width=width, placeholder="...")
-    if return_value:
-        return return_value
+    return_str = textwrap.shorten(first_line, width=width, placeholder="...")
+    if return_str:
+        return_str = return_str[:-3] if return_str.endswith("....") else return_str
+        return return_str
 
     # If the docstring is a long paragraph, pydoc.splitdoc will return ''
     # We change this behavior to include the start of the string.
-    if not return_value and doc:
-        return textwrap.shorten(doc, width=width, placeholder="...")
+    if not return_str and doc:
+        return_str = textwrap.shorten(doc, width=width, placeholder="...")
+        return_str = return_str[:-3] if return_str.endswith("....") else return_str
+        return return_str
 
     return ""
 
@@ -521,6 +524,16 @@ def descend_from_package(
             # print(f"Could not import {object_name}. Error: {error}")
             return
 
+        # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/ctypes/wintypes.py", line 20, in <module>
+        except ValueError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
+        # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/ctypes/wintypes.py", line 20, in <module>
+        except LookupError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
         if types.lower() == "package" and ispkg:
             yield object_name, obj
         elif types.lower() == "module" and ismodule:
@@ -574,7 +587,7 @@ def resolve_input(obj):
     True
     >>> resolve_input("list dict") == [list, dict]
     True
-    >>> len(resolve_input("python")) > 10
+    >>> len(resolve_input(["python"])) > 10
     True
     >>> resolve_input(["list"]) == [list]
     True
@@ -594,7 +607,7 @@ def resolve_input(obj):
         obj = [o for o in obj.split(" ") if o != ""]
 
     # Special handling if "python" is passed
-    if isinstance(obj, str) and obj.lower().strip() == "python":
+    if isinstance(obj, list) and len(obj) == 1 and obj[0].lower().strip() == "python":
         objects = []
 
         for (importer, object_name, ispkg) in pkgutil.iter_modules():
@@ -607,7 +620,18 @@ def resolve_input(obj):
             except:
                 continue
 
-            objects.append(object)
+            # =============================================================================
+            #             is_standard_lib = False
+            #             try:
+            #                 fname = inspect.getfile(obj)
+            #                 if not 'site-packages' in fname:
+            #                     is_standard_lib = False
+            #             except (ValueError, TypeError):
+            #                 is_standard_lib = False
+            #
+            #             if is_standard_lib:
+            # =============================================================================
+            objects.append(obj)
 
         return objects
 
