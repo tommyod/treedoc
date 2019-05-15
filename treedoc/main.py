@@ -14,8 +14,8 @@ from treedoc.utils import resolve_input
 
 
 def treedoc(
-    *,
     obj,
+    *,
     level=999,
     subpackages=False,
     modules=False,
@@ -29,29 +29,39 @@ def treedoc(
     printer=TreePrinter,
     stream=sys.stdout,
 ):
-    """
-    Print minimalistic tree-like documentation.
+    """Print minimalistic tree-like documentation.
+    
+    Arguments
+    ---------
+    obj: a string representing an object, or several space-separated object, or a list
+         of objects. examples: "dict", "dict set", [dict, set]
+    
+    Examples
+    --------
+    >>> treedoc(list)
+    >>> treedoc("collections.Counter")
     """
 
+    # Resolve the object
     objects = resolve_input(obj)
 
-    printer = printer(signature=signature, docstring=docstring, info=info, width=width)
+    # Pass the arguments to the object traverser and the printer
     traverser = ObjectTraverser(
         level=level,
         subpackages=subpackages,
         modules=modules,
         private=private,
         dunders=dunders,
+        tests=tests,
         stream=stream,
     )
+    printer = printer(signature=signature, docstring=docstring, info=info, width=width)
 
     for obj in objects:
-        iterable = traverser.search(obj=obj)
-        iterable = iter(iterable)
+        search_result_iterator = traverser.search(obj=obj)
 
-        for row in printer.format_iterable(iterable):
-            if row is not None:
-                print(row, file=stream)
+        for row in printer.format_iterable(search_result_iterator):
+            print(row, file=stream)
 
 
 def setup_argumentparser(printers):
@@ -110,6 +120,7 @@ def setup_argumentparser(printers):
     )
 
     traversal.add_argument(
+        "-p",
         "--private",
         default=False,
         dest="private",
@@ -151,7 +162,7 @@ def setup_argumentparser(printers):
         dest="printer",
         nargs="?",
         choices=list(printers.keys()),
-        help="printer to use, defaults to 'simple'",
+        help="printer to use, defaults to 'tree'",
     )
 
     printing.add_argument(

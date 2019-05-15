@@ -27,6 +27,7 @@ from treedoc.utils import (
     is_inspectable,
     is_dunder_method,
     is_private,
+    is_test,
     ispackage,
     ispropersubpackage,
     issubpackage,
@@ -46,6 +47,7 @@ class ObjectTraverser(PrintMixin):
         modules=False,
         private=False,
         dunders=False,
+        tests=False,
         stream=sys.stdout,
     ):
         self.level = level
@@ -54,6 +56,7 @@ class ObjectTraverser(PrintMixin):
         self.sort_key = None
         self.private = private
         self.dunders = dunders
+        self.tests = tests
         self.stream = stream
 
     def search(self, *, obj):
@@ -222,6 +225,9 @@ class ObjectTraverser(PrintMixin):
         if obj is type:
             return False
 
+        if is_test(obj) and not self.tests:
+            return False
+
         if is_private(obj) and not self.private:
             return False
 
@@ -277,7 +283,9 @@ class ObjectTraverser(PrintMixin):
         # The objects we will recurse on
         filtered = []
 
-        generator1 = descend_from_package(obj)
+        generator1 = descend_from_package(
+            package=obj, include_tests=self.tests, include_private=self.private
+        )
         generator2 = inspect.getmembers(obj)
 
         def unique_first(gen1, gen2):

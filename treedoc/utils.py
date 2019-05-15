@@ -279,6 +279,13 @@ def is_private(obj):
     return typical_private or private_subpackage
 
 
+def is_test(obj):
+    assert hasattr(obj, "__name__")
+    obj_name = obj.__name__.lower()
+    patterns = ("test", "_test", "__test")
+    return any(obj_name.startswith(pattern) for pattern in patterns)
+
+
 def ispackage(obj):
 
     if not hasattr(obj, "__file__"):
@@ -473,7 +480,7 @@ def format_signature(obj, verbosity=2):
 
 
 def descend_from_package(
-    package, types="package", include_tests=False, include_hidden=False
+    package, *, types="package", include_tests=False, include_private=False
 ):
     """
     Descent from a package to either a subpackage or modules one level down.
@@ -501,7 +508,7 @@ def descend_from_package(
         if ".test" in object_name.lower() and not include_tests:
             continue
 
-        if "._" in object_name.lower() and not include_hidden:
+        if "._" in object_name.lower() and not include_private:
             continue
 
         try:
@@ -573,6 +580,8 @@ def resolve_input(obj):
     True
     >>> resolve_input(["list", "dict"]) == [list, dict]
     True
+    >>> resolve_input(list) == [list]
+    True
     >>> from collections.abc import Collection
     >>> resolve_input("collections.abc.Collection") == [Collection]
     True
@@ -609,9 +618,10 @@ def resolve_input(obj):
     elif isinstance(obj, (list, set, tuple)):
         attempt = [resolve_str_to_obj(o) if isinstance(o, str) else o for o in obj]
         return [obj for obj in attempt if obj is not None]
-
     else:
-        raise ValueError("Could not resolve object")
+        return [obj]
+
+    raise ValueError("Could not resolve object")
 
 
 if __name__ == "__main__":

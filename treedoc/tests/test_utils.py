@@ -142,13 +142,13 @@ class TestDescentFromPackage:
         assert set([module, module2]) == modules
 
     @staticmethod
-    def test_package_to_modules_w_hidden():
+    def test_package_to_modules_w_private():
         """
         Test that yielding modules one level down works with hidden modules too.
         """
 
         modules = descend_from_package(
-            treedoctestpackage, types="module", include_hidden=True
+            treedoctestpackage, types="module", include_private=True
         )
         modules = set(map_itemgetter(modules, 1))
 
