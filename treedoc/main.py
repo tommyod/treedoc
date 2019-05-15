@@ -8,7 +8,7 @@ Entrypoint for command line interface.
 import argparse
 import sys
 
-from treedoc.printing import SimplePrinter, TreePrinter
+from treedoc.printing import DensePrinter, TreePrinter
 from treedoc.traversal import ObjectTraverser
 from treedoc.utils import resolve_object
 
@@ -57,29 +57,31 @@ def treedoc(
             print(row)
 
 
-def main():
+def setup_argumentparser(printers):
     """
     Endpoint for CLI implementation.
     """
 
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
-        description="Minimalistic documentation in a tree structure.",
-        epilog="Report issues and contribute on https://github.com/tommyod/treedoc.",
+        description="Minimalistic Python documentation in a tree structure.",
+        epilog="Report issues and contribute at https://github.com/tommyod/treedoc.",
         allow_abbrev=True,
         # add_help=True,
     )
 
-    parser.add_argument("obj", default=None, nargs="?", help=("The object"))
+    parser.add_argument("obj", default=None, nargs="?", 
+                        help="package/class/method/... , e.g. collections.Counter")
 
     # =============================================================================
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
     # =============================================================================
 
     traversal = parser.add_argument_group(
-        "traversal", "The arguments are common to every printer."
+        "traversal", "The arguments below are common to every printer."
     )
     traversal.add_argument(
+            "-l",
         "--level",
         default=999,
         dest="level",
@@ -89,6 +91,7 @@ def main():
     )
 
     traversal.add_argument(
+            "-s",
         "--subpackages",
         default=False,
         dest="subpackages",
@@ -97,6 +100,7 @@ def main():
     )
 
     traversal.add_argument(
+            "-m",
         "--modules",
         default=False,
         dest="modules",
@@ -113,14 +117,16 @@ def main():
     )
 
     traversal.add_argument(
-        "--magic",
+            "-d",
+        "--dunders",
         default=False,
         dest="magic",
         action="store_true",
-        help="show magic methods, i.e. __add(self, other)__.",
+        help="show double underscore methods, i.e. __add__(self, other).",
     )
 
     traversal.add_argument(
+            "-t",
         "--tests",
         default=False,
         dest="tests",
@@ -133,11 +139,12 @@ def main():
     # =============================================================================
 
     printing = parser.add_argument_group(
-        "printing", "The meaning of the arguments varies depending on the printer."
+        "printing", "The meaning of the arguments below may vary depending on the printer.\nNumeric arguments default to middle values, printer defaults to 'tree'."
     )
 
-    printers = {"simple": SimplePrinter, "dense": lambda x: x ** 2}
+
     printing.add_argument(
+            "-P",
         "--printer",
         default="simple",
         dest="printer",
@@ -147,6 +154,7 @@ def main():
     )
 
     printing.add_argument(
+            "-S",
         "--signature",
         action="store",
         default=2,
@@ -157,6 +165,7 @@ def main():
     )
 
     printing.add_argument(
+            "-D",
         "--docstring",
         action="store",
         default=1,
@@ -167,6 +176,7 @@ def main():
     )
 
     printing.add_argument(
+            "-I",
         "--info",
         action="store",
         default=2,
@@ -175,12 +185,32 @@ def main():
         choices=[0, 1, 2, 3, 4],
         help="how much general information to show.",
     )
+    
+    printing.add_argument(
+            "-W",
+        "--width",
+        action="store",
+        default=2,
+        dest="width",
+        type=int,
+        choices=range(50, 500),
+        help="maximal width of the output.",
+    )
+    
+    return parser
+
+def main():
+    """TODO
+    """
+    printers = {"tree": TreePrinter, "dense": DensePrinter}
+    parser = setup_argumentparser(printers)
 
     args = parser.parse_args()
     args_to_func = {k: w for (k, w) in args._get_kwargs()}
     args_to_func["printer"] = printers[args_to_func["printer"]]
 
     treedoc(**args_to_func)
+
 
 
 if __name__ == "__main__":
