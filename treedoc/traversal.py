@@ -25,7 +25,7 @@ from treedoc.utils import (
     PrintMixin,
     descend_from_package,
     is_inspectable,
-    is_magic_method,
+    is_dunder_method,
     is_private,
     ispackage,
     ispropersubpackage,
@@ -45,7 +45,7 @@ class ObjectTraverser(PrintMixin):
         subpackages=False,
         modules=False,
         private=False,
-        magic=False,
+        dunders=False,
         stream=sys.stdout,
     ):
         self.level = level
@@ -53,7 +53,7 @@ class ObjectTraverser(PrintMixin):
         self.modules = modules
         self.sort_key = None
         self.private = private
-        self.magic = magic
+        self.dunders = dunders
         self.stream = stream
 
     def search(self, *, obj):
@@ -225,7 +225,7 @@ class ObjectTraverser(PrintMixin):
         if is_private(obj) and not self.private:
             return False
 
-        if is_magic_method(obj) and not self.magic:
+        if is_dunder_method(obj) and not self.dunders:
             return False
 
         if not is_inspectable(obj):
@@ -339,8 +339,10 @@ if __name__ == "__main__":
 
     pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
 
-    import subprocess
-
-    subprocess.call(["treedoc", "collections"])
-    subprocess.call(["treedoc", "pandas"])
-    subprocess.call(["treedoc", "list"])
+# =============================================================================
+#     import subprocess
+#
+#     subprocess.call(["treedoc", "collections"])
+#     subprocess.call(["treedoc", "pandas"])
+#     subprocess.call(["treedoc", "list"])
+# =============================================================================

@@ -10,51 +10,48 @@ import sys
 
 from treedoc.printing import DensePrinter, TreePrinter
 from treedoc.traversal import ObjectTraverser
-from treedoc.utils import resolve_object
+from treedoc.utils import resolve_input
 
 
 def treedoc(
+    *,
     obj,
     level=999,
     subpackages=False,
     modules=False,
     private=False,
-    magic=False,
+    dunders=False,
     tests=False,
     signature=1,
     docstring=2,
     info=2,
-    printer=SimplePrinter,
+    width=88,
+    printer=TreePrinter,
     stream=sys.stdout,
 ):
     """
     Print minimalistic tree-like documentation.
     """
 
-    printer = TreePrinter
+    objects = resolve_input(obj)
 
-    if isinstance(obj, str):
-        obj = resolve_object(obj)
-
-    if obj is None:
-        raise ValueError("Could not resolve object")
-
-    printer = printer(signature=signature, docstring=docstring, info=info)
+    printer = printer(signature=signature, docstring=docstring, info=info, width=width)
     traverser = ObjectTraverser(
         level=level,
         subpackages=subpackages,
         modules=modules,
         private=private,
-        magic=magic,
+        dunders=dunders,
         stream=stream,
     )
 
-    iterable = traverser.search(obj=obj)
-    iterable = iter(iterable)
+    for obj in objects:
+        iterable = traverser.search(obj=obj)
+        iterable = iter(iterable)
 
-    for row in printer.format_iterable(iterable):
-        if row is not None:
-            print(row)
+        for row in printer.format_iterable(iterable):
+            if row is not None:
+                print(row, file=stream)
 
 
 def setup_argumentparser(printers):
@@ -70,8 +67,12 @@ def setup_argumentparser(printers):
         # add_help=True,
     )
 
-    parser.add_argument("obj", default=None, nargs="?", 
-                        help="package/class/method/... , e.g. collections.Counter")
+    parser.add_argument(
+        "obj",
+        default=None,
+        nargs="?",
+        help="package/class/method/... , e.g. collections.Counter",
+    )
 
     # =============================================================================
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
@@ -81,7 +82,7 @@ def setup_argumentparser(printers):
         "traversal", "The arguments below are common to every printer."
     )
     traversal.add_argument(
-            "-l",
+        "-l",
         "--level",
         default=999,
         dest="level",
@@ -91,7 +92,7 @@ def setup_argumentparser(printers):
     )
 
     traversal.add_argument(
-            "-s",
+        "-s",
         "--subpackages",
         default=False,
         dest="subpackages",
@@ -100,7 +101,7 @@ def setup_argumentparser(printers):
     )
 
     traversal.add_argument(
-            "-m",
+        "-m",
         "--modules",
         default=False,
         dest="modules",
@@ -117,16 +118,16 @@ def setup_argumentparser(printers):
     )
 
     traversal.add_argument(
-            "-d",
+        "-d",
         "--dunders",
         default=False,
-        dest="magic",
+        dest="dunders",
         action="store_true",
         help="show double underscore methods, i.e. __add__(self, other).",
     )
 
     traversal.add_argument(
-            "-t",
+        "-t",
         "--tests",
         default=False,
         dest="tests",
@@ -139,14 +140,14 @@ def setup_argumentparser(printers):
     # =============================================================================
 
     printing = parser.add_argument_group(
-        "printing", "The meaning of the arguments below may vary depending on the printer.\nNumeric arguments default to middle values, printer defaults to 'tree'."
+        "printing",
+        "The meaning of the arguments below may vary depending on the printer.\nNumeric arguments default to middle values, printer defaults to 'tree'.",
     )
 
-
     printing.add_argument(
-            "-P",
+        "-P",
         "--printer",
-        default="simple",
+        default="tree",
         dest="printer",
         nargs="?",
         choices=list(printers.keys()),
@@ -154,7 +155,7 @@ def setup_argumentparser(printers):
     )
 
     printing.add_argument(
-            "-S",
+        "-S",
         "--signature",
         action="store",
         default=2,
@@ -165,7 +166,7 @@ def setup_argumentparser(printers):
     )
 
     printing.add_argument(
-            "-D",
+        "-D",
         "--docstring",
         action="store",
         default=1,
@@ -176,7 +177,7 @@ def setup_argumentparser(printers):
     )
 
     printing.add_argument(
-            "-I",
+        "-I",
         "--info",
         action="store",
         default=2,
@@ -185,19 +186,20 @@ def setup_argumentparser(printers):
         choices=[0, 1, 2, 3, 4],
         help="how much general information to show.",
     )
-    
+
     printing.add_argument(
-            "-W",
+        "-W",
         "--width",
         action="store",
-        default=2,
+        default=88,
         dest="width",
         type=int,
         choices=range(50, 500),
         help="maximal width of the output.",
     )
-    
+
     return parser
+
 
 def main():
     """TODO
@@ -210,7 +212,6 @@ def main():
     args_to_func["printer"] = printers[args_to_func["printer"]]
 
     treedoc(**args_to_func)
-
 
 
 if __name__ == "__main__":

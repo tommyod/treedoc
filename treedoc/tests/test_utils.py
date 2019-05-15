@@ -7,6 +7,9 @@ Created on Sun Apr 28 20:20:49 2019
 """
 
 import operator
+from collections.abc import Callable
+import collections.abc
+import builtins
 
 import pytest
 
@@ -16,7 +19,8 @@ from treedoc.utils import (
     format_signature,
     get_docstring,
     ispackage,
-    resolve_object,
+    resolve_str_to_obj,
+    resolve_input,
 )
 
 
@@ -153,25 +157,56 @@ class TestDescentFromPackage:
         assert set([module, module2, _hidden_module]) == modules
 
 
-def test_resolve_object():
-    """
-    Test that objects are resolved from strings as expected.
-    """
+class TestObjectResolution:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "input_arg, expected",
+        [
+            ("list", list),
+            ("builtins.set", set),
+            ("operator.add", operator.add),
+            ("collections.abc.Callable", Callable),
+            ("collections.abc", collections.abc),
+            ("", builtins),
+        ],
+    )
+    def test_resolve_str_to_obj(input_arg, expected):
+        """
+        Test that objects are resolved from strings as expected.
+        """
+        assert resolve_str_to_obj(input_arg) == expected
 
-    assert resolve_object("None") == None
-    assert resolve_object("list") == list
-    assert resolve_object("builtins.set") == set
-    assert resolve_object("operator.add") == operator.add
-    assert resolve_object("operator") == operator
-    assert resolve_object("Python") == None
+    @staticmethod
+    def test_resolve_str_to_obj_raises():
 
-    from collections.abc import Callable
+        with pytest.raises(ImportError):
+            resolve_str_to_obj("gibberish")
 
-    assert resolve_object("collections.abc.Callable") == Callable
+    @staticmethod
+    @pytest.mark.parametrize(
+        "input_arg, expected",
+        [
+            ("list dict set", [list, dict, set]),
+            (["list", "dict", "set"], [list, dict, set]),
+            (["list", "dict", set], [list, dict, set]),
+            ([list, dict, set], [list, dict, set]),
+            ("list dict", [list, dict]),
+            ("list   dict ", [list, dict]),
+            ("list", [list]),
+        ],
+    )
+    def test_resolve_input(input_arg, expected):
+        """
+        Test that objects are resolved from inputs.
+        """
 
-    import collections.abc as module
+        assert resolve_input(input_arg) == expected
 
-    assert resolve_object("collections.abc") == module
+    @staticmethod
+    def test_resolve_input_raises():
+
+        with pytest.raises(ImportError):
+            resolve_input("list dict gibberish")
 
 
 class TestSignature:
