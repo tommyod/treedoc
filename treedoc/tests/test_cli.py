@@ -15,6 +15,8 @@ object_strings = [
     "collections.Counter",
     "math",
     "collections.abc.Collection",
+    "list set dict",
+    "list   set dict  ",
 ]
 
 

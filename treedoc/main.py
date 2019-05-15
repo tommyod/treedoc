@@ -69,8 +69,8 @@ def setup_argumentparser(printers):
 
     parser.add_argument(
         "obj",
-        default=None,
-        nargs="?",
+        default="builtins",  # TODO: Change this to a different default?
+        nargs="*",
         help="package/class/method/... , e.g. collections.Counter",
     )
 
