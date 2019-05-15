@@ -41,8 +41,11 @@ def _generate_cli_args(n):
         info = "--info " + str(random.choice([0, 1, 2]))
         docstring = "--docstring " + str(random.choice([0, 1, 2]))
         signature = "--signature " + str(random.choice([0, 1, 2, 3, 4]))
+        modules = random.choice(["", "--modules"])
+        subpackages = random.choice(["", "--subpackages"])
+        dunders = random.choice(["", "--dunders"])
 
-        to_yield = " ".join([info, docstring, signature])
+        to_yield = " ".join([info, docstring, signature, modules, subpackages, dunders])
         if to_yield not in yielded:
             yielded.add(to_yield)
             yield to_yield

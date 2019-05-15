@@ -249,8 +249,14 @@ def issubpackage(package_a, package_b):
     try:
         path_a, _ = os.path.split(inspect.getfile(package_a))
         path_b, _ = os.path.split(inspect.getfile(package_b))
-        # is a built-in module
+
     except TypeError:
+        # is a built-in module
+
+        # For instance: issubpackage(builtins, builtins) should return True
+        if package_a == package_b:
+            return True
+
         return False
 
     return path_b in path_a

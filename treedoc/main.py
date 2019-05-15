@@ -194,7 +194,7 @@ def setup_argumentparser(printers):
         default=88,
         dest="width",
         type=int,
-        choices=range(50, 500),
+        # choices=range(50, 500),
         help="maximal width of the output.",
     )
 
