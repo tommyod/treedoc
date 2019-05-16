@@ -6,15 +6,15 @@ Module for printer classes.
 
 import abc
 import collections
-import pydoc
 
 from treedoc.utils import (
     Peekable,
     clean_object_stack,
     format_signature,
     get_docstring,
-    inspect_classify,
+    # inspect_classify,
     resolve_str_to_obj,
+    describe,
 )
 
 from treedoc.utils_meta import PrintMixin
@@ -118,7 +118,8 @@ class DensePrinter(Printer, PrinterABC):
                 obj_names = ".".join([s.__name__ for s in clean_object_stack(stack)])
 
             yield (
-                self.SPACES2 * len(stack)
+                "{}|".format(describe(last_obj))
+                + self.SPACES2 * len(stack)
                 + obj_names
                 + signature
                 + self.SPACES4

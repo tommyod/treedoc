@@ -14,8 +14,39 @@ import pkgutil
 import pydoc
 import textwrap
 import collections
+import sys
 
 _marker = object()
+
+
+def _describe(obj):
+    """Produce a short description of the given object.
+    
+    Inspired by pydoc.describe."""
+    if inspect.ismodule(obj):
+        if obj.__name__ in sys.builtin_module_names:
+            return "built-in module"
+        if hasattr(obj, "__path__"):
+            return "package"
+        else:
+            return "module"
+    if inspect.isbuiltin(obj):
+        return "built-in function"
+    if inspect.isgetsetdescriptor(obj):
+        return "getset descriptor"
+    if inspect.ismemberdescriptor(obj):
+        return "member descriptor"
+    if inspect.isclass(obj):
+        return "class"
+    if inspect.isfunction(obj):
+        return "function"
+    if inspect.ismethod(obj):
+        return "method"
+    return type(obj).__name__
+
+
+def describe(obj):
+    return _describe(obj).ljust(17)
 
 
 def get_docstring(object, *, width=88):

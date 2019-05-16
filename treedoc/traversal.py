@@ -32,7 +32,7 @@ from treedoc.utils import (
     issubpackage,
 )
 
-from treedoc.utils_meta import PrintMixin, ensure_output
+from treedoc.utils_meta import PrintMixin
 
 
 class ObjectTraverser(PrintMixin):
