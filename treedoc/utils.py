@@ -18,14 +18,7 @@ import collections
 _marker = object()
 
 
-class PrintMixin:
-    def __repr__(self):
-        """Returns a string like ClassName(a=2, b=3)."""
-        args = ["{}={}".format(k, v) for k, v in self.__dict__.items()]
-        return type(self).__name__ + "({})".format(", ".join(args))
-
-
-def get_docstring(object, width=88):
+def get_docstring(object, *, width=88):
     """Get a docstring summary from an object.
     
     If no docstring is available, an empty string is returned.
@@ -361,11 +354,16 @@ def signature_from_docstring(obj):
         return None
 
     # Attempt to get the signature
-    signature_part = docstring_line[len(obj.__name__) :]
+    index = docstring_line.index(obj.__name__) + len(obj.__name__)
+    signature_part = docstring_line[index:]
     try:
-        return _between(signature_part, "(", ")")
+        ret_value = _between(signature_part, "(", ")")
+        if ret_value:
+            return ret_value
     except ValueError:
         return None
+
+    return None
 
 
 def format_signature(obj, verbosity=2):

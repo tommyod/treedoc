@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Printers: objects that format rows in the tree.
+Module for printer classes.
 """
 
 import abc
 import collections
-import inspect
+import pydoc
 
 from treedoc.utils import (
     Peekable,
-    PrintMixin,
     clean_object_stack,
     format_signature,
     get_docstring,
@@ -18,9 +17,11 @@ from treedoc.utils import (
     resolve_str_to_obj,
 )
 
+from treedoc.utils_meta import PrintMixin
+
 
 class PrinterABC(abc.ABC):
-    """Abstract base class for printers."""
+    """Abstract base class (ABC) for printers."""
 
     @abc.abstractmethod
     def __init__():
@@ -28,16 +29,16 @@ class PrinterABC(abc.ABC):
 
     @abc.abstractmethod
     def format_iterable():
-        """
-        Format a row, i.e. a path in the tree.
+        """Takes an iterable yielding object stacks and yields formatted strings.
         
         Parameters:
         -----------
-        iterator (Iterator): an iterator yielding (objects, final_node)
+        iterator (Iterator): an iterator yielding (print_stack, stack). The stacks
+                             are lists representing paths in the object tree.
         
         Yields
         -------
-        output (string) : a string for printer, or None if something went wrong
+        formatted_str (string) : a string to be printed
         """
         pass
 
@@ -45,9 +46,20 @@ class PrinterABC(abc.ABC):
 class Printer(PrintMixin):
     """Base class for printers used for input validation."""
 
-    def __init__(self, *, signature=1, docstring=2, info=2, width=88):
-        """
-        Initialize a printer.
+    def __init__(
+        self, *, signature: int = 1, docstring: int = 2, info: int = 2, width: int = 88
+    ):
+        """Initialize a printer.
+        
+        The interpretation of the following arguments varies from printer to printer.
+        
+        Arguments
+        ---------
+            signature (int) :  how much signature information to show
+            docstring (int) :  how much docstring information to show
+            info (int) :  how much general information to show
+            width (int) :  maximum character width
+
         """
         assert signature in (0, 1, 2, 3, 4)
         assert docstring in (0, 1, 2)
@@ -68,48 +80,55 @@ class DensePrinter(Printer, PrinterABC):
 
     SEP = " -> "
     END = "\n"
+    SPACES2 = "  "
+    SPACES4 = 2 * SPACES2
 
-    def _get_docstring(self, object):
-        """Get and format docstring from the object."""
+    def _get_docstring(self, obj) -> str:
+        """Get and format docstring from an object."""
 
         if self.docstring == 0:
             return ""
-        return get_docstring(object)
+        return get_docstring(obj, width=self.width)
 
-    def _format_argspec(self, leaf_object):
-        """Get and format argspec from the leaf object in the tree path."""
-        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
-        return format_signature(leaf_object, verbosity=self.signature)
+    def _format_signature(self, obj) -> str:
+        """Get and format signature from an object."""
+        formatted = format_signature(obj, verbosity=self.signature)
+        assert isinstance(formatted, str)
+        return formatted
 
     def format_iterable(self, iterable):
 
+        for stack in self._format_row(iterable):
+
+            self._validate_row(stack)
+
+            # The row represents a path in the tree, the leaf object is the "final" object
+            *_, last_obj = stack
+
+            # Attempt to get a signature for the last object
+            signature = self._format_signature(last_obj)
+
+            # Get docstring information from the leaf object
+            docstring = self._get_docstring(last_obj)
+
+            # Info determines how much to show
+            if self.info == 0:
+                obj_names = stack[-1].__name__
+            else:
+                obj_names = ".".join([s.__name__ for s in clean_object_stack(stack)])
+
+            yield (
+                self.SPACES2 * len(stack)
+                + obj_names
+                + signature
+                + self.SPACES4
+                + docstring
+            )
+
+    def _format_row(self, iterable):
+        """Yield the object stack from the iterable."""
         for stack, final_node_at_depth in iterable:
-            yield self.format_row(stack)
-
-    def format_row(self, row):
-        # No docstring here, it's inherited from the method PrinterABC.print_row.
-        self._validate_row(row)
-
-        # The row represents a path in the tree, the leaf object is the "final" object
-        *_, leaf_object = row
-
-        # Attempt to get a signature for the leaf object
-        try:
-            inspect.getfullargspec(leaf_object)
-            signature = self._format_argspec(leaf_object)
-        except TypeError:
-            signature = ""
-
-        # Get docstring information from the leaf object
-        docstring = self._get_docstring(leaf_object)
-        docstring = docstring
-
-        return (
-            self.SEP.join([c.__name__ for c in row])
-            + signature
-            + str(inspect_classify(leaf_object))
-            # + ("\n\t" + docstring if docstring else "")
-        )  # + '\n'
+            yield stack
 
 
 class TreePrinter(Printer, PrinterABC):
@@ -120,26 +139,29 @@ class TreePrinter(Printer, PrinterABC):
     LAST = "└──"
     BLANK = "   "
 
-    def _get_docstring(self, object):
-        """Get and format docstring from the object."""
+    def _get_docstring(self, obj) -> str:
+        """Get and format docstring from an object."""
 
         if self.docstring == 0:
             return ""
-        return get_docstring(object, width=self.width)
+        return get_docstring(obj, width=self.width)
 
-    def _format_argspec(self, leaf_object):
-        """Get and format argspec from the leaf object in the tree path."""
-
-        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
-        return format_signature(leaf_object, verbosity=self.signature)
+    def _format_signature(self, obj) -> str:
+        """Get and format signature from an object."""
+        formatted = format_signature(obj, verbosity=self.signature)
+        assert isinstance(formatted, str)
+        return formatted
 
     def format_iterable(self, iterable):
-        """Formats rows and print stack yielded by iterable."""
+        # See the Abstract Base Class for the docstring
+        # Summary: take an iterable object yielding (stack, final_node_at_depth)
+        # and returns strings
+        assert isinstance(iterable, collections.abc.Iterable)
 
         for print_stack, stack in self._format_row(iterable):
             joined_print_stack = " ".join(print_stack)
 
-            # Infor determines how much to show
+            # Info determines how much to show
             if self.info == 0:
                 obj_names = stack[-1].__name__
             else:
@@ -159,7 +181,7 @@ class TreePrinter(Printer, PrinterABC):
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
             last_obj = stack[-1]
-            signature = self._format_argspec(last_obj)
+            signature = self._format_signature(last_obj)
             docstring = self._get_docstring(last_obj)
 
             yield " ".join([joined_print_stack, obj_names]) + signature
@@ -181,7 +203,12 @@ class TreePrinter(Printer, PrinterABC):
             yield " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
 
     def _format_row(self, iterator, depth=0, print_stack=None):
-        """Format a row."""
+        """Takes an iterator and yields tuples (print_stack, stack).
+        
+        This recursive generator takes an iterator which yields 
+        (stack, final_node_at_depth) and from it computes (print_stack, stack).
+        It's purpose is to generate the pretty tree-structure from the 
+        `final_node_at_depth` stack."""
 
         if not isinstance(iterator, Peekable):
             iterator = Peekable(iter(iterator))
@@ -262,16 +289,6 @@ class TreePrinter(Printer, PrinterABC):
 
 
 if __name__ == "__main__":
-
     import pytest
 
     pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
-
-    import subprocess
-
-    subprocess.call(["treedoc", "list"])
-    subprocess.call(["treedoc", "collections"])
-    subprocess.call(["treedoc", "pandas"])
-
-    t = TreePrinter()
-    print(t)

@@ -22,7 +22,6 @@ import os
 import sys
 
 from treedoc.utils import (
-    PrintMixin,
     descend_from_package,
     is_inspectable,
     is_dunder_method,
@@ -32,6 +31,8 @@ from treedoc.utils import (
     ispropersubpackage,
     issubpackage,
 )
+
+from treedoc.utils_meta import PrintMixin, ensure_output
 
 
 class ObjectTraverser(PrintMixin):
@@ -59,8 +60,8 @@ class ObjectTraverser(PrintMixin):
         self.tests = tests
         self.stream = stream
 
-    def search(self, *, obj):
-        """DFS search starting at an object `obj` and recursing down to its children."""
+    def search(self, obj):
+        """DFS search starting at an object and recursing to its children."""
         yield from self._search(obj=obj, stack=None)
 
     def _p(self, *args):
@@ -70,7 +71,7 @@ class ObjectTraverser(PrintMixin):
         print(*args, file=self.stream)
 
     def recurse_to_child_object(self, *, obj, child_obj):
-        """Given an object, should we recurse down to the child?"""
+        """Given an object and it's child, do we recurse down to the child?"""
 
         self._p(f"obj = {obj.__name__}, child_obj = {child_obj.__name__}")
 
@@ -214,7 +215,7 @@ class ObjectTraverser(PrintMixin):
 
         return True
 
-    def recurse_to_object(self, *, obj):
+    def recurse_to_object(self, obj):
         """Given an object, should we recurse down to it?"""
 
         name = obj.__name__
@@ -265,9 +266,8 @@ class ObjectTraverser(PrintMixin):
         assert len(stack + [obj]) == len(final_node_at_depth)
         yield stack + [obj], final_node_at_depth
 
+        # If it's not a module/package or class, we don't bother getting children
         if not (inspect.ismodule(obj) or inspect.isclass(obj)):
-            # stack.pop()
-            # final_node_at_depth.pop()
             return
 
         # =============================================================================
@@ -281,8 +281,6 @@ class ObjectTraverser(PrintMixin):
         # =============================================================================
 
         # The objects we will recurse on
-        filtered = []
-
         generator1 = descend_from_package(
             package=obj, include_tests=self.tests, include_private=self.private
         )
@@ -299,6 +297,7 @@ class ObjectTraverser(PrintMixin):
         generator = unique_first(generator1, generator2)
 
         # Iterate through children
+        filtered = []
         for name, child_obj in sorted(generator, key=self.sort_key):
 
             self._p(f"Looking at {name}, {type(child_obj)}")
@@ -342,15 +341,6 @@ class ObjectTraverser(PrintMixin):
 
 
 if __name__ == "__main__":
-
     import pytest
 
     pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
-
-# =============================================================================
-#     import subprocess
-#
-#     subprocess.call(["treedoc", "collections"])
-#     subprocess.call(["treedoc", "pandas"])
-#     subprocess.call(["treedoc", "list"])
-# =============================================================================

@@ -10,6 +10,8 @@ import operator
 from collections.abc import Callable
 import collections.abc
 import builtins
+import math
+import datetime
 
 import pytest
 
@@ -21,13 +23,31 @@ from treedoc.utils import (
     ispackage,
     resolve_str_to_obj,
     resolve_input,
+    signature_from_docstring,
 )
 
 
-def map_itemgetter(iterable, index):
+def map_itemgetter(iterable, index: int):
+    """Map an itemgetter over an iterable, returning element correpoding to index."""
     getter = operator.itemgetter(index)
     for item in iterable:
         yield getter(item)
+
+
+@pytest.mark.parametrize(
+    "input_arg, expected",
+    [
+        (math.log, ("x[, base]", "x, [base=math.e]")),
+        (dict.pop, ("k[,d]", None)),
+        (datetime.datetime.strptime, (None,)),
+    ],
+)
+def test_signature_from_docstring(input_arg, expected):
+    """Test the function getting signature information from docstrings.
+    
+    Due to builtin docstrings differing on different Python versions,
+    we allow several possibilities."""
+    assert signature_from_docstring(input_arg) in expected
 
 
 def test_ispackage():
@@ -82,7 +102,7 @@ def test_get_docstring():
     Even more stuff.
     """
     assert get_docstring(func) == "This is the docstring. More information here."
-    assert get_docstring(func, 12) == "This is..."
+    assert get_docstring(func, width=12) == "This is..."
 
     delattr(func, "__doc__")
     assert get_docstring(func) == ""
@@ -98,7 +118,7 @@ def test_get_docstring():
     including versions of Lorem Ipsum.
     """
 
-    assert get_docstring(func, 16) == "Lorem Ipsum..."
+    assert get_docstring(func, width=16) == "Lorem Ipsum..."
 
 
 class TestDescentFromPackage:
