@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Module for printer classes.
+Module for the printer classes and associated functions.
 """
 
 import abc
@@ -12,11 +12,7 @@ import textwrap
 import sys
 import pkgutil
 import importlib
-from treedoc.utils import (
-    Peekable,
-    PrintMixin,
-
-)
+from treedoc.utils import Peekable, PrintMixin
 
 
 # =============================================================================
@@ -291,20 +287,13 @@ class TreePrinter(Printer, PrinterABC):
             else:
                 # The next stack is of the same length as the current one
                 continue
-            
-            
-            
-            
-            
-            
+
+
 # =============================================================================
 # ------------------------ PART 2/2 OF MODULE - FUNCTIONS ---------------------
 # =============================================================================
-            
-            
-            
-            
-            
+
+
 def _describe(obj):
     """Produce a short description of the given object.
     
@@ -373,9 +362,6 @@ def get_docstring(object, *, width=88):
     return ""
 
 
-
-
-
 def clean_object_stack(stack):
     """
     Join an object stack so that consequtive modules are merged into the last one.
@@ -406,7 +392,6 @@ def clean_object_stack(stack):
 
     assert len(new_stack) > 0
     return new_stack
-
 
 
 def _get_name(param):
@@ -597,9 +582,6 @@ def format_signature(obj, verbosity=2):
 
     else:
         return str(sig)
-
-
-
 
 
 def resolve_str_to_obj(object_string):

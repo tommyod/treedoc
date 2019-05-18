@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Module for traversal of objects.
+Module for the ObjectTraverser class and associated functions.
 
 
-
+TODO: Description.
                    +---+                  
       -------------|obj|--------------    
       |            +---+             |    
@@ -23,7 +23,7 @@ import functools
 import importlib
 import pkgutil
 import sys
-from treedoc.utils_meta import PrintMixin
+from treedoc.utils import PrintMixin
 
 
 # =============================================================================
@@ -334,12 +334,13 @@ class ObjectTraverser(PrintMixin):
                 stack=stack.copy() + [obj],
                 final_node_at_depth=final_node_at_depth.copy() + [last],
             )
-            
+
+
 # =============================================================================
 # ------------------------ PART 2/2 OF MODULE - FUNCTIONS ---------------------
 # =============================================================================
-            
-            
+
+
 def is_inspectable(obj):
     """An object is inspectable if it returns True for any of the inspect.is.. functions."""
     funcs = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
@@ -412,6 +413,7 @@ def is_package(obj):
 
     return obj.__file__.endswith("__init__.py")
 
+
 def descend_from_package(
     package, *, types="package", include_tests=False, include_private=False
 ):
@@ -472,10 +474,6 @@ def descend_from_package(
             yield object_name, obj
         elif types.lower() not in ("package", "module", "both"):
             raise ValueError("Parameter `types` must be 'package', 'module' or 'both'.")
-
-
-
-
 
 
 if __name__ == "__main__":

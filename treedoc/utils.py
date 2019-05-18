@@ -4,9 +4,10 @@
 General utilities for treedoc.
 """
 
+import collections
 
 class PrintMixin:
-    """Adds a __repr__ method."""
+    """Adds a __repr__ method to a class."""
 
     # Could've used dataclasses, but they were introduced in Python 3.8
 
@@ -14,15 +15,13 @@ class PrintMixin:
         """Returns a string like ClassName(a=2, b=3)."""
         args = ["{}={}".format(k, v) for k, v in self.__dict__.items()]
         return type(self).__name__ + "({})".format(", ".join(args))
-    
-    
-    
-    
+
+
 _marker = object()
 
 
 class Peekable:
-    """Wrap an iterator to allow a lookahead.
+    """Wrap an iterator to allow lookahead.
     
     Call `peek` on the result to get the value that will be returned by `next`. 
     This won't advance the iterator:

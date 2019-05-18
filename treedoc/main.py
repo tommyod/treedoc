@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Entrypoint for command line interface.
+High level functions: treedoc-function, argument parsing and CLI entrypoint.
 """
 
 
 import argparse
 import sys
 
-from treedoc.printing import DensePrinter, TreePrinter
+from treedoc.printing import DensePrinter, TreePrinter, resolve_input
 from treedoc.traversal import ObjectTraverser
-from treedoc.utils import resolve_input
 
 
 def treedoc(
@@ -65,9 +64,7 @@ def treedoc(
 
 
 def setup_argumentparser(printers):
-    """
-    Endpoint for CLI implementation.
-    """
+    """Set up the argumentparser."""
 
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
@@ -212,9 +209,8 @@ def setup_argumentparser(printers):
     return parser
 
 
-def main():
-    """TODO
-    """
+def CLI_entrypoint():
+    """Set up argumentparser and parse arguments, then pass arguments to treedoc."""
     printers = {"tree": TreePrinter, "dense": DensePrinter}
     parser = setup_argumentparser(printers)
 
@@ -226,4 +222,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import pytest
+
+    pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])

@@ -12,7 +12,7 @@ setup(
     python_requires=">=3.6",
     install_requires=[],
     # https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
-    entry_points={"console_scripts": ["treedoc = treedoc.main:main"]},
+    entry_points={"console_scripts": ["treedoc = treedoc.main:CLI_entrypoint"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
