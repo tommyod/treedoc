@@ -24,15 +24,15 @@ documentation.
 
 TODO: Add sentence about GIF below.
 ![Example
-1](https://github.com/tommyod/treedoc/branding/examples/example_list.gif)
+1](branding/examples/example_list.gif)
 
 TODO: Add sentence about GIF below.
 ![Example
-2](https://github.com/tommyod/treedoc/branding/examples/example_collectionsabc.gif)
+2](branding/examples/example_collectionsabc.gif)
 
 TODO: Add sentence about GIF below.
 ![Example
-3](https://github.com/tommyod/treedoc/branding/examples/example_pandas_grep.gif)
+3](branding/examples/example_pandas_grep.gif)
 
 
 ## Python package
