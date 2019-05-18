@@ -301,11 +301,23 @@ class ObjectTraverser(PrintMixin):
         def unique_first(gen1, gen2):
             """Chain generators, but only one unique name."""
             # Using a list would be faster, but modules are not hashable, so O(n) lookup
-            seen = []
-            for a, b in itertools.chain(generator1, generator2):
-                if b not in seen:
-                    seen.append(b)
-                    yield a, b
+            seen_objects = []
+            seen_names = set()
+            for name, obj in itertools.chain(generator1, generator2):
+                try:
+                    if obj not in seen_objects:
+                        seen_objects.append(obj)
+                        seen_names.add(name)
+                        yield name, obj
+
+                # The comparison operation has been overwritten. Fall back to naming
+                # This happen for instance with pandas NaT (Not a Time)
+                except TypeError:
+
+                    if name not in seen_names:
+                        seen_objects.append(obj)
+                        seen_names.add(name)
+                        yield name, obj
 
         generator = unique_first(generator1, generator2)
 

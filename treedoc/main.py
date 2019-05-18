@@ -10,6 +10,7 @@ import sys
 
 from treedoc.printing import DensePrinter, TreePrinter, resolve_input
 from treedoc.traversal import ObjectTraverser
+from treedoc.utils import get_terminal_size
 
 
 def treedoc(
@@ -40,6 +41,10 @@ def treedoc(
     >>> treedoc(list)
     >>> treedoc("collections.Counter")
     """
+
+    # A zero means that no width was explicitly set, if so we set it to terminal width
+    if width == 0:
+        width, _ = get_terminal_size()
 
     # Resolve the object
     objects = resolve_input(obj)
@@ -199,7 +204,7 @@ def setup_argumentparser(printers):
         "-W",
         "--width",
         action="store",
-        default=88,
+        default=0,
         dest="width",
         type=int,
         # choices=range(50, 500),

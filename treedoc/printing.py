@@ -508,8 +508,10 @@ def format_signature(obj, *, verbosity=2, width=88) -> str:
 
     # It's too wide, shorten it and return
     inner_sig = str(signature_string).strip("()")
-    inner_sig = textwrap.shorten(inner_sig, width=width - 2)
-    return "(" + inner_sig + ")"
+    inner_sig = textwrap.shorten(inner_sig, width=width - 2, placeholder=" ...")
+    result = "(" + inner_sig + ")"
+    assert len(result) <= width
+    return result
 
 
 def _format_signature(obj, *, verbosity=2) -> str:
