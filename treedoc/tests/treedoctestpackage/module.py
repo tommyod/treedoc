@@ -37,6 +37,10 @@ def func_many_args(a, b=2, c=4, d=(1, 2, 3)):
     """Function with many arguments."""
     return b + c
 
+def func_many_long_args(arg:str='default', second_arg:int=1232456789, third_and_final_argument:str='long_default'):
+    """Function with many arguments."""
+    return None
+
 
 def generator(a):
     for i in range(a):

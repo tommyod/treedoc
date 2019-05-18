@@ -365,7 +365,7 @@ class TestSignature:
 
         assert (
             "".join(
-                char for char in format_signature(myfunc1, verbosity) if char != " "
+                char for char in format_signature(myfunc1, verbosity=verbosity) if char != " "
             )
             == expected
         )
@@ -382,7 +382,7 @@ class TestSignature:
         def myfunc2():
             return None
 
-        assert format_signature(myfunc2, verbosity) == expected
+        assert format_signature(myfunc2, verbosity=verbosity) == expected
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -401,7 +401,7 @@ class TestSignature:
         """
         from collections import Counter
 
-        assert format_signature(Counter.most_common, verbosity) == expected
+        assert format_signature(Counter.most_common, verbosity=verbosity) == expected
 
     @staticmethod
     @pytest.mark.parametrize("verbosity, expected", parameters)
@@ -414,7 +414,7 @@ class TestSignature:
         assert (
             "".join(
                 char
-                for char in format_signature(myclass.method_bound_to_myclass, verbosity)
+                for char in format_signature(myclass.method_bound_to_myclass, verbosity=verbosity)
                 if char != " "
             )
             == expected
@@ -441,7 +441,7 @@ class TestSignature:
             "".join(
                 char
                 for char in format_signature(
-                    myclass.static_method_bound_to_myclass, verbosity
+                    myclass.static_method_bound_to_myclass, verbosity=verbosity
                 )
                 if char != " "
             )
@@ -450,22 +450,11 @@ class TestSignature:
 
     @staticmethod
     @pytest.mark.parametrize("verbosity, expected", parameters)
-    def test_class_method(verbosity, expected):
+    def test_width_restriction(verbosity, expected):
         """
         Test that formatting signature works on a class method.
         """
-        myclass = treedoctestpackage.MyClass()
-
-        assert (
-            "".join(
-                char
-                for char in format_signature(
-                    myclass.classmethod_bound_to_myclass, verbosity
-                )
-                if char != " "
-            )
-            == expected
-        )
+        assert True
 
 
 if __name__ == "__main__":

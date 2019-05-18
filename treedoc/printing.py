@@ -468,7 +468,7 @@ def signature_from_docstring(obj):
     return None
 
 
-def format_signature(obj, verbosity=2):
+def format_signature(obj, *, verbosity=2, width=88) -> str:
     """ 
     Format a function signature for printing.
     
