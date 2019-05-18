@@ -81,6 +81,15 @@ def setup_argumentparser(printers):
         help="package/class/method/... , e.g. collections.Counter",
     )
 
+    parser.add_argument(
+        "-v",
+        "--version",
+        default=False,
+        dest="version",
+        action="store_true",
+        help="print the version and exit.",
+    )
+
     # =============================================================================
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
     # =============================================================================
@@ -215,6 +224,16 @@ def CLI_entrypoint():
     parser = setup_argumentparser(printers)
 
     args = parser.parse_args()
+
+    # The user wants to print the version. Print it and exit.
+    if args.version:
+        from treedoc import __version__
+
+        print("treedoc version {}".format(__version__))
+        return
+    else:
+        delattr(args, "version")
+
     args_to_func = {k: w for (k, w) in args._get_kwargs()}
     args_to_func["printer"] = printers[args_to_func["printer"]]
 
