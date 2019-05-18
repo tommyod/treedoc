@@ -16,15 +16,15 @@ TODO: Description.
 
 
 """
+import functools
+import importlib
 import inspect
 import itertools
 import os
-import functools
-import importlib
 import pkgutil
 import sys
-from treedoc.utils import PrintMixin
 
+from treedoc.utils import PrintMixin
 
 # =============================================================================
 # ------------------------ PART 1/2 OF MODULE - CLASSES -----------------------
@@ -69,6 +69,8 @@ class ObjectTraverser(PrintMixin):
     def recurse_to_child_object(self, *, obj, child_obj):
         """Given an object and it's child, do we recurse down to the child?"""
 
+        # TODO: Optimize this by placing what fails most often first
+
         self._p(f"obj = {obj.__name__}, child_obj = {child_obj.__name__}")
 
         # =============================================================================
@@ -80,12 +82,15 @@ class ObjectTraverser(PrintMixin):
             # Prevent `collections.eq` / `collections._eq`
             if inspect.isbuiltin(child_obj):
                 if inspect.getmodule(child_obj) != obj:
-                    self._p(f"Failed on condition 1.1")
+                    self._p(f"OC: Failed on condition 1.1")
                     return False
 
             # Not defined in the sub-tree, skip it
             if not is_subpackage(inspect.getmodule(child_obj), obj):
-                self._p(f"Failed on condition 1.2")
+
+                print(inspect.getmodule(child_obj), obj)
+
+                self._p(f"OC: Failed on condition 1.2")
                 return False
 
             # The object is defined in a different file
@@ -94,7 +99,7 @@ class ObjectTraverser(PrintMixin):
                 # If the object is not __init__.py,
                 # never include anything imported to it
                 if not is_package(obj):
-                    self._p(f"Failed on condition 1.3")
+                    self._p(f"OC: Failed on condition 1.3")
                     return False
 
                 # At this point the object is __init__.py, and we *might* include
@@ -105,7 +110,7 @@ class ObjectTraverser(PrintMixin):
 
                     if self.subpackages:
                         # will find it later, so skip it now
-                        self._p(f"Failed on condition 1.4")
+                        self._p(f"OC: Failed on condition 1.4")
                         return False
 
                 # If the object is defined at the same level
@@ -115,7 +120,7 @@ class ObjectTraverser(PrintMixin):
 
                     if self.modules:
                         # will find it later, so skip it now
-                        self._p(f"Failed on condition 1.5")
+                        self._p(f"OC: Failed on condition 1.5")
                         return False
 
         # =============================================================================
@@ -132,13 +137,13 @@ class ObjectTraverser(PrintMixin):
             else:
                 child_package_wrong = child_obj.__package__ in obj.__package__
             if different_packages and child_package_wrong:
-                self._p(f"Failed on condition 2.1")
+                self._p(f"OC: Failed on condition 2.1")
                 return False
 
             if child_obj.__package__ is not None:
                 # Prevents for instance `pandas` to recurse into `numpy`
                 if not obj.__package__ in child_obj.__package__:
-                    self._p(f"Failed on condition 2.2")
+                    self._p(f"OC: Failed on condition 2.2")
                     return False
 
             # Another fail safe to prevent `mysubpackage` to recurse into `subpack`
@@ -154,32 +159,32 @@ class ObjectTraverser(PrintMixin):
                     inspect.getfile(child_obj)
                 )
                 if not obj_pth in child_obj_pth:
-                    self._p(f"Failed on condition 2.3")
+                    self._p(f"OC: Failed on condition 2.3")
                     return False
 
                 if inspect.getfile(obj) == inspect.getfile(child_obj):
-                    self._p(f"Failed on condition 2.4")
+                    self._p(f"OC: Failed on condition 2.4")
                     return False
 
                 if child_obj_py_file == "__init__.py" and obj_py_file != "__init__.py":
-                    self._p(f"Failed on condition 2.5")
+                    self._p(f"OC: Failed on condition 2.5")
                     return False
 
             if is_propersubpackage(child_obj, obj) and not self.subpackages:
-                self._p(f"Failed on condition 2.6")
+                self._p(f"OC: Failed on condition 2.6")
                 return False
 
             try:
                 file = inspect.getfile(child_obj)
                 if (not file.endswith("__init__.py")) and not self.modules:
-                    self._p(f"Failed on condition 2.7")
+                    self._p(f"OC: Failed on condition 2.7")
                     return False
             except TypeError:
                 # TypeError: <module 'sys' (built-in)> is a built-in module
                 pass
 
             if obj.__package__ == child_obj.__package__ and not self.modules:
-                self._p(f"Failed on condition 2.8")
+                self._p(f"OC: Failed on condition 2.8")
                 return False
 
         # =============================================================================
@@ -191,21 +196,21 @@ class ObjectTraverser(PrintMixin):
         if inspect.isclass(child_obj):
 
             if not is_subpackage(inspect.getmodule(child_obj), obj):
-                self._p(f"Failed on condition 3.1")
+                self._p(f"OC: Failed on condition 3.1")
                 return False
 
             if obj in inspect.getmro(child_obj):
-                self._p(f"Failed on condition 3.2")
+                self._p(f"OC: Failed on condition 3.2")
                 return False
 
             # We prefer going from modules to classes, not from classes to classes
             if inspect.isclass(obj):
-                self._p(f"Failed on condition 3.3")
+                self._p(f"OC: Failed on condition 3.3")
                 return False
 
         # =============================================================================
         #         if not is_subpackage(inspect.getmodule(child_obj), obj):
-        #             self._p(f"Failed on condition 4.1")
+        #             self._p(f"OC: Failed on condition 4.1")
         #             return False
         # =============================================================================
 
@@ -214,25 +219,32 @@ class ObjectTraverser(PrintMixin):
     def recurse_to_object(self, obj):
         """Given an object, should we recurse down to it?"""
 
+        # TODO: Optimize this by placing what fails most often first
+
         name = obj.__name__
 
         if name in self._ignored_names:
+            self._p(f"O: Failed on condition 1.1")
             return False
 
         if obj is type:
+            self._p(f"O: Failed on condition 1.2")
             return False
 
         if is_test(obj) and not self.tests:
+            self._p(f"O: Failed on condition 1.3")
             return False
 
         if is_private(obj) and not self.private:
+            self._p(f"O: Failed on condition 1.4")
             return False
 
         if is_dunder_method(obj) and not self.dunders:
+            self._p(f"O: Failed on condition 1.5")
             return False
 
         if not is_inspectable(obj):
-            self._p(f"Failed on condition 4.1")
+            self._p(f"O: Failed on condition 1.6")
             return False
 
         return True
@@ -278,16 +290,21 @@ class ObjectTraverser(PrintMixin):
 
         # The objects we will recurse on
         generator1 = descend_from_package(
-            package=obj, include_tests=self.tests, include_private=self.private
+            package=obj,
+            include_tests=self.tests,
+            include_private=self.private,
+            include_modules=self.modules,
+            include_subpackages=self.subpackages,
         )
         generator2 = inspect.getmembers(obj)
 
         def unique_first(gen1, gen2):
             """Chain generators, but only one unique name."""
-            seen = set()
+            # Using a list would be faster, but modules are not hashable, so O(n) lookup
+            seen = []
             for a, b in itertools.chain(generator1, generator2):
-                if a not in seen:
-                    seen.add(a)
+                if b not in seen:
+                    seen.append(b)
                     yield a, b
 
         generator = unique_first(generator1, generator2)
@@ -383,8 +400,7 @@ def is_subpackage(package_a, package_b):
 
 
 def is_dunder_method(obj):
-    # if not inspect.ismethod(obj) or inspect.ismethoddescriptor(obj) or isinstance(obj, collections.abc.Callable):
-    #    return False
+    """Is the method a dunder (double underscore), i.e. __add__(self, other)?"""
 
     assert hasattr(obj, "__name__")
     obj_name = obj.__name__
@@ -392,6 +408,7 @@ def is_dunder_method(obj):
 
 
 def is_private(obj):
+    """Is the object private, i.e. _func(x)?"""
     assert hasattr(obj, "__name__")
     obj_name = obj.__name__
     typical_private = obj_name.startswith("_") and obj_name[1] != "_"
@@ -400,6 +417,7 @@ def is_private(obj):
 
 
 def is_test(obj):
+    """Is the object a test, i.e. test_func()?"""
     assert hasattr(obj, "__name__")
     obj_name = obj.__name__.lower()
     patterns = ("test", "_test", "__test")
@@ -407,6 +425,7 @@ def is_test(obj):
 
 
 def is_package(obj):
+    """Does the object file end with '__init__.py'?"""
 
     if not hasattr(obj, "__file__"):
         return False
@@ -415,10 +434,14 @@ def is_package(obj):
 
 
 def descend_from_package(
-    package, *, types="package", include_tests=False, include_private=False
+    package,
+    *,
+    include_tests=False,
+    include_private=False,
+    include_modules=False,
+    include_subpackages=False,
 ):
-    """
-    Descent from a package to either a subpackage or modules one level down.
+    """Descent from a package to either a subpackage or modules one level down.
     
     Yields a tuple of (object, object_name) one level down.
     """
@@ -466,14 +489,10 @@ def descend_from_package(
             # print(f"Could not import {object_name}. Error: {error}")
             return
 
-        if types.lower() == "package" and ispkg:
+        if include_subpackages and ispkg:
             yield object_name, obj
-        elif types.lower() == "module" and ismodule:
+        if include_modules and ismodule:
             yield object_name, obj
-        elif types.lower() == "both":
-            yield object_name, obj
-        elif types.lower() not in ("package", "module", "both"):
-            raise ValueError("Parameter `types` must be 'package', 'module' or 'both'.")
 
 
 if __name__ == "__main__":

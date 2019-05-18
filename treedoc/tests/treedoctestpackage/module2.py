@@ -5,6 +5,7 @@ Created on Sun Apr 21 21:13:23 2019
 
 @author: tommy
 """
+import functools
 
 
 def function_nested_outer(x):
@@ -23,6 +24,19 @@ def function_with_inner_class(x):
 
 def function_which_will_become_staticmethod():
     pass
+
+
+def wrapper(function):
+    @functools.wraps(function)
+    def wrapped(*args, **kwargs):
+        return function(*args, **kwargs)
+
+    return wrapped
+
+
+@wrapper
+def func_wrapped(a, b=2):
+    return a + b
 
 
 # =============================================================================

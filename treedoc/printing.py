@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Module for the printer classes and associated functions.
+Module for printers (classes) and associated functions.
 """
 
 import abc
 import collections
-import inspect
-import pydoc
-import textwrap
-import sys
-import pkgutil
 import importlib
-from treedoc.utils import Peekable, PrintMixin
+import inspect
+import pkgutil
+import pydoc
+import sys
+import textwrap
 
+from treedoc.utils import Peekable, PrintMixin
 
 # =============================================================================
 # ------------------------ PART 1/2 OF MODULE - CLASSES -----------------------
@@ -28,8 +28,8 @@ class PrinterABC(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def format_iterable():
-        """Takes an iterable yielding object stacks and yields formatted strings.
+    def format_iterable(iterable) -> str:
+        """Consumes an iterator yielding object stacks and yields formatted strings.
         
         Parameters:
         -----------
@@ -44,7 +44,7 @@ class PrinterABC(abc.ABC):
 
 
 class Printer(PrintMixin):
-    """Base class for printers used for input validation."""
+    """Base class for printers, used for input validation."""
 
     def __init__(
         self, *, signature: int = 1, docstring: int = 2, info: int = 2, width: int = 88
@@ -70,10 +70,10 @@ class Printer(PrintMixin):
         self.info = info
         self.width = width
 
-    def _validate_row(self, row):
-        assert isinstance(row, collections.abc.Sequence)
-        assert len(row) > 0
-        assert all((hasattr(obj, "__name__") for obj in row))
+    def _validate_obj_stack(self, stack) -> None:
+        assert isinstance(stack, collections.abc.Sequence)
+        assert len(stack) > 0
+        assert all((hasattr(obj, "__name__") for obj in stack))
 
 
 class DensePrinter(Printer, PrinterABC):
@@ -84,23 +84,25 @@ class DensePrinter(Printer, PrinterABC):
     SPACES4 = 2 * SPACES2
 
     def _get_docstring(self, obj) -> str:
-        """Get and format docstring from an object."""
+        """Get and format the docstring of an object."""
 
         if self.docstring == 0:
             return ""
         return get_docstring(obj, width=self.width)
 
     def _format_signature(self, obj) -> str:
-        """Get and format signature from an object."""
+        """Get and format the signature of an object."""
         formatted = format_signature(obj, verbosity=self.signature)
         assert isinstance(formatted, str)
         return formatted
 
-    def format_iterable(self, iterable):
-
+    def format_iterable(self, iterable) -> str:
+        # See the Abstract Base Class for the docstring
+        # Summary: take an iterable object yielding (stack, final_node_at_depth)
+        # and returns strings
         for stack in self._format_row(iterable):
 
-            self._validate_row(stack)
+            self._validate_obj_stack(stack)
 
             # The row represents a path in the tree, the leaf object is the "final" object
             *_, last_obj = stack
@@ -141,25 +143,28 @@ class TreePrinter(Printer, PrinterABC):
     BLANK = "   "
 
     def _get_docstring(self, obj) -> str:
-        """Get and format docstring from an object."""
+        """Get and format the docstring of an object."""
 
         if self.docstring == 0:
             return ""
         return get_docstring(obj, width=self.width)
 
     def _format_signature(self, obj) -> str:
-        """Get and format signature from an object."""
+        """Get and format the signature of an object."""
         formatted = format_signature(obj, verbosity=self.signature)
         assert isinstance(formatted, str)
         return formatted
 
-    def format_iterable(self, iterable):
+    def format_iterable(self, iterable) -> str:
         # See the Abstract Base Class for the docstring
         # Summary: take an iterable object yielding (stack, final_node_at_depth)
         # and returns strings
         assert isinstance(iterable, collections.abc.Iterable)
 
         for print_stack, stack in self._format_row(iterable):
+
+            self._validate_obj_stack(stack)
+
             joined_print_stack = " ".join(print_stack)
 
             # Info determines how much to show
@@ -320,11 +325,12 @@ def _describe(obj):
     return type(obj).__name__
 
 
-def describe(obj):
+def describe(obj) -> str:
+    """Produce a short description of the given object."""
     return _describe(obj).ljust(17)
 
 
-def get_docstring(object, *, width=88):
+def get_docstring(obj, *, width=88) -> str:
     """Get a docstring summary from an object.
     
     If no docstring is available, an empty string is returned.
@@ -344,7 +350,7 @@ def get_docstring(object, *, width=88):
 
     # pydoc.getdoc is slightly more general than inspect.getdoc,see:
     # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
-    doc = pydoc.getdoc(object)
+    doc = pydoc.getdoc(obj)
     first_line, _ = pydoc.splitdoc(doc)
 
     return_str = textwrap.shorten(first_line, width=width, placeholder="...")
@@ -395,9 +401,7 @@ def clean_object_stack(stack):
 
 
 def _get_name(param):
-    """ 
-    Checks if signature.Parameter corresponds to *args or **kwargs type input.
-    """
+    """Checks if signature.Parameter corresponds to *args or **kwargs type input."""
     if (
         param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD)
         and param.default is param.empty
@@ -660,17 +664,6 @@ def resolve_input(obj):
             except:
                 continue
 
-            # =============================================================================
-            #             is_standard_lib = False
-            #             try:
-            #                 fname = inspect.getfile(obj)
-            #                 if not 'site-packages' in fname:
-            #                     is_standard_lib = False
-            #             except (ValueError, TypeError):
-            #                 is_standard_lib = False
-            #
-            #             if is_standard_lib:
-            # =============================================================================
             objects.append(obj)
 
         return objects

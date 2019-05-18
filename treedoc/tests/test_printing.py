@@ -4,27 +4,25 @@
 Tests for classes and functions located in `printing.py`.
 """
 
-from treedoc.printing import TreePrinter
-from treedoc.utils import Peekable
+import builtins
+import collections.abc
+import datetime
+import math
 import operator
 from collections.abc import Callable
-import collections.abc
-import builtins
-import math
-import datetime
 
 import pytest
 
 import treedoctestpackage
-
-
 from treedoc.printing import (
+    TreePrinter,
     format_signature,
     get_docstring,
-    resolve_str_to_obj,
     resolve_input,
+    resolve_str_to_obj,
     signature_from_docstring,
 )
+from treedoc.utils import Peekable
 
 
 class TestTreePrinterRowFormatting:

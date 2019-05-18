@@ -11,6 +11,7 @@ import operator
 
 from treedoctestpackage.module2 import SuperClass
 from treedoctestpackage.module2 import function_nested_outer as imported_function
+from treedoctestpackage.module2 import wrapper
 
 
 class SubClass(SuperClass):
@@ -42,17 +43,19 @@ def generator(a):
         yield i
 
 
-def wrapper(function):
-    @functools.wraps(function)
-    def wrapped(*args, **kwargs):
-        return function(*args, **kwargs)
-
-    return wrapped
+# =============================================================================
+# WRAPPED USING A WRAPPER FROM AN OUTSIDE MODULE
+# =============================================================================
 
 
 @wrapper
-def func_wrapped(a, b=2):
-    return a + b
+def func_wrapped_w_wrapper_from_other_module(x):
+    return x
+
+
+# =============================================================================
+# Classes
+# =============================================================================
 
 
 class MyClass:

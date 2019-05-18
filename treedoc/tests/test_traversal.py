@@ -7,14 +7,13 @@ Tests for classes and functions located in `traversal.py`.
 import inspect
 import itertools
 import operator
+
 import pytest
 
-import treedoctestpackage
 import treedoctestpackage as testpackage
 import treedoctestpackage.subpackage as subtestpackage
+from treedoc.traversal import ObjectTraverser, descend_from_package, is_package
 from treedoctestpackage import module
-
-from treedoc.traversal import ObjectTraverser, is_package, descend_from_package
 
 
 class TestObjectTraverser:
@@ -201,7 +200,11 @@ class TestDescendFromPackage:
         Test that yielding subpackages one level down works.
         """
 
-        sub_packages = descend_from_package(treedoctestpackage, types="package")
+        import treedoctestpackage
+
+        sub_packages = descend_from_package(
+            treedoctestpackage, include_subpackages=True
+        )
         sub_packages = set(map_itemgetter(sub_packages, 1))
 
         from treedoctestpackage import subpackage, subpackage2
@@ -217,7 +220,7 @@ class TestDescendFromPackage:
 
         from treedoctestpackage import subpackage
 
-        sub_packages = descend_from_package(subpackage, types="package")
+        sub_packages = descend_from_package(subpackage, include_subpackages=True)
         sub_packages = set(map_itemgetter(sub_packages, 1))
         assert set([subsubpackage]) == sub_packages
 
@@ -226,8 +229,9 @@ class TestDescendFromPackage:
         """
         Test that yielding modules one level down works.
         """
+        import treedoctestpackage
 
-        modules = descend_from_package(treedoctestpackage, types="module")
+        modules = descend_from_package(treedoctestpackage, include_modules=True)
         modules = set(map_itemgetter(modules, 1))
 
         from treedoctestpackage import module, module2
@@ -239,9 +243,10 @@ class TestDescendFromPackage:
         """
         Test that yielding modules one level down works with hidden modules too.
         """
+        import treedoctestpackage
 
         modules = descend_from_package(
-            treedoctestpackage, types="module", include_private=True
+            treedoctestpackage, include_private=True, include_modules=True
         )
         modules = set(map_itemgetter(modules, 1))
 
