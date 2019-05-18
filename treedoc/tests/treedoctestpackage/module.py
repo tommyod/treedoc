@@ -37,7 +37,15 @@ def func_many_args(a, b=2, c=4, d=(1, 2, 3)):
     """Function with many arguments."""
     return b + c
 
-def func_many_long_args(arg:str='default', second_arg:int=1232456789, third_and_final_argument:str='long_default'):
+
+def func_many_long_args(
+    arg=2,
+    num: int = 123,
+    name: str = "john",
+    pi: float = 3.14,
+    place: str = "london",
+    e: float = 2.718281828459045,
+):
     """Function with many arguments."""
     return None
 

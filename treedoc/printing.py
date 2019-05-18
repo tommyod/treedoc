@@ -92,7 +92,7 @@ class DensePrinter(Printer, PrinterABC):
 
     def _format_signature(self, obj) -> str:
         """Get and format the signature of an object."""
-        formatted = format_signature(obj, verbosity=self.signature)
+        formatted = format_signature(obj, verbosity=self.signature, width=self.width)
         assert isinstance(formatted, str)
         return formatted
 
@@ -142,16 +142,16 @@ class TreePrinter(Printer, PrinterABC):
     LAST = "└──"
     BLANK = "   "
 
-    def _get_docstring(self, obj) -> str:
+    def _get_docstring(self, obj, *, width) -> str:
         """Get and format the docstring of an object."""
 
         if self.docstring == 0:
             return ""
-        return get_docstring(obj, width=self.width)
+        return get_docstring(obj, width=width)
 
-    def _format_signature(self, obj) -> str:
+    def _format_signature(self, obj, *, width) -> str:
         """Get and format the signature of an object."""
-        formatted = format_signature(obj, verbosity=self.signature)
+        formatted = format_signature(obj, verbosity=self.signature, width=width)
         assert isinstance(formatted, str)
         return formatted
 
@@ -186,11 +186,19 @@ class TreePrinter(Printer, PrinterABC):
 
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
-            last_obj = stack[-1]
-            signature = self._format_signature(last_obj)
-            docstring = self._get_docstring(last_obj)
+            # The 1 represents the spacing between the stacks
+            # The 3 represents space and quotation marks in "docstring"
+            width_used = len(joined_print_stack) + len(obj_names) + 1
 
-            yield " ".join([joined_print_stack, obj_names]) + signature
+            last_obj = stack[-1]
+            signature = self._format_signature(last_obj, width=self.width - width_used)
+            docstring = self._get_docstring(
+                last_obj, width=self.width - len(joined_print_stack) - 3
+            )
+
+            to_yield = " ".join([joined_print_stack, obj_names]) + signature
+            assert len(to_yield) <= self.width
+            yield to_yield
 
             # No need to show docstring, or no docstring to show, simply continue
             if self.docstring == 0 or docstring == "":
@@ -206,7 +214,9 @@ class TreePrinter(Printer, PrinterABC):
                 symbol = ""
 
             print_stack[-1] = symbol
-            yield " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
+            to_yield = " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
+            assert len(to_yield) <= self.width
+            yield to_yield
 
     def _format_row(self, iterator, depth=0, print_stack=None):
         """Takes an iterator and yields tuples (print_stack, stack).
@@ -489,6 +499,22 @@ def format_signature(obj, *, verbosity=2, width=88) -> str:
     >>> format_signature(collections.deque.append, verbosity=2)
     '(...)'
     """
+    signature_string = _format_signature(obj=obj, verbosity=verbosity)
+    assert isinstance(signature_string, str)
+
+    # No problems with the width
+    if len(signature_string) <= width:
+        return signature_string
+
+    # It's too wide, shorten it and return
+    inner_sig = str(signature_string).strip("()")
+    inner_sig = textwrap.shorten(inner_sig, width=width - 2)
+    return "(" + inner_sig + ")"
+
+
+def _format_signature(obj, *, verbosity=2) -> str:
+    """Format the signature, but make no guarantee for width.
+    """
     # TODO: Figure out how to handle *
 
     max_verbosity = 4
@@ -537,6 +563,10 @@ def format_signature(obj, *, verbosity=2, width=88) -> str:
         # 'TypeError: 1 is not a callable object'
         return ""
 
+    # =============================================================================
+    #     If the code reaches this point, we have a Signature stored in `sig`
+    # =============================================================================
+
     # If function as no arguments, return
     if str(sig) == "()" and verbosity > 0:
         return str(sig)
@@ -561,28 +591,24 @@ def format_signature(obj, *, verbosity=2, width=88) -> str:
         # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
         verbosity = max_verbosity
 
-        # Fails for instance on collections.ChainMap without this
+        # Fails for instance on collections.ChainMap without this logic
         return str(sig)
 
     elif verbosity == 1:
         return "(...)"
 
     elif verbosity == 2:
-        return (
-            "(" + SEP.join(_get_name(param) for param in sig.parameters.values()) + ")"
-        )
+        sig = SEP.join(_get_name(param) for param in sig.parameters.values())
+        return "(" + sig + ")"
 
     elif verbosity == 3:
-        return (
-            "("
-            + SEP.join(
-                param.name + "=" + str(param.default)
-                if param.default is not param.empty
-                else _get_name(param)
-                for param in sig.parameters.values()
-            )
-            + ")"
+        sig = SEP.join(
+            param.name + "=" + str(param.default)
+            if param.default is not param.empty
+            else _get_name(param)
+            for param in sig.parameters.values()
         )
+        return "(" + sig + ")"
 
     else:
         return str(sig)
