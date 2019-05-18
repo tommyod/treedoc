@@ -18,21 +18,18 @@ Install from [Python Package Index](https://pypi.org/project/treedoc/) (PyPI) us
 
 ## Usage
 
-treedoc provides a simple, efficient and interactive interface to Python
-documentation. treedoc can be used directly through the command-line interface,
-or interactively in a Python shell or Jupyter notebook.
+treedoc can be used directly through the command-line interface,
+or interactively in a Python shell or Jupyter notebook. For more information
+about arguments, see `treedoc --help` or `help(treedoc)`.
 
 ### Command-line interface
 
-TODO: Add sentence about GIF below.
 ![Example
 1](branding/examples/example_list.gif)
 
-TODO: Add sentence about GIF below.
 ![Example
 2](branding/examples/example_collectionsabc.gif)
 
-TODO: Add sentence about GIF below.
 ![Example
 3](branding/examples/example_pandas_grep.gif)
 
