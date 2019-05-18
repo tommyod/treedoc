@@ -2,7 +2,7 @@
 
 - Contributing
 - Existing work
-- Deployment
+- Maintainers
 
 ## Contributing
 
@@ -34,13 +34,14 @@ Below is a survey of similar packages and scripts.
 - [`vadivelmurugank/inspectshow`](https://github.com/vadivelmurugank/inspectshow)- "inspectshow module lists all the module internals in a tree format."
 
 
-## Deployment
+## Maintainers
 
 ### Creating a new release
 
 We use [Semantic Versioning 2.0.0](https://semver.org/).
-Pull the latest master, create a tag, and push it.
-Then trigger the Travis CI build, which will upload to PyPI.
+Pull the latest master branch commit (without creating a merge commit), create a tag, and then push the tag to GitHub.
+Make sure that the `__version__` constant corresponds with the git version tag.
+Trigger the Travis CI build, which will upload tagged commits to PyPI.
 
 ```bash
 $ git tag v.X.Y.Z
