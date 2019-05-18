@@ -1,13 +1,31 @@
-# TODO
+## Table of contents
 
-## What has been done?
+- Contributing
+- Existing work
+- Deployment
 
-- The builtin `dir` function along with [`inspect`](https://docs.python.org/3/library/inspect.html) is of great help
+## Contributing
+
+You are very welcome to scrutinize the code and make pull requests if you have suggestions and improvements.
+Your submitted code must be PEP8 compliant, and all tests must pass.
+
+If you wish to work on a problem, please create a Work In Progress (WIP) pull request to get feedback.
+We aim for:
+
+- Zero dependencies, but dependencies for testing are ok.
+- Idiomatic, clean Python code. Readability matters.
+- Thorough testing and code formatting, see `.travis.yml` for commands run by continuous integration.
+
+## Existing work
+
+Below is a survey of similar packages and scripts.
+
+- The built-in `dir` function along with [`inspect`](https://docs.python.org/3/library/inspect.html) is of great help
 - There's a package in the standard library called [`pydoc`](https://docs.python.org/3/library/pydoc.html)
   - The source is found at [`Lib/pydoc.py](https://github.com/python/cpython/blob/master/Lib/pydoc.py)
 - The package [`ljcooke/see`](https://github.com/ljcooke/see) is "Python's dir() for humans."
 - The package [`gabrielcnr/python-ls`](https://github.com/gabrielcnr/python-ls) is "Python's dir builtin with recursive search."
-- The Sphinx package has functionality we might find interesting, see 
+- The Sphinx package has functionality we might find interesting, see
   - [`util/inspect.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/util/inspect.py)
   - [`ext/autosummary/generate.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autosummary/generate.py)                                                                                                            
   - [`ext/autodoc/__init__.py`](https://github.com/sphinx-doc/sphinx/blob/master/sphinx/ext/autodoc/__init__.py)
@@ -16,18 +34,15 @@
 - [`vadivelmurugank/inspectshow`](https://github.com/vadivelmurugank/inspectshow)- "inspectshow module lists all the module internals in a tree format."
 
 
-## What should we do?
+## Deployment
 
-Determine how to structure the software. E.g. we can separate a Module traverser/tree structure, and the printing of it.
+### Creating a new release
 
-- [ ] Setup project structure (we can use cookiecutter)
-  - [ ] Testing 
-  - [ ] Travis CI 
-  - [ ] Pypi stuff 
-- [ ] Module traverser
-  - [ ] How to determine what an object is 
-  - [ ] How to retrieve documentation from an object 
-  - [ ] How to store results 
-  - [ ] Setup 
-- [ ] Printers
-  - [ ] Determine which options we want
+We use [Semantic Versioning 2.0.0](https://semver.org/).
+Pull the latest master, create a tag, and push it.
+Then trigger the Travis CI build, which will upload to PyPI.
+
+```bash
+$ git tag v.X.Y.Z
+$ git push origin tag v.X.Y.Z
+```
