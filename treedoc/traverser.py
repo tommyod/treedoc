@@ -19,20 +19,16 @@ Module for traversal of objects.
 import inspect
 import itertools
 import os
+import functools
+import importlib
+import pkgutil
 import sys
-
-from treedoc.utils import (
-    descend_from_package,
-    is_inspectable,
-    is_dunder_method,
-    is_private,
-    is_test,
-    ispackage,
-    ispropersubpackage,
-    issubpackage,
-)
-
 from treedoc.utils_meta import PrintMixin
+
+
+# =============================================================================
+# ------------------------ PART 1/2 OF MODULE - CLASSES -----------------------
+# =============================================================================
 
 
 class ObjectTraverser(PrintMixin):
@@ -88,7 +84,7 @@ class ObjectTraverser(PrintMixin):
                     return False
 
             # Not defined in the sub-tree, skip it
-            if not issubpackage(inspect.getmodule(child_obj), obj):
+            if not is_subpackage(inspect.getmodule(child_obj), obj):
                 self._p(f"Failed on condition 1.2")
                 return False
 
@@ -97,7 +93,7 @@ class ObjectTraverser(PrintMixin):
 
                 # If the object is not __init__.py,
                 # never include anything imported to it
-                if not ispackage(obj):
+                if not is_package(obj):
                     self._p(f"Failed on condition 1.3")
                     return False
 
@@ -105,7 +101,7 @@ class ObjectTraverser(PrintMixin):
                 # a file imported into it (depending on settings below)
 
                 # The object is defined at a lower level
-                if ispropersubpackage(inspect.getmodule(child_obj), obj):
+                if is_propersubpackage(inspect.getmodule(child_obj), obj):
 
                     if self.subpackages:
                         # will find it later, so skip it now
@@ -113,7 +109,7 @@ class ObjectTraverser(PrintMixin):
                         return False
 
                 # If the object is defined at the same level
-                if issubpackage(inspect.getmodule(child_obj), obj) and issubpackage(
+                if is_subpackage(inspect.getmodule(child_obj), obj) and is_subpackage(
                     obj, inspect.getmodule(child_obj)
                 ):
 
@@ -169,7 +165,7 @@ class ObjectTraverser(PrintMixin):
                     self._p(f"Failed on condition 2.5")
                     return False
 
-            if ispropersubpackage(child_obj, obj) and not self.subpackages:
+            if is_propersubpackage(child_obj, obj) and not self.subpackages:
                 self._p(f"Failed on condition 2.6")
                 return False
 
@@ -194,7 +190,7 @@ class ObjectTraverser(PrintMixin):
         # TODO: Extend this to other objects?
         if inspect.isclass(child_obj):
 
-            if not issubpackage(inspect.getmodule(child_obj), obj):
+            if not is_subpackage(inspect.getmodule(child_obj), obj):
                 self._p(f"Failed on condition 3.1")
                 return False
 
@@ -208,7 +204,7 @@ class ObjectTraverser(PrintMixin):
                 return False
 
         # =============================================================================
-        #         if not issubpackage(inspect.getmodule(child_obj), obj):
+        #         if not is_subpackage(inspect.getmodule(child_obj), obj):
         #             self._p(f"Failed on condition 4.1")
         #             return False
         # =============================================================================
@@ -338,6 +334,148 @@ class ObjectTraverser(PrintMixin):
                 stack=stack.copy() + [obj],
                 final_node_at_depth=final_node_at_depth.copy() + [last],
             )
+            
+# =============================================================================
+# ------------------------ PART 2/2 OF MODULE - FUNCTIONS ---------------------
+# =============================================================================
+            
+            
+def is_inspectable(obj):
+    """An object is inspectable if it returns True for any of the inspect.is.. functions."""
+    funcs = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
+    funcs = (getattr(inspect, func_name) for func_name in funcs)
+    return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
+
+
+def is_propersubpackage(package_a, package_b):
+    """
+    Is A a proper subpackage or submodule of B?
+    """
+    try:
+        path_a, _ = os.path.split(inspect.getfile(package_a))
+        path_b, _ = os.path.split(inspect.getfile(package_b))
+        # is a built-in module
+    except TypeError:
+        return False
+
+    return (path_b in path_a) and not (path_b == path_a)
+
+
+def is_subpackage(package_a, package_b):
+    """
+    Is A a subpackage or submodule of B?
+    """
+    try:
+        path_a, _ = os.path.split(inspect.getfile(package_a))
+        path_b, _ = os.path.split(inspect.getfile(package_b))
+
+    except TypeError:
+        # is a built-in module
+
+        # For instance: is_subpackage(builtins, builtins) should return True
+        if package_a == package_b:
+            return True
+
+        return False
+
+    return path_b in path_a
+
+
+def is_dunder_method(obj):
+    # if not inspect.ismethod(obj) or inspect.ismethoddescriptor(obj) or isinstance(obj, collections.abc.Callable):
+    #    return False
+
+    assert hasattr(obj, "__name__")
+    obj_name = obj.__name__
+    return obj_name.endswith("__") and obj_name.startswith("__")
+
+
+def is_private(obj):
+    assert hasattr(obj, "__name__")
+    obj_name = obj.__name__
+    typical_private = obj_name.startswith("_") and obj_name[1] != "_"
+    private_subpackage = "._" in obj_name
+    return typical_private or private_subpackage
+
+
+def is_test(obj):
+    assert hasattr(obj, "__name__")
+    obj_name = obj.__name__.lower()
+    patterns = ("test", "_test", "__test")
+    return any(obj_name.startswith(pattern) for pattern in patterns)
+
+
+def is_package(obj):
+
+    if not hasattr(obj, "__file__"):
+        return False
+
+    return obj.__file__.endswith("__init__.py")
+
+def descend_from_package(
+    package, *, types="package", include_tests=False, include_private=False
+):
+    """
+    Descent from a package to either a subpackage or modules one level down.
+    
+    Yields a tuple of (object, object_name) one level down.
+    """
+    if not inspect.ismodule(package):
+        return None
+
+    try:
+        path, _ = os.path.split(inspect.getfile(package))
+        # TypeError: <module 'itertools' (built-in)> is a built-in module
+    except TypeError:
+        return None
+
+    prefix = package.__name__ + "."
+
+    generator = pkgutil.iter_modules(path=[path], prefix=prefix)
+
+    for (importer, object_name, ispkg) in generator:
+
+        ismodule = not ispkg
+
+        # Covers names such as "test", "tests", "testing", ...
+        if ".test" in object_name.lower() and not include_tests:
+            continue
+
+        if "._" in object_name.lower() and not include_private:
+            continue
+
+        try:
+            obj = importlib.import_module(object_name)
+        except ModuleNotFoundError:
+            # TODO: Replace this with logging
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+        except ImportError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
+        # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/ctypes/wintypes.py", line 20, in <module>
+        except ValueError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
+        # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/ctypes/wintypes.py", line 20, in <module>
+        except LookupError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
+        if types.lower() == "package" and ispkg:
+            yield object_name, obj
+        elif types.lower() == "module" and ismodule:
+            yield object_name, obj
+        elif types.lower() == "both":
+            yield object_name, obj
+        elif types.lower() not in ("package", "module", "both"):
+            raise ValueError("Parameter `types` must be 'package', 'module' or 'both'.")
+
+
+
+
 
 
 if __name__ == "__main__":
