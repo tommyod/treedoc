@@ -1,51 +1,49 @@
-# treedoc [![Build Status](https://api.travis-ci.com/tommyod/treedoc.svg?branch=master)](https://travis-ci.com/tommyod/treedoc) [![PyPI version](https://badge.fury.io/py/treedoc.svg)](https://pypi.org/project/treedoc/)  [![Downloads](https://pepy.tech/badge/treedoc)](https://pepy.tech/project/treedoc) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+# <img src="branding/icons/treedoc_white_rounded.png" height="60">
+[![Build Status](https://api.travis-ci.com/tommyod/treedoc.svg?branch=master)](https://travis-ci.com/tommyod/treedoc) [![PyPI version](https://badge.fury.io/py/treedoc.svg)](https://pypi.org/project/treedoc/)  [![Downloads](https://pepy.tech/badge/treedoc)](https://pepy.tech/project/treedoc) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-Minimalistic Python documentation in a tree structure.
+Minimalistic Python documentation for dendrophiles.
 
-```bash
-$ treedoc collections
-collections
- ├── collections.ChainMap(self)
- │   ├── collections.ChainMap.copy(self)
- │   ├── collections.ChainMap.clear(self)
- │   ├── collections.ChainMap.copy(self)
- │   ├── collections.ChainMap.fromkeys(cls, iterable)
-<142 lines omitted>
-```
+treedoc prints minimalistic Python documentation in a tree structure,
+aiming to hit the sweet spot between detailed information about
+a single object and superficial information about object attributes.
 
-The built-in`help` command gives detailed information about a single object, while `dir` gives superficial information about object attributes.
-`treedoc` aims to hit the sweet spot between the two, and is great for:
-- Exploring the Python standard library.
-- Getting an overview of a package without clicking through a website.
-- Perform searches and output minimalistic documentation.
+treedoc is great for:
+- Getting an overview of a package without endlessly scrolling through a website.
+- Searching through documentation.
+- Printing essential information about different Python objects. 
 
 ## Installation
 
 Install from [Python Package Index](https://pypi.org/project/treedoc/) (PyPI) using `pip install treedoc`.
 
-## Examples
+## Usage
+
+treedoc can be used directly through the command-line interface,
+or interactively in a Python shell or Jupyter notebook. For more information
+about arguments, see `treedoc --help` or `help(treedoc)`.
 
 ### Command-line interface
 
-```bash
-$ # Information about a built-in
-$ treedoc list
-$ # Information about EVERY built-in
-$ treedoc builtins
-$ # Information about a package
-$ treedoc collections
-$ # Full list of arguments
-$ treedoc --help
-```
+![Example
+1](branding/examples/example_list.gif)
 
-## Python package
+![Example
+2](branding/examples/example_collectionsabc.gif)
 
-```python
->>> from treedoc import treedoc
->>> treedoc(list)
->>> import functools
->>> treedoc(functools)
-```
+![Example
+3](branding/examples/example_pandas_grep.gif)
+
+
+## Python shell and notebooks
+
+treedoc can be imported and used just like any other package, e.g. in an
+interactive Python interpreter session or a Jupyter notebook. 
+
+### Interpreter
+![Example 4](branding/examples/example_python_list.gif)
+
+### Jupyter notebook
+![Example 5](branding/examples/example_jupyter_list.gif)
 
 ## Contributing
 
