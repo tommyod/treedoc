@@ -1,13 +1,13 @@
-# <img src="branding/icons/treedoc_white_rounded.png" height="48">
+# <img src="branding/icons/treedoc_white_rounded.png" height="60">
 [![Build Status](https://api.travis-ci.com/tommyod/treedoc.svg?branch=master)](https://travis-ci.com/tommyod/treedoc) [![PyPI version](https://badge.fury.io/py/treedoc.svg)](https://pypi.org/project/treedoc/)  [![Downloads](https://pepy.tech/badge/treedoc)](https://pepy.tech/project/treedoc) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 Minimalistic Python documentation for dendrophiles.
 
-`treedoc` prints minimalistic Python documentation in a tree structure,
+treedoc prints minimalistic Python documentation in a tree structure,
 aiming to hit the sweet spot between detailed information about
 a single object and superficial information about object attributes.
 
-`treedoc` is great for:
+treedoc is great for:
 - Getting an overview of a package without endlessly scrolling through a website.
 - Searching through documentation.
 - Printing essential information about different Python objects. 
@@ -18,8 +18,9 @@ Install from [Python Package Index](https://pypi.org/project/treedoc/) (PyPI) us
 
 ## Usage
 
-`treedoc` provides a simple, efficient and interactive interface to Python
-documentation.
+treedoc provides a simple, efficient and interactive interface to Python
+documentation. treedoc can be used directly through the command-line interface,
+or interactively in a Python shell or Jupyter notebook.
 
 ### Command-line interface
 
@@ -36,14 +37,16 @@ TODO: Add sentence about GIF below.
 3](branding/examples/example_pandas_grep.gif)
 
 
-## Python package
+## Python shell and notebooks
 
-```python
->>> from treedoc import treedoc
->>> treedoc(list)
->>> import functools
->>> treedoc(functools)
-```
+treedoc can be imported and used just like any other package, e.g. in an
+interactive Python interpreter session or a Jupyter notebook. 
+
+### Interpreter
+![Example 4](branding/examples/example_python_list.gif)
+
+### Jupyter notebook
+![Example 5](branding/examples/example_jupyter_list.gif)
 
 ## Contributing
 
