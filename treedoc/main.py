@@ -231,6 +231,8 @@ def CLI_entrypoint():
 
         print("treedoc version {}".format(__version__))
         return
+    else:
+        delattr(args, "version")
 
     args_to_func = {k: w for (k, w) in args._get_kwargs()}
     args_to_func["printer"] = printers[args_to_func["printer"]]
