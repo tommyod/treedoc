@@ -6,6 +6,7 @@ General utilities for treedoc.
 
 import collections
 
+
 class PrintMixin:
     """Adds a __repr__ method to a class."""
 

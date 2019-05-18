@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Test the command line interface.
+Test the command line interface (CLI).
 """
 import itertools
 import random
