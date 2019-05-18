@@ -1,53 +1,65 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Printers: objects that format rows in the tree.
+Module for printers (classes) and associated functions.
 """
 
 import abc
 import collections
+import importlib
 import inspect
+import pkgutil
+import pydoc
+import sys
+import textwrap
 
-from treedoc.utils import (
-    Peekable,
-    PrintMixin,
-    clean_object_stack,
-    format_signature,
-    get_docstring,
-    inspect_classify,
-    resolve_str_to_obj,
-)
+from treedoc.utils import Peekable, PrintMixin
+
+# =============================================================================
+# ------------------------ PART 1/2 OF MODULE - CLASSES -----------------------
+# =============================================================================
 
 
 class PrinterABC(abc.ABC):
-    """Abstract base class for printers."""
+    """Abstract base class (ABC) for printers."""
 
     @abc.abstractmethod
     def __init__():
         pass
 
     @abc.abstractmethod
-    def format_iterable():
-        """
-        Format a row, i.e. a path in the tree.
+    def format_iterable(iterable) -> str:
+        """Consumes an iterator yielding object stacks and yields formatted strings.
         
         Parameters:
         -----------
-        iterator (Iterator): an iterator yielding (objects, final_node)
+        iterator (Iterator): an iterator yielding (print_stack, stack). The stacks
+                             are lists representing paths in the object tree.
         
         Yields
         -------
-        output (string) : a string for printer, or None if something went wrong
+        formatted_str (string) : a string to be printed
         """
         pass
 
 
 class Printer(PrintMixin):
-    """Base class for printers used for input validation."""
+    """Base class for printers, used for input validation."""
 
-    def __init__(self, *, signature=1, docstring=2, info=2, width=88):
-        """
-        Initialize a printer.
+    def __init__(
+        self, *, signature: int = 1, docstring: int = 2, info: int = 2, width: int = 88
+    ):
+        """Initialize a printer.
+        
+        The interpretation of the following arguments varies from printer to printer.
+        
+        Arguments
+        ---------
+            signature (int) :  how much signature information to show
+            docstring (int) :  how much docstring information to show
+            info (int) :  how much general information to show
+            width (int) :  maximum character width
+
         """
         assert signature in (0, 1, 2, 3, 4)
         assert docstring in (0, 1, 2)
@@ -58,58 +70,68 @@ class Printer(PrintMixin):
         self.info = info
         self.width = width
 
-    def _validate_row(self, row):
-        assert isinstance(row, collections.abc.Sequence)
-        assert len(row) > 0
-        assert all((hasattr(obj, "__name__") for obj in row))
+    def _validate_obj_stack(self, stack) -> None:
+        assert isinstance(stack, collections.abc.Sequence)
+        assert len(stack) > 0
+        assert all((hasattr(obj, "__name__") for obj in stack))
 
 
 class DensePrinter(Printer, PrinterABC):
 
     SEP = " -> "
     END = "\n"
+    SPACES2 = "  "
+    SPACES4 = 2 * SPACES2
 
-    def _get_docstring(self, object):
-        """Get and format docstring from the object."""
+    def _get_docstring(self, obj) -> str:
+        """Get and format the docstring of an object."""
 
         if self.docstring == 0:
             return ""
-        return get_docstring(object)
+        return get_docstring(obj, width=self.width)
 
-    def _format_argspec(self, leaf_object):
-        """Get and format argspec from the leaf object in the tree path."""
-        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
-        return format_signature(leaf_object, verbosity=self.signature)
+    def _format_signature(self, obj) -> str:
+        """Get and format the signature of an object."""
+        formatted = format_signature(obj, verbosity=self.signature)
+        assert isinstance(formatted, str)
+        return formatted
 
-    def format_iterable(self, iterable):
+    def format_iterable(self, iterable) -> str:
+        # See the Abstract Base Class for the docstring
+        # Summary: take an iterable object yielding (stack, final_node_at_depth)
+        # and returns strings
+        for stack in self._format_row(iterable):
 
+            self._validate_obj_stack(stack)
+
+            # The row represents a path in the tree, the leaf object is the "final" object
+            *_, last_obj = stack
+
+            # Attempt to get a signature for the last object
+            signature = self._format_signature(last_obj)
+
+            # Get docstring information from the leaf object
+            docstring = self._get_docstring(last_obj)
+
+            # Info determines how much to show
+            if self.info == 0:
+                obj_names = stack[-1].__name__
+            else:
+                obj_names = ".".join([s.__name__ for s in clean_object_stack(stack)])
+
+            yield (
+                "{}|".format(describe(last_obj))
+                + self.SPACES2 * len(stack)
+                + obj_names
+                + signature
+                + self.SPACES4
+                + docstring
+            )
+
+    def _format_row(self, iterable):
+        """Yield the object stack from the iterable."""
         for stack, final_node_at_depth in iterable:
-            yield self.format_row(stack)
-
-    def format_row(self, row):
-        # No docstring here, it's inherited from the method PrinterABC.print_row.
-        self._validate_row(row)
-
-        # The row represents a path in the tree, the leaf object is the "final" object
-        *_, leaf_object = row
-
-        # Attempt to get a signature for the leaf object
-        try:
-            inspect.getfullargspec(leaf_object)
-            signature = self._format_argspec(leaf_object)
-        except TypeError:
-            signature = ""
-
-        # Get docstring information from the leaf object
-        docstring = self._get_docstring(leaf_object)
-        docstring = docstring
-
-        return (
-            self.SEP.join([c.__name__ for c in row])
-            + signature
-            + str(inspect_classify(leaf_object))
-            # + ("\n\t" + docstring if docstring else "")
-        )  # + '\n'
+            yield stack
 
 
 class TreePrinter(Printer, PrinterABC):
@@ -120,26 +142,32 @@ class TreePrinter(Printer, PrinterABC):
     LAST = "└──"
     BLANK = "   "
 
-    def _get_docstring(self, object):
-        """Get and format docstring from the object."""
+    def _get_docstring(self, obj) -> str:
+        """Get and format the docstring of an object."""
 
         if self.docstring == 0:
             return ""
-        return get_docstring(object, width=self.width)
+        return get_docstring(obj, width=self.width)
 
-    def _format_argspec(self, leaf_object):
-        """Get and format argspec from the leaf object in the tree path."""
+    def _format_signature(self, obj) -> str:
+        """Get and format the signature of an object."""
+        formatted = format_signature(obj, verbosity=self.signature)
+        assert isinstance(formatted, str)
+        return formatted
 
-        assert isinstance(format_signature(leaf_object, verbosity=self.signature), str)
-        return format_signature(leaf_object, verbosity=self.signature)
-
-    def format_iterable(self, iterable):
-        """Formats rows and print stack yielded by iterable."""
+    def format_iterable(self, iterable) -> str:
+        # See the Abstract Base Class for the docstring
+        # Summary: take an iterable object yielding (stack, final_node_at_depth)
+        # and returns strings
+        assert isinstance(iterable, collections.abc.Iterable)
 
         for print_stack, stack in self._format_row(iterable):
+
+            self._validate_obj_stack(stack)
+
             joined_print_stack = " ".join(print_stack)
 
-            # Infor determines how much to show
+            # Info determines how much to show
             if self.info == 0:
                 obj_names = stack[-1].__name__
             else:
@@ -159,7 +187,7 @@ class TreePrinter(Printer, PrinterABC):
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
             last_obj = stack[-1]
-            signature = self._format_argspec(last_obj)
+            signature = self._format_signature(last_obj)
             docstring = self._get_docstring(last_obj)
 
             yield " ".join([joined_print_stack, obj_names]) + signature
@@ -181,7 +209,12 @@ class TreePrinter(Printer, PrinterABC):
             yield " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
 
     def _format_row(self, iterator, depth=0, print_stack=None):
-        """Format a row."""
+        """Takes an iterator and yields tuples (print_stack, stack).
+        
+        This recursive generator takes an iterator which yields 
+        (stack, final_node_at_depth) and from it computes (print_stack, stack).
+        It's purpose is to generate the pretty tree-structure from the 
+        `final_node_at_depth` stack."""
 
         if not isinstance(iterator, Peekable):
             iterator = Peekable(iter(iterator))
@@ -261,17 +294,394 @@ class TreePrinter(Printer, PrinterABC):
                 continue
 
 
-if __name__ == "__main__":
+# =============================================================================
+# ------------------------ PART 2/2 OF MODULE - FUNCTIONS ---------------------
+# =============================================================================
 
+
+def _describe(obj):
+    """Produce a short description of the given object.
+    
+    Inspired by pydoc.describe."""
+    if inspect.ismodule(obj):
+        if obj.__name__ in sys.builtin_module_names:
+            return "built-in module"
+        if hasattr(obj, "__path__"):
+            return "package"
+        else:
+            return "module"
+    if inspect.isbuiltin(obj):
+        return "built-in function"
+    if inspect.isgetsetdescriptor(obj):
+        return "getset descriptor"
+    if inspect.ismemberdescriptor(obj):
+        return "member descriptor"
+    if inspect.isclass(obj):
+        return "class"
+    if inspect.isfunction(obj):
+        return "function"
+    if inspect.ismethod(obj):
+        return "method"
+    return type(obj).__name__
+
+
+def describe(obj) -> str:
+    """Produce a short description of the given object."""
+    return _describe(obj).ljust(17)
+
+
+def get_docstring(obj, *, width=88) -> str:
+    """Get a docstring summary from an object.
+    
+    If no docstring is available, an empty string is returned.
+    
+    Examples
+    --------
+    >>> get_docstring(set.intersection)
+    'Return the intersection of two sets as a new set.'
+    >>> get_docstring(set.intersection, width=18)
+    'Return the...'
+    """
+
+    # =============================================================================
+    #     TODO: This function needs to become smarter, i.e. more adaptible to
+    #     how docstrings are written "in the wild".
+    # =============================================================================
+
+    # pydoc.getdoc is slightly more general than inspect.getdoc,see:
+    # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
+    doc = pydoc.getdoc(obj)
+    first_line, _ = pydoc.splitdoc(doc)
+
+    return_str = textwrap.shorten(first_line, width=width, placeholder="...")
+    if return_str:
+        return_str = return_str[:-3] if return_str.endswith("....") else return_str
+        return return_str
+
+    # If the docstring is a long paragraph, pydoc.splitdoc will return ''
+    # We change this behavior to include the start of the string.
+    if not return_str and doc:
+        return_str = textwrap.shorten(doc, width=width, placeholder="...")
+        return_str = return_str[:-3] if return_str.endswith("....") else return_str
+        return return_str
+
+    return ""
+
+
+def clean_object_stack(stack):
+    """
+    Join an object stack so that consequtive modules are merged into the last one.
+    
+    This avoids the stack [collections, collections.abc] as being named
+    'collections.collections.abc'.
+    
+    >>> import collections
+    >>> from collections import abc
+    >>> clean_object_stack([collections, abc]) == [abc]
+    True
+    >>> from collections import Counter
+    >>> input_stack = [collections, Counter, Counter.most_common]
+    >>> clean_object_stack(input_stack) == input_stack
+    True
+    """
+    assert isinstance(stack, list)
+
+    stack = stack.copy()
+    new_stack = []
+    for obj in stack:
+        # This one is a module, and the last one is a module
+        # Therefore it must be a submodule, get rid of the first one
+        # to avoid [collections, collections.abc]
+        if new_stack and inspect.ismodule(obj) and inspect.ismodule(new_stack[-1]):
+            new_stack.pop()
+        new_stack.append(obj)
+
+    assert len(new_stack) > 0
+    return new_stack
+
+
+def _get_name(param):
+    """Checks if signature.Parameter corresponds to *args or **kwargs type input."""
+    if (
+        param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD)
+        and param.default is param.empty
+    ):
+        return str(param)
+    else:
+        return param.name
+
+
+def _between(string, start, end):
+    """Returns what's between `start` and `end`, exclusive.
+    
+    Examples
+    >>> _between("im a nice (person) to all", "(", ")")
+    'person'
+    >>> _between("im a nice (person to all", "(", ")")
+    Traceback (most recent call last):
+        ...
+    ValueError: substring not found
+    """
+    i = string.index(start)
+    part = string[i + len(start) :]
+    j = part.index(")")
+    return part[:j]
+
+
+def signature_from_docstring(obj):
+    """Extract signature from built-in object docstring.
+    
+    Some of the built-in methods have signature info in the docstring. One example is
+    `dict.pop`. This method will retrieve the docstring, and return None if it cannot.
+    
+    >>> import math
+    >>> signature_from_docstring(math.log) in ('x[, base]', 'x, [base=math.e]')
+    True
+    >>> signature_from_docstring(dict.pop) in ('k[,d]', None)
+    True
+    """
+
+    # If not docstring is available, return
+    docstring_line = get_docstring(obj)
+    if not docstring_line:
+        return None
+
+    # If it's not callable, return
+    if not isinstance(obj, collections.abc.Callable):
+        return None
+
+    # Look for the name of the object, i.e. func(x)
+    assert hasattr(obj, "__name__")
+    if not obj.__name__ in docstring_line:
+        return None
+
+    # Attempt to get the signature
+    index = docstring_line.index(obj.__name__) + len(obj.__name__)
+    signature_part = docstring_line[index:]
+    try:
+        ret_value = _between(signature_part, "(", ")")
+        if ret_value:
+            return ret_value
+    except ValueError:
+        return None
+
+    return None
+
+
+def format_signature(obj, verbosity=2):
+    """ 
+    Format a function signature for printing.
+    
+    This function tries first to use inspect.signature, if that fails it will look for
+    signature information in the first line of the docstring, and if that fails it will
+    return a generic sigature if the object is callable.
+    
+    Examples
+    --------
+    >>> import collections
+    >>> # Works on functions with well-defined signature
+    >>> format_signature(collections.defaultdict.fromkeys, verbosity=2)
+    '(iterable, value)'
+    >>> # Built-ins with signature information in the docs
+    >>> format_signature(collections.defaultdict.update, verbosity=2)
+    '([E, ]**F)'
+    >>> # Built-ins with signature no signature information at all
+    >>> format_signature(collections.deque.append, verbosity=2)
+    '(...)'
+    """
+    # TODO: Figure out how to handle *
+
+    max_verbosity = 4
+    assert 0 <= verbosity <= max_verbosity
+    SEP = ", "
+
+    # Return formatted signature based on verbosity
+    if verbosity == 0:
+        return ""
+
+    # Check if object has signature
+    try:
+        sig = inspect.signature(obj)
+    except ValueError:
+        # inspect.signature raises ValueError if no signature can be provided.
+        # Example:
+        # -------
+        # >>> inspect.signature(math.log)
+        # 'ValueError: no signature found for builtin <built-in function log>'
+
+        signature_in_docs = signature_from_docstring(obj)
+
+        # Failed to find a signature in the docstring
+        if signature_in_docs is None:
+
+            # inspect.signature and docstring info has failed, still return if callable
+            if isinstance(obj, collections.abc.Callable) and verbosity >= 1:
+                return "(...)"
+            return ""
+
+        # Found a signature in the docstring
+        else:
+            if verbosity == 1:
+                return "(...)"
+            else:
+                # TODO: Format this more depending on verbosity
+                return "(" + signature_in_docs + ")"
+        return ""
+
+    except TypeError:
+        # inspect.signature raises TypeError if type of object is not supported.
+        # Example:
+        # -------
+        # >>> x = 1
+        # >>> inspect.signature(x)
+        # 'TypeError: 1 is not a callable object'
+        return ""
+
+    # If function as no arguments, return
+    if str(sig) == "()" and verbosity > 0:
+        return str(sig)
+
+    # Check if signature has annotations or defaults
+    annotated = any(
+        param.annotation is not param.empty for param in sig.parameters.values()
+    )
+    has_defaults = any(
+        param.default is not param.empty for param in sig.parameters.values()
+    )
+
+    # Dial down verbosity if user has provided a more verbose alternative than is available
+    if not annotated:
+        max_verbosity = 3
+
+    if not has_defaults and not annotated:
+        max_verbosity = 2
+
+    if verbosity > max_verbosity:
+        # TODO: Give user warning if verbosity needs to be adjusted, e.g.
+        # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
+        verbosity = max_verbosity
+
+        # Fails for instance on collections.ChainMap without this
+        return str(sig)
+
+    elif verbosity == 1:
+        return "(...)"
+
+    elif verbosity == 2:
+        return (
+            "(" + SEP.join(_get_name(param) for param in sig.parameters.values()) + ")"
+        )
+
+    elif verbosity == 3:
+        return (
+            "("
+            + SEP.join(
+                param.name + "=" + str(param.default)
+                if param.default is not param.empty
+                else _get_name(param)
+                for param in sig.parameters.values()
+            )
+            + ")"
+        )
+
+    else:
+        return str(sig)
+
+
+def resolve_str_to_obj(object_string):
+    """
+    Resolve a string to a Python object.
+    
+    
+    list -> builtin
+    collections -> module
+    collections.Counter -> object
+    
+    Examples
+    --------
+    >>> resolve_str_to_obj("list") == list
+    True
+    >>> import collections
+    >>> resolve_str_to_obj("collections") == collections
+    True
+    >>> from collections import Counter
+    >>> resolve_str_to_obj("collections.Counter") == Counter
+    True
+    >>> resolve_str_to_obj("gibberish.Counter")
+    Traceback (most recent call last):
+        ...
+    ImportError: Could not resolve 'gibberish.Counter'.
+    """
+    assert isinstance(object_string, str)
+    suggestion = pydoc.locate(object_string)
+
+    if suggestion is None and object_string != "None":
+        raise ImportError("Could not resolve '{}'.".format(object_string))
+    else:
+        return suggestion
+
+
+def resolve_input(obj):
+    """Resolve a general input (str, iterable, etc) to a list of Python objects.
+    
+    
+    Examples
+    --------
+    >>> resolve_input("list") == [list]
+    True
+    >>> resolve_input("list dict") == [list, dict]
+    True
+    >>> len(resolve_input(["python"])) > 10
+    True
+    >>> resolve_input(["list"]) == [list]
+    True
+    >>> resolve_input(["list", "dict"]) == [list, dict]
+    True
+    >>> resolve_input(list) == [list]
+    True
+    >>> from collections.abc import Collection
+    >>> resolve_input("collections.abc.Collection") == [Collection]
+    True
+    """
+    if isinstance(obj, str):
+        obj = obj.strip()
+
+    if isinstance(obj, str) and " " in obj:
+        # Parse "dict   str  " correctly, ignoring extra whitespace
+        obj = [o for o in obj.split(" ") if o != ""]
+
+    # Special handling if "python" is passed
+    if isinstance(obj, list) and len(obj) == 1 and obj[0].lower().strip() == "python":
+        objects = []
+
+        for (importer, object_name, ispkg) in pkgutil.iter_modules():
+
+            if not ispkg:
+                continue
+
+            try:
+                obj = importlib.import_module(object_name)
+            except:
+                continue
+
+            objects.append(obj)
+
+        return objects
+
+    elif isinstance(obj, str):
+        assert " " not in obj
+        return [resolve_str_to_obj(obj)]
+
+    elif isinstance(obj, (list, set, tuple)):
+        attempt = [resolve_str_to_obj(o) if isinstance(o, str) else o for o in obj]
+        return [obj for obj in attempt if obj is not None]
+    else:
+        return [obj]
+
+    raise ValueError("Could not resolve object")
+
+
+if __name__ == "__main__":
     import pytest
 
     pytest.main(args=[".", "--doctest-modules", "-v", "--capture=sys"])
-
-    import subprocess
-
-    subprocess.call(["treedoc", "list"])
-    subprocess.call(["treedoc", "collections"])
-    subprocess.call(["treedoc", "pandas"])
-
-    t = TreePrinter()
-    print(t)

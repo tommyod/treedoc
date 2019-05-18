@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Test the command line interface.
+Test the command line interface (CLI).
 """
 import itertools
 import random
@@ -47,14 +47,20 @@ def _generate_cli_args(n):
     yielded = set()
 
     for _ in range(n):
-        info = "--info " + str(random.choice([0, 1, 2]))
-        docstring = "--docstring " + str(random.choice([0, 1, 2]))
-        signature = "--signature " + str(random.choice([0, 1, 2, 3, 4]))
-        modules = random.choice(["", "--modules"])
-        subpackages = random.choice(["", "--subpackages"])
-        dunders = random.choice(["", "--dunders"])
 
-        to_yield = " ".join([info, docstring, signature, modules, subpackages, dunders])
+        to_yield = " ".join(
+            [
+                "--level " + str(random.choice([1, 2, 3])),
+                random.choice(["", "--subpackages"]),
+                random.choice(["", "--modules"]),
+                random.choice(["", "--private"]),
+                random.choice(["", "--tests"]),
+                random.choice(["--printer tree", "--printer dense"]),
+                "--signature " + str(random.choice([0, 1, 2, 3, 4])),
+                "--docstring " + str(random.choice([0, 1, 2])),
+                "--info " + str(random.choice([0, 1, 2])),
+            ]
+        )
         if to_yield not in yielded:
             yielded.add(to_yield)
             yield to_yield

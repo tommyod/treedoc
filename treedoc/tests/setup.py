@@ -9,12 +9,11 @@ setup(
     author_email="tod001@uib.no",
     license="MIT",
     packages=find_packages(),
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     install_requires=[],
     # https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3 :: Only",

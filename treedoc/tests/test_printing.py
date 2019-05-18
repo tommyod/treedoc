@@ -1,14 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Test the printers and their functionality.
+Tests for classes and functions located in `printing.py`.
 """
 
-from treedoc.printing import TreePrinter
+import builtins
+import collections.abc
+import datetime
+import math
+import operator
+from collections.abc import Callable
+
+import pytest
+
+import treedoctestpackage
+from treedoc.printing import (
+    TreePrinter,
+    format_signature,
+    get_docstring,
+    resolve_input,
+    resolve_str_to_obj,
+    signature_from_docstring,
+)
 from treedoc.utils import Peekable
 
 
-class TestTreePrinter:
+class TestTreePrinterRowFormatting:
     def test_row_formatting_ex1(self):
         """Test on an example drawn by hand."""
 
@@ -193,6 +210,262 @@ class TestTreePrinter:
             (["", "   ", "├──"], ["root", "D", "d"]),
             (["", "   ", "└──"], ["root", "D", "e"]),
         ]
+
+
+def map_itemgetter(iterable, index: int):
+    """Map an itemgetter over an iterable, returning element correpoding to index."""
+    getter = operator.itemgetter(index)
+    for item in iterable:
+        yield getter(item)
+
+
+@pytest.mark.parametrize(
+    "input_arg, expected",
+    [
+        (math.log, ("x[, base]", "x, [base=math.e]")),
+        (dict.pop, ("k[,d]", None)),
+        (datetime.datetime.strptime, (None,)),
+    ],
+)
+def test_signature_from_docstring(input_arg, expected):
+    """Test the function getting signature information from docstrings.
+    
+    Due to builtin docstrings differing on different Python versions,
+    we allow several possibilities."""
+    assert signature_from_docstring(input_arg) in expected
+
+
+def test_get_docstring():
+    """Test retrieval of docstrings."""
+
+    def func():
+        pass
+
+    return_val = "This is the docstring."
+
+    func.__doc__ = """This is the docstring."""
+    assert get_docstring(func) == return_val
+
+    func.__doc__ = """
+    
+    
+    This is the docstring.
+    
+    
+    """
+    assert get_docstring(func) == return_val
+
+    func.__doc__ = """
+    This is the docstring.
+    
+    This is more stuff.
+    """
+    assert get_docstring(func) == return_val
+
+    func.__doc__ = """
+    This is the docstring. More information here.
+    
+    Even more stuff.
+    """
+    assert get_docstring(func) == "This is the docstring. More information here."
+    assert get_docstring(func, width=12) == "This is..."
+
+    delattr(func, "__doc__")
+    assert get_docstring(func) == ""
+
+    func.__doc__ = """
+    Lorem Ipsum is simply dummy text of the printing and typesetting industry. 
+    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
+    when an unknown printer took a galley of type and scrambled it to make a type 
+    specimen book. It has survived not only five centuries, but also the leap into 
+    electronic typesetting, remaining essentially unchanged. It was popularised 
+    in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, 
+    and more recently with desktop publishing software like Aldus PageMaker 
+    including versions of Lorem Ipsum.
+    """
+
+    assert get_docstring(func, width=16) == "Lorem Ipsum..."
+
+
+class TestObjectResolution:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "input_arg, expected",
+        [
+            ("list", list),
+            ("builtins.set", set),
+            ("operator.add", operator.add),
+            ("collections.abc.Callable", Callable),
+            ("collections.abc", collections.abc),
+            ("", builtins),
+        ],
+    )
+    def test_resolve_str_to_obj(input_arg, expected):
+        """
+        Test that objects are resolved from strings as expected.
+        """
+        assert resolve_str_to_obj(input_arg) == expected
+
+    @staticmethod
+    def test_resolve_str_to_obj_raises():
+
+        with pytest.raises(ImportError):
+            resolve_str_to_obj("gibberish")
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "input_arg, expected",
+        [
+            ("list dict set", [list, dict, set]),
+            (["list", "dict", "set"], [list, dict, set]),
+            (["list", "dict", set], [list, dict, set]),
+            ([list, dict, set], [list, dict, set]),
+            ("list dict", [list, dict]),
+            ("list   dict ", [list, dict]),
+            ("list", [list]),
+        ],
+    )
+    def test_resolve_input(input_arg, expected):
+        """
+        Test that objects are resolved from inputs.
+        """
+
+        assert resolve_input(input_arg) == expected
+
+    @staticmethod
+    def test_resolve_input_raises():
+
+        with pytest.raises(ImportError):
+            resolve_input("list dict gibberish")
+
+
+class TestSignature:
+    """
+    Class for gathering format_signature() tests. 
+    Note the stripping of whitespaces in some of the tests. More info on this in PR #9.
+    """
+
+    parameters = [
+        (0, ""),
+        (1, "(...)"),
+        (2, "(a,b,*args,c,d,**kwargs)"),
+        (3, "(a,b,*args,c=4.2,d=42,**kwargs)"),
+        (4, "(a,b:int,*args,c=4.2,d:int=42,**kwargs)"),
+    ]
+
+    @staticmethod
+    @pytest.mark.parametrize("verbosity, expected", parameters)
+    def test_keywords_annotated_defaults_args_kwargs(verbosity, expected):
+        """ 
+        Test that formatting signature works on a user defined function.
+        """
+
+        def myfunc1(a, b: int, *args, c=4.2, d: int = 42, **kwargs):
+            return None
+
+        assert (
+            "".join(
+                char for char in format_signature(myfunc1, verbosity) if char != " "
+            )
+            == expected
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "verbosity, expected", [(0, ""), (1, "()"), (2, "()"), (3, "()"), (4, "()")]
+    )
+    def test_empty_signature(verbosity, expected):
+        """ 
+        Test that formatting signature works on a user defined function with no arguments.
+        """
+
+        def myfunc2():
+            return None
+
+        assert format_signature(myfunc2, verbosity) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "verbosity, expected",
+        [
+            (0, ""),
+            (1, "(...)"),
+            (2, "(self, n)"),
+            (3, "(self, n=None)"),
+            (4, "(self, n=None)"),
+        ],
+    )
+    def test_builtin_class(verbosity, expected):
+        """ 
+        Test that formatting signature works on a built-in class.
+        """
+        from collections import Counter
+
+        assert format_signature(Counter.most_common, verbosity) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize("verbosity, expected", parameters)
+    def test_method(verbosity, expected):
+        """
+        Test that formatting signature works on a method.
+        """
+        myclass = treedoctestpackage.MyClass()
+
+        assert (
+            "".join(
+                char
+                for char in format_signature(myclass.method_bound_to_myclass, verbosity)
+                if char != " "
+            )
+            == expected
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "verbosity, expected",
+        [
+            (0, ""),
+            (1, "(...)"),
+            (2, "(self,a,b,*args,c,d,**kwargs)"),
+            (3, "(self,a,b,*args,c=4.2,d=42,**kwargs)"),
+            (4, "(self,a,b:int,*args,c=4.2,d:int=42,**kwargs)"),
+        ],
+    )
+    def test_static_method(verbosity, expected):
+        """
+        Test that formatting signature works on a static method.
+        """
+        myclass = treedoctestpackage.MyClass()
+
+        assert (
+            "".join(
+                char
+                for char in format_signature(
+                    myclass.static_method_bound_to_myclass, verbosity
+                )
+                if char != " "
+            )
+            == expected
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("verbosity, expected", parameters)
+    def test_class_method(verbosity, expected):
+        """
+        Test that formatting signature works on a class method.
+        """
+        myclass = treedoctestpackage.MyClass()
+
+        assert (
+            "".join(
+                char
+                for char in format_signature(
+                    myclass.classmethod_bound_to_myclass, verbosity
+                )
+                if char != " "
+            )
+            == expected
+        )
 
 
 if __name__ == "__main__":
