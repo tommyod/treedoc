@@ -88,8 +88,6 @@ class ObjectTraverser(PrintMixin):
             # Not defined in the sub-tree, skip it
             if not is_subpackage(inspect.getmodule(child_obj), obj):
 
-                print(inspect.getmodule(child_obj), obj)
-
                 self._p(f"OC: Failed on condition 1.2")
                 return False
 
