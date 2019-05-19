@@ -38,6 +38,18 @@ def func_many_args(a, b=2, c=4, d=(1, 2, 3)):
     return b + c
 
 
+def func_many_long_args(
+    arg=2,
+    num: int = 123,
+    name: str = "john",
+    pi: float = 3.14,
+    place: str = "london",
+    e: float = 2.718281828459045,
+):
+    """Function with many arguments."""
+    return None
+
+
 def generator(a):
     for i in range(a):
         yield i

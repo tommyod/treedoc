@@ -7,6 +7,7 @@ Tests for classes and functions located in `printing.py`.
 import builtins
 import collections.abc
 import datetime
+import itertools
 import math
 import operator
 from collections.abc import Callable
@@ -365,7 +366,9 @@ class TestSignature:
 
         assert (
             "".join(
-                char for char in format_signature(myfunc1, verbosity) if char != " "
+                char
+                for char in format_signature(myfunc1, verbosity=verbosity)
+                if char != " "
             )
             == expected
         )
@@ -382,7 +385,7 @@ class TestSignature:
         def myfunc2():
             return None
 
-        assert format_signature(myfunc2, verbosity) == expected
+        assert format_signature(myfunc2, verbosity=verbosity) == expected
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -401,7 +404,7 @@ class TestSignature:
         """
         from collections import Counter
 
-        assert format_signature(Counter.most_common, verbosity) == expected
+        assert format_signature(Counter.most_common, verbosity=verbosity) == expected
 
     @staticmethod
     @pytest.mark.parametrize("verbosity, expected", parameters)
@@ -414,7 +417,9 @@ class TestSignature:
         assert (
             "".join(
                 char
-                for char in format_signature(myclass.method_bound_to_myclass, verbosity)
+                for char in format_signature(
+                    myclass.method_bound_to_myclass, verbosity=verbosity
+                )
                 if char != " "
             )
             == expected
@@ -441,7 +446,7 @@ class TestSignature:
             "".join(
                 char
                 for char in format_signature(
-                    myclass.static_method_bound_to_myclass, verbosity
+                    myclass.static_method_bound_to_myclass, verbosity=verbosity
                 )
                 if char != " "
             )
@@ -449,23 +454,17 @@ class TestSignature:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("verbosity, expected", parameters)
-    def test_class_method(verbosity, expected):
-        """
-        Test that formatting signature works on a class method.
-        """
-        myclass = treedoctestpackage.MyClass()
+    def test_width_restriction():
+        """Test that the width is always respected."""
 
-        assert (
-            "".join(
-                char
-                for char in format_signature(
-                    myclass.classmethod_bound_to_myclass, verbosity
-                )
-                if char != " "
+        func = treedoctestpackage.module.func_many_long_args
+
+        generator = itertools.product(list(range(15, 100)), [0, 1, 2, 3, 4])
+        for width, verbosity in generator:
+            formatted_signature = format_signature(
+                func, width=width, verbosity=verbosity
             )
-            == expected
-        )
+            assert len(formatted_signature) <= width
 
 
 if __name__ == "__main__":

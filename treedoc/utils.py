@@ -5,6 +5,7 @@ General utilities for treedoc.
 """
 
 import collections
+import os
 
 
 class PrintMixin:
@@ -76,3 +77,19 @@ class Peekable:
             return self._cache.popleft()
 
         return next(self._it)
+
+
+def get_terminal_size(fallback=(80, 24)):
+    """Get the terminal size.
+    
+    See http://granitosaurus.rocks/getting-terminal-size.html
+    """
+    for i in range(0, 3):
+        try:
+            columns, rows = os.get_terminal_size(i)
+        except OSError:
+            continue
+        break
+    else:  # set default if the loop completes which means all failed
+        columns, rows = fallback
+    return columns, rows
