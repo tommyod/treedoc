@@ -68,7 +68,7 @@ def setup_argumentparser(printers):
 
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
-        description="Minimalistic Python documentation in a tree structure.",
+        description="Minimalistic Python documentation for dendrophiles.",
         epilog="Report issues and contribute at https://github.com/tommyod/treedoc.",
         allow_abbrev=True,
         # add_help=True,

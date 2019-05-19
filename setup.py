@@ -1,14 +1,19 @@
 from os import path
+import re
 from setuptools import find_packages, setup
 
 # Get the long description from README.md
 PATH = path.abspath(path.dirname(__file__))
-with open(path.join(PATH, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
+with open(path.join(PATH, "README.md"), encoding="utf-8") as file:
+    long_description = file.read()
+
+# Get version
+with open(path.join(PATH, "treedoc/__init__.py", encoding="utf-8") as file:
+    version = re.search(r"__version__ = \"(.*?)\"", file.read()).group(1)
 
 setup(
     name="treedoc",
-    version="0.2.0",
+    version=version,
     description="Minimalistic Python documentation for dendrophiles.",
     long_description=long_description,
     url="https://github.com/tommyod/treedoc",

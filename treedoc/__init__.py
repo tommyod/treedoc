@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Minimalistic Python documentation in a tree structure.
+Minimalistic Python documentation for dendrophiles.
 """
 
 
