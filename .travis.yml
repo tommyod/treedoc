@@ -47,6 +47,7 @@ script:
   - black . --check # Check that code is formatted correctly w.r.t. black
   - flake8 treedoc --select=F401 # Unused imports
   - bash ./linting.sh # Spelling errors
+  - mypy treedoc/*.py --ignore-missing-imports --show-error-context # Static type analysis
   
   # Install the testpackage before running the tests
   - pip install treedoc/tests
