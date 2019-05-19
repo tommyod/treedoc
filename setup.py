@@ -8,7 +8,7 @@ with open(path.join(PATH, "README.md"), encoding="utf-8") as file:
     long_description = file.read()
 
 # Get version
-with open(path.join(PATH, "treedoc/__init__.py", encoding="utf-8") as file:
+with open(path.join(PATH, "treedoc/__init__.py"), encoding="utf-8") as file:
     version = re.search(r"__version__ = \"(.*?)\"", file.read()).group(1)
 
 setup(
