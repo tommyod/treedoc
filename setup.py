@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 # Get the long description from README.md
 PATH = path.abspath(path.dirname(__file__))
-with open(path.join(PATH, 'README.md'), encoding='utf-8') as f:
+with open(path.join(PATH, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
