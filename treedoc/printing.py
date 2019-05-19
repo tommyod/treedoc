@@ -310,7 +310,7 @@ class TreePrinter(Printer, PrinterABC):
 # =============================================================================
 
 
-def _describe(obj):
+def _describe(obj) -> str:
     """Produce a short description of the given object.
     
     Inspired by pydoc.describe."""
@@ -422,7 +422,7 @@ def _get_name(param) -> str:
         return param.name
 
 
-def _between(string, start, end):
+def _between(string, start, end) -> str:
     """Returns what's between `start` and `end`, exclusive.
     
     Examples
@@ -617,7 +617,7 @@ def _format_signature(obj, *, verbosity=2) -> str:
         return str(sig)
 
 
-def resolve_str_to_obj(object_string):
+def resolve_str_to_obj(object_string) -> object:
     """
     Resolve a string to a Python object.
     

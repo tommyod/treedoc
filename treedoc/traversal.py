@@ -66,7 +66,7 @@ class ObjectTraverser(PrintMixin):
         # TODO: set up proper logging
         print(*args, file=self.stream)
 
-    def recurse_to_child_object(self, *, obj, child_obj):
+    def recurse_to_child_object(self, *, obj, child_obj) -> bool:
         """Given an object and it's child, do we recurse down to the child?"""
 
         # TODO: Optimize this by placing what fails most often first
@@ -214,7 +214,7 @@ class ObjectTraverser(PrintMixin):
 
         return True
 
-    def recurse_to_object(self, obj):
+    def recurse_to_object(self, obj) -> bool:
         """Given an object, should we recurse down to it?"""
 
         # TODO: Optimize this by placing what fails most often first
@@ -368,14 +368,14 @@ class ObjectTraverser(PrintMixin):
 # =============================================================================
 
 
-def is_inspectable(obj):
+def is_inspectable(obj) -> bool:
     """An object is inspectable if it returns True for any of the inspect.is.. functions."""
-    funcs = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
-    funcs = (getattr(inspect, func_name) for func_name in funcs)
+    func_names = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
+    funcs = (getattr(inspect, func_name) for func_name in func_names)
     return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
 
 
-def is_propersubpackage(package_a, package_b):
+def is_propersubpackage(package_a, package_b) -> bool:
     """
     Is A a proper subpackage or submodule of B?
     """
@@ -389,7 +389,7 @@ def is_propersubpackage(package_a, package_b):
     return (path_b in path_a) and not (path_b == path_a)
 
 
-def is_subpackage(package_a, package_b):
+def is_subpackage(package_a, package_b) -> bool:
     """
     Is A a subpackage or submodule of B?
     """
@@ -409,7 +409,7 @@ def is_subpackage(package_a, package_b):
     return path_b in path_a
 
 
-def is_dunder_method(obj):
+def is_dunder_method(obj) -> bool:
     """Is the method a dunder (double underscore), i.e. __add__(self, other)?"""
 
     assert hasattr(obj, "__name__")
@@ -417,7 +417,7 @@ def is_dunder_method(obj):
     return obj_name.endswith("__") and obj_name.startswith("__")
 
 
-def is_private(obj):
+def is_private(obj) -> bool:
     """Is the object private, i.e. _func(x)?"""
     assert hasattr(obj, "__name__")
     obj_name = obj.__name__
@@ -426,7 +426,7 @@ def is_private(obj):
     return typical_private or private_subpackage
 
 
-def is_test(obj):
+def is_test(obj) -> bool:
     """Is the object a test, i.e. test_func()?"""
     assert hasattr(obj, "__name__")
     obj_name = obj.__name__.lower()
@@ -434,7 +434,7 @@ def is_test(obj):
     return any(obj_name.startswith(pattern) for pattern in patterns)
 
 
-def is_package(obj):
+def is_package(obj) -> bool:
     """Does the object file end with '__init__.py'?"""
 
     if not hasattr(obj, "__file__"):
