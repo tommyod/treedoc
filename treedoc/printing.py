@@ -12,6 +12,7 @@ import pkgutil
 import pydoc
 import sys
 import textwrap
+import typing
 
 from treedoc.utils import Peekable, PrintMixin
 
@@ -24,11 +25,11 @@ class PrinterABC(abc.ABC):
     """Abstract base class (ABC) for printers."""
 
     @abc.abstractmethod
-    def __init__():
+    def __init__(self):
         pass
 
     @abc.abstractmethod
-    def format_iterable(iterable) -> str:
+    def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         """Consumes an iterator yielding object stacks and yields formatted strings.
         
         Parameters:
@@ -96,7 +97,7 @@ class DensePrinter(Printer, PrinterABC):
         assert isinstance(formatted, str)
         return formatted
 
-    def format_iterable(self, iterable) -> str:
+    def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         # See the Abstract Base Class for the docstring
         # Summary: take an iterable object yielding (stack, final_node_at_depth)
         # and returns strings
@@ -155,7 +156,7 @@ class TreePrinter(Printer, PrinterABC):
         assert isinstance(formatted, str)
         return formatted
 
-    def format_iterable(self, iterable) -> str:
+    def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         # See the Abstract Base Class for the docstring
         # Summary: take an iterable object yielding (stack, final_node_at_depth)
         # and returns strings
