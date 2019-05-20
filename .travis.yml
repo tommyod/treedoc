@@ -29,7 +29,7 @@ before_install:
   - python --version # Print python information
 
 install:
-  - pip install --upgrade -r requirements.txt
+  - pip install --upgrade --requirement=requirements.txt
   - pip list # List installed packages
   
 # -------------------- script: run the build script ---------------------------
@@ -44,16 +44,16 @@ before_script:
 script:
   # Install the test package before running the tests
   - pip install treedoc/tests
-  - pytest treedoc --verbose --doctest-modules # Run all tests
+  - pytest treedoc --verbose --doctest-modules --color=yes # Run all tests
 
 # -------------------- deploy: deploy to PyPI if it's a tagged commit ---------
 after_script:
   - python setup.py sdist # Source distribution
   - python setup.py bdist_wheel # Binary distribution (not really needed)
-  #  report any problems rendering your README. If your markup renders fine, 
+  # report any problems rendering your README. If your markup renders fine, 
   # the command will output Checking distribution FILENAME: Passed.
   - twine check dist/*
   - echo "$TRAVIS_TAG"
   - if [ -n "$TRAVIS_TAG" ]; then
-    python -m twine upload dist/* -u tommyod -p $TWINE --skip-existing;
+    python -m twine upload dist/* --username tommyod --password $TWINE --skip-existing;
     fi

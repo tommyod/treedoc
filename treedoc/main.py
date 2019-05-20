@@ -44,7 +44,7 @@ def treedoc(
 
     # A zero means that no width was explicitly set, if so we set it to terminal width
     if width == 0:
-        width, _ = get_terminal_size()
+        width, _ = get_terminal_size(fallback=(128, 24))
 
     # Resolve the object
     objects = resolve_input(obj)

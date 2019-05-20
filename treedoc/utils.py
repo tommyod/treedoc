@@ -80,7 +80,7 @@ class Peekable:
         return next(self._it)
 
 
-def get_terminal_size(fallback=(80, 24)) -> typing.Tuple[int, int]:
+def get_terminal_size(fallback=(128, 24)) -> typing.Tuple[int, int]:
     """Get the terminal size.
     
     See http://granitosaurus.rocks/getting-terminal-size.html
