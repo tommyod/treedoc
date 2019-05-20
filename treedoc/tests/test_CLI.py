@@ -39,7 +39,7 @@ def test_cli_smoketests_famous_packages(library):
     """The smoketests assure that the commands run without errors. No output testing
     is performed apart from the non-existence of an error."""
 
-    args = " ".join(["treedoc", obj_string, "--subpackages"])
+    args = " ".join(["treedoc", library, "--subpackages"])
     exit_code, output = subprocess.getstatusoutput(args)
 
     # Zero exit code means everything is OK
