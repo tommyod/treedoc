@@ -94,7 +94,7 @@ class DensePrinter(Printer, PrinterABC):
     def _format_signature(self, obj) -> str:
         """Get and format the signature of an object."""
         formatted = format_signature(obj, verbosity=self.signature, width=self.width)
-        assert isinstance(formatted, str)
+        assert isinstance(formatted, (str,))
         return formatted
 
     def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
@@ -310,7 +310,7 @@ class TreePrinter(Printer, PrinterABC):
 # =============================================================================
 
 
-def _describe(obj):
+def _describe(obj) -> str:
     """Produce a short description of the given object.
     
     Inspired by pydoc.describe."""
@@ -411,7 +411,7 @@ def clean_object_stack(stack):
     return new_stack
 
 
-def _get_name(param):
+def _get_name(param) -> str:
     """Checks if signature.Parameter corresponds to *args or **kwargs type input."""
     if (
         param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD)
@@ -422,7 +422,7 @@ def _get_name(param):
         return param.name
 
 
-def _between(string, start, end):
+def _between(string, start, end) -> str:
     """Returns what's between `start` and `end`, exclusive.
     
     Examples
@@ -544,7 +544,7 @@ def _format_signature(obj, *, verbosity=2) -> str:
         if signature_in_docs is None:
 
             # inspect.signature and docstring info has failed, still return if callable
-            if isinstance(obj, collections.abc.Callable) and verbosity >= 1:
+            if callable(obj) and verbosity >= 1:
                 return "(...)"
             return ""
 
@@ -601,23 +601,23 @@ def _format_signature(obj, *, verbosity=2) -> str:
         return "(...)"
 
     elif verbosity == 2:
-        sig = SEP.join(_get_name(param) for param in sig.parameters.values())
-        return "(" + sig + ")"
+        return_sig = SEP.join(_get_name(param) for param in sig.parameters.values())
+        return "(" + return_sig + ")"
 
     elif verbosity == 3:
-        sig = SEP.join(
+        return_sig = SEP.join(
             param.name + "=" + str(param.default)
             if param.default is not param.empty
             else _get_name(param)
             for param in sig.parameters.values()
         )
-        return "(" + sig + ")"
+        return "(" + return_sig + ")"
 
     else:
         return str(sig)
 
 
-def resolve_str_to_obj(object_string):
+def resolve_str_to_obj(object_string) -> object:
     """
     Resolve a string to a Python object.
     

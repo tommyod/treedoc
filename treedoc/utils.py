@@ -6,6 +6,7 @@ General utilities for treedoc.
 
 import collections
 import os
+import typing
 
 
 class PrintMixin:
@@ -13,7 +14,7 @@ class PrintMixin:
 
     # Could've used dataclasses, but they were introduced in Python 3.8
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Returns a string like ClassName(a=2, b=3)."""
         args = ["{}={}".format(k, v) for k, v in self.__dict__.items()]
         return type(self).__name__ + "({})".format(", ".join(args))
@@ -50,7 +51,7 @@ class Peekable:
     def __iter__(self):
         return self
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         try:
             self.peek()
         except StopIteration:
@@ -79,7 +80,7 @@ class Peekable:
         return next(self._it)
 
 
-def get_terminal_size(fallback=(80, 24)):
+def get_terminal_size(fallback=(80, 24)) -> typing.Tuple[int, int]:
     """Get the terminal size.
     
     See http://granitosaurus.rocks/getting-terminal-size.html
