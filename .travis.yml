@@ -8,19 +8,16 @@ matrix:
   
     - os: linux
       sudo: required
-      services: docker
       python: '3.6'
   
     - os: linux
       dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
       sudo: required
-      services: docker
       python: '3.7'
 
     - os: linux
       dist: xenial    
       sudo: required
-      services: docker
       python: '3.8-dev'
 
 # The Travis CI job lifecycle specifies the order of the commands below phases.
@@ -41,7 +38,7 @@ before_script:
   - pip install . # Install the package
   - pip show treedoc # Show information about the package
   - black . --check # Check that code is formatted correctly w.r.t. black
-  - flake8 treedoc --select=F401 # Unused imports
+  - flake8 treedoc --select=F401 --exclude=__init__.py # Unused imports
   - bash ./linting.sh # Spelling errors
   - mypy treedoc/*.py --ignore-missing-imports --show-error-context # Static type analysis
 
