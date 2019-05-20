@@ -302,6 +302,12 @@ class ObjectTraverser(PrintMixin):
             seen_objects = []
             seen_names = set()
             for name, obj in itertools.chain(generator1, generator2):
+
+                # If it's not a module it's not a problem, since gen2 only yield modules
+                if not inspect.ismodule(obj):
+                    yield name, obj
+                    continue
+
                 try:
                     if obj not in seen_objects:
                         seen_objects.append(obj)
@@ -316,6 +322,9 @@ class ObjectTraverser(PrintMixin):
                         seen_objects.append(obj)
                         seen_names.add(name)
                         yield name, obj
+
+                except:
+                    continue
 
         generator = unique_first(generator1, generator2)
 
@@ -496,6 +505,11 @@ def descend_from_package(
 
         # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/ctypes/wintypes.py", line 20, in <module>
         except LookupError:
+            # print(f"Could not import {object_name}. Error: {error}")
+            return
+
+        # File "/home/tommy/anaconda3/envs/treedoc/lib/python3.7/site-packages/numpy/ma/version.py", line 12, in <module>
+        except AttributeError:
             # print(f"Could not import {object_name}. Error: {error}")
             return
 
