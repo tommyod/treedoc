@@ -51,15 +51,10 @@ script:
   - pytest treedoc --verbose --doctest-modules # Run all tests
 
 # -------------------- deploy: deploy to PyPI if it's a tagged commit ---------
-before_deploy:
+after_script:
   - echo "$TRAVIS_TAG"
   - if [ -n "$TRAVIS_TAG" ]; then
     pip install twine;
     python setup.py sdist bdist_wheel;
-    fi
-    
-deploy:
-  - echo "$TRAVIS_TAG"
-  - if [ -n "$TRAVIS_TAG" ]; then
     python -m twine upload dist/* -u tommyod -p $TWINE --skip-existing;
     fi
