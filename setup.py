@@ -5,6 +5,7 @@ setup(
     version="0.2.0",
     description="Minimalistic Python documentation in a tree structure.",
     long_description="Minimalistic Python documentation in a tree structure.",
+    long_description_content_type="text/markdown",
     author="tommyod",
     author_email="tod001@uib.no",
     license="MIT",
