@@ -10,6 +10,7 @@ import sys
 
 from treedoc.printing import DensePrinter, TreePrinter, resolve_input
 from treedoc.traversal import ObjectTraverser
+from treedoc.utils import get_terminal_size
 
 
 def treedoc(
@@ -41,6 +42,10 @@ def treedoc(
     >>> treedoc("collections.Counter")
     """
 
+    # A zero means that no width was explicitly set, if so we set it to terminal width
+    if width == 0:
+        width, _ = get_terminal_size(fallback=(128, 24))
+
     # Resolve the object
     objects = resolve_input(obj)
 
@@ -68,7 +73,7 @@ def setup_argumentparser(printers):
 
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
-        description="Minimalistic Python documentation in a tree structure.",
+        description="Minimalistic Python documentation for dendrophiles.",
         epilog="Report issues and contribute at https://github.com/tommyod/treedoc.",
         allow_abbrev=True,
         # add_help=True,
@@ -208,7 +213,7 @@ def setup_argumentparser(printers):
         "-W",
         "--width",
         action="store",
-        default=88,
+        default=0,
         dest="width",
         type=int,
         # choices=range(50, 500),

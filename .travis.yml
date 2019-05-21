@@ -8,60 +8,54 @@ matrix:
   
     - os: linux
       sudo: required
-      services: docker
       python: '3.6'
   
     - os: linux
       dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
       sudo: required
-      services: docker
       python: '3.7'
 
-    - os: linux
-      dist: xenial    
-      sudo: required
-      services: docker
-      python: '3.8-dev'
+# =============================================================================
+#     - os: linux
+#       dist: xenial    
+#       sudo: required
+#       python: '3.8-dev'
+# =============================================================================
 
 # The Travis CI job lifecycle specifies the order of the commands below phases.
 # https://docs.travis-ci.com/user/job-lifecycle/#the-job-lifecycle
 
 # -------------------- install: install any dependencies required -------------
 before_install:
-  - sudo apt install libpython-dev
   - uname --all # Print system information
   - python --version # Print python information
 
 install:
-  - pip install -r requirements.txt
+  - pip install --upgrade --requirement=requirements.txt
   - pip list # List installed packages
-
-
+  
 # -------------------- script: run the build script ---------------------------
 before_script:
-  - echo 'before script.'
-
-script:
-  - pip install -e . # python setup.py develop sdist # Install the package
+  - pip install . # Install the package
   - pip show treedoc # Show information about the package
   - black . --check # Check that code is formatted correctly w.r.t. black
-  - flake8 treedoc --select=F401 # Unused imports
+  - flake8 treedoc --select=F401 --exclude=__init__.py # Unused imports
   - bash ./linting.sh # Spelling errors
-  
-  # Install the testpackage before running the tests
+  - mypy treedoc/*.py --ignore-missing-imports --show-error-context # Static type analysis
+
+script:
+  # Install the test package before running the tests
   - pip install treedoc/tests
-  - pytest treedoc --verbose --doctest-modules # Run all tests
-                 
-# Build order
-# =============================================================================
-# before_install
-# install
-# before_script
-# script
-# OPTIONAL before_cache (for cleaning up cache)
-# after_success or after_failure
-# OPTIONAL before_deploy
-# OPTIONAL deploy
-# OPTIONAL after_deploy
-# after_script
-# =============================================================================
+  - pytest treedoc --verbose --doctest-modules --color=yes # Run all tests
+
+# -------------------- deploy: deploy to PyPI if it's a tagged commit ---------
+after_script:
+  - python setup.py sdist # Source distribution
+  - python setup.py bdist_wheel # Binary distribution (not really needed)
+  # report any problems rendering your README. If your markup renders fine, 
+  # the command will output Checking distribution FILENAME: Passed.
+  - twine check dist/*
+  - echo "$TRAVIS_TAG"
+  - if [ -n "$TRAVIS_TAG" ]; then
+    python -m twine upload dist/* --username tommyod --password $TWINE --skip-existing;
+    fi

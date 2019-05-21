@@ -12,6 +12,7 @@ import pkgutil
 import pydoc
 import sys
 import textwrap
+import typing
 
 from treedoc.utils import Peekable, PrintMixin
 
@@ -24,11 +25,11 @@ class PrinterABC(abc.ABC):
     """Abstract base class (ABC) for printers."""
 
     @abc.abstractmethod
-    def __init__():
+    def __init__(self):
         pass
 
     @abc.abstractmethod
-    def format_iterable(iterable) -> str:
+    def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         """Consumes an iterator yielding object stacks and yields formatted strings.
         
         Parameters:
@@ -92,11 +93,11 @@ class DensePrinter(Printer, PrinterABC):
 
     def _format_signature(self, obj) -> str:
         """Get and format the signature of an object."""
-        formatted = format_signature(obj, verbosity=self.signature)
-        assert isinstance(formatted, str)
+        formatted = format_signature(obj, verbosity=self.signature, width=self.width)
+        assert isinstance(formatted, (str,))
         return formatted
 
-    def format_iterable(self, iterable) -> str:
+    def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         # See the Abstract Base Class for the docstring
         # Summary: take an iterable object yielding (stack, final_node_at_depth)
         # and returns strings
@@ -142,20 +143,20 @@ class TreePrinter(Printer, PrinterABC):
     LAST = "└──"
     BLANK = "   "
 
-    def _get_docstring(self, obj) -> str:
+    def _get_docstring(self, obj, *, width) -> str:
         """Get and format the docstring of an object."""
 
         if self.docstring == 0:
             return ""
-        return get_docstring(obj, width=self.width)
+        return get_docstring(obj, width=width)
 
-    def _format_signature(self, obj) -> str:
+    def _format_signature(self, obj, *, width) -> str:
         """Get and format the signature of an object."""
-        formatted = format_signature(obj, verbosity=self.signature)
+        formatted = format_signature(obj, verbosity=self.signature, width=width)
         assert isinstance(formatted, str)
         return formatted
 
-    def format_iterable(self, iterable) -> str:
+    def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         # See the Abstract Base Class for the docstring
         # Summary: take an iterable object yielding (stack, final_node_at_depth)
         # and returns strings
@@ -186,11 +187,19 @@ class TreePrinter(Printer, PrinterABC):
 
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
-            last_obj = stack[-1]
-            signature = self._format_signature(last_obj)
-            docstring = self._get_docstring(last_obj)
+            # The 1 represents the spacing between the stacks
+            # The 3 represents space and quotation marks in "docstring"
+            width_used = len(joined_print_stack) + len(obj_names) + 1
 
-            yield " ".join([joined_print_stack, obj_names]) + signature
+            last_obj = stack[-1]
+            signature = self._format_signature(last_obj, width=self.width - width_used)
+            docstring = self._get_docstring(
+                last_obj, width=self.width - len(joined_print_stack) - 3
+            )
+
+            to_yield = " ".join([joined_print_stack, obj_names]) + signature
+            assert len(to_yield) <= self.width
+            yield to_yield
 
             # No need to show docstring, or no docstring to show, simply continue
             if self.docstring == 0 or docstring == "":
@@ -206,7 +215,9 @@ class TreePrinter(Printer, PrinterABC):
                 symbol = ""
 
             print_stack[-1] = symbol
-            yield " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
+            to_yield = " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
+            assert len(to_yield) <= self.width
+            yield to_yield
 
     def _format_row(self, iterator, depth=0, print_stack=None):
         """Takes an iterator and yields tuples (print_stack, stack).
@@ -299,7 +310,7 @@ class TreePrinter(Printer, PrinterABC):
 # =============================================================================
 
 
-def _describe(obj):
+def _describe(obj) -> str:
     """Produce a short description of the given object.
     
     Inspired by pydoc.describe."""
@@ -400,7 +411,7 @@ def clean_object_stack(stack):
     return new_stack
 
 
-def _get_name(param):
+def _get_name(param) -> str:
     """Checks if signature.Parameter corresponds to *args or **kwargs type input."""
     if (
         param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD)
@@ -411,7 +422,7 @@ def _get_name(param):
         return param.name
 
 
-def _between(string, start, end):
+def _between(string, start, end) -> str:
     """Returns what's between `start` and `end`, exclusive.
     
     Examples
@@ -468,7 +479,7 @@ def signature_from_docstring(obj):
     return None
 
 
-def format_signature(obj, verbosity=2):
+def format_signature(obj, *, verbosity=2, width=88) -> str:
     """ 
     Format a function signature for printing.
     
@@ -488,6 +499,27 @@ def format_signature(obj, verbosity=2):
     >>> # Built-ins with signature no signature information at all
     >>> format_signature(collections.deque.append, verbosity=2)
     '(...)'
+    """
+    signature_string = _format_signature(obj=obj, verbosity=verbosity)
+    assert isinstance(signature_string, str)
+
+    # No problems with the width
+    if len(signature_string) <= width:
+        return signature_string
+
+    # It's too wide, shorten it and return
+    inner_sig = str(signature_string).strip("()")
+    try:
+        inner_sig = textwrap.shorten(inner_sig, width=width - 2, placeholder=" ...")
+    except ValueError:  # ValueError: placeholder too large for max width
+        inner_sig = ""
+    result = "(" + inner_sig + ")"
+    assert len(result) <= width
+    return result
+
+
+def _format_signature(obj, *, verbosity=2) -> str:
+    """Format the signature, but make no guarantee for width.
     """
     # TODO: Figure out how to handle *
 
@@ -515,7 +547,7 @@ def format_signature(obj, verbosity=2):
         if signature_in_docs is None:
 
             # inspect.signature and docstring info has failed, still return if callable
-            if isinstance(obj, collections.abc.Callable) and verbosity >= 1:
+            if callable(obj) and verbosity >= 1:
                 return "(...)"
             return ""
 
@@ -536,6 +568,10 @@ def format_signature(obj, verbosity=2):
         # >>> inspect.signature(x)
         # 'TypeError: 1 is not a callable object'
         return ""
+
+    # =============================================================================
+    #     If the code reaches this point, we have a Signature stored in `sig`
+    # =============================================================================
 
     # If function as no arguments, return
     if str(sig) == "()" and verbosity > 0:
@@ -561,34 +597,30 @@ def format_signature(obj, verbosity=2):
         # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
         verbosity = max_verbosity
 
-        # Fails for instance on collections.ChainMap without this
+        # Fails for instance on collections.ChainMap without this logic
         return str(sig)
 
     elif verbosity == 1:
         return "(...)"
 
     elif verbosity == 2:
-        return (
-            "(" + SEP.join(_get_name(param) for param in sig.parameters.values()) + ")"
-        )
+        return_sig = SEP.join(_get_name(param) for param in sig.parameters.values())
+        return "(" + return_sig + ")"
 
     elif verbosity == 3:
-        return (
-            "("
-            + SEP.join(
-                param.name + "=" + str(param.default)
-                if param.default is not param.empty
-                else _get_name(param)
-                for param in sig.parameters.values()
-            )
-            + ")"
+        return_sig = SEP.join(
+            param.name + "=" + str(param.default)
+            if param.default is not param.empty
+            else _get_name(param)
+            for param in sig.parameters.values()
         )
+        return "(" + return_sig + ")"
 
     else:
         return str(sig)
 
 
-def resolve_str_to_obj(object_string):
+def resolve_str_to_obj(object_string) -> object:
     """
     Resolve a string to a Python object.
     

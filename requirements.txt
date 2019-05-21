@@ -3,3 +3,11 @@
 black
 pytest
 flake8
+mypy
+twine
+
+# For smoketests
+numpy
+scipy
+pandas
+scikit-learn
