@@ -16,6 +16,7 @@ setup(
     version=version,
     description="Minimalistic Python documentation for dendrophiles.",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/tommyod/treedoc",
     author="tommyod",
     author_email="tod001@uib.no",
