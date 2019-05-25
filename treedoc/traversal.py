@@ -132,10 +132,10 @@ class ObjectTraverser(PrintMixin):
             # pytest.collect has __package__ == None
             if child_obj.__package__ is None:
                 child_package_wrong = False
-                
+
             else:
                 child_package_wrong = child_obj.__package__ in obj.__package__
-            
+
             if different_packages and child_package_wrong:
                 self._p(f"OC: Failed on condition 2.1")
                 return False
@@ -285,7 +285,7 @@ class ObjectTraverser(PrintMixin):
         #         a child node is the last child to be visited *before* the
         #         DFS search recurses. If a, b and c are children of A, then
         #         the algorithm must discover that c is the final child of A
-        #         before it recurses on a, b or c. 
+        #         before it recurses on a, b or c.
         # =============================================================================
 
         # The objects we will recurse on
@@ -338,11 +338,11 @@ class ObjectTraverser(PrintMixin):
 
             try:
                 getattr(child_obj, "__name__")
-                
+
             except AttributeError:
                 try:
                     setattr(child_obj, "__name__", name)
-                
+
                 except AttributeError:
                     # This is for everything to work with properties, e.g. pandas.DataFrame.T
                     # TODO: Figure out how to deal with properties
@@ -425,30 +425,30 @@ def is_subpackage(package_a, package_b) -> bool:
 def is_dunder_method(obj) -> bool:
     """Is the method a dunder (double underscore), i.e. __add__(self, other)?"""
     assert hasattr(obj, "__name__")
-    
+
     obj_name = obj.__name__
-    
+
     return obj_name.endswith("__") and obj_name.startswith("__")
 
 
 def is_private(obj) -> bool:
     """Is the object private, i.e. _func(x)?"""
     assert hasattr(obj, "__name__")
-    
+
     obj_name = obj.__name__
     typical_private = obj_name.startswith("_") and obj_name[1] != "_"
     private_subpackage = "._" in obj_name
-    
+
     return typical_private or private_subpackage
 
 
 def is_test(obj) -> bool:
     """Is the object a test, i.e. test_func()?"""
     assert hasattr(obj, "__name__")
-    
+
     obj_name = obj.__name__.lower()
     patterns = ("test", "_test", "__test")
-    
+
     return any(obj_name.startswith(pattern) for pattern in patterns)
 
 
@@ -456,7 +456,7 @@ def is_package(obj) -> bool:
     """Does the object file end with '__init__.py'?"""
     if not hasattr(obj, "__file__"):
         return False
-    
+
     return obj.__file__.endswith("__init__.py")
 
 
@@ -477,7 +477,7 @@ def descend_from_package(
 
     try:
         path, _ = os.path.split(inspect.getfile(package))
-    
+
     except TypeError:
         # Is a built-in module
         return None
@@ -499,12 +499,12 @@ def descend_from_package(
 
         try:
             obj = importlib.import_module(object_name)
-            
+
         except ModuleNotFoundError:
             # TODO: Replace this with logging
             # print(f"Could not import {object_name}. Error: {error}")
             return
-        
+
         except ImportError:
             # print(f"Could not import {object_name}. Error: {error}")
             return
@@ -526,7 +526,7 @@ def descend_from_package(
 
         if include_subpackages and ispkg:
             yield object_name, obj
-            
+
         if include_modules and ismodule:
             yield object_name, obj
 
