@@ -33,8 +33,9 @@ def treedoc(
     
     Arguments
     ---------
-    obj: a string representing an object, or several space-separated object, or a list
-         of objects. examples: "dict", "dict set", [dict, set]
+    obj
+        A string representing an object, or several space-separated objects, or a list
+        of objects. Examples: "dict", "dict set", [dict, set]
     
     Examples
     --------
@@ -69,7 +70,7 @@ def treedoc(
 
 
 def setup_argumentparser(printers):
-    """Set up the argumentparser."""
+    """Set up the argument parser."""
 
     parser = argparse.ArgumentParser(
         prog="treedoc",  # The name of the program
