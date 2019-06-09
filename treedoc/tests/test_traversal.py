@@ -102,6 +102,7 @@ class TestObjectTraverser:
 
         # Recurse if it would not have been found elsewhere and it's in __init__.py
         assert MyClass in [obj for (_, obj) in inspect.getmembers(treedoctestpackage)]
+        
         traverser = ObjectTraverser(subpackages=subpackages, modules=False)
         assert traverser.recurse_to_child_object(
             obj=treedoctestpackage, child_obj=MyClass
@@ -139,6 +140,7 @@ class TestObjectTraverser:
         assert func_subtraction in [
             obj for (_, obj) in inspect.getmembers(treedoctestpackage)
         ]
+        
         traverser = ObjectTraverser(subpackages=False, modules=modules)
         assert traverser.recurse_to_child_object(
             obj=treedoctestpackage, child_obj=func_subtraction
