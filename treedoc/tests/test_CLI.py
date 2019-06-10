@@ -46,15 +46,6 @@ def test_cli_smoketests_famous_packages(library):
     assert exit_code == 0
 
 
-# =============================================================================
-# def test_cli_python_arg():
-#     """Ensure that `treedoc python` runs."""
-#
-#     exit_code, output = subprocess.getstatusoutput(" ".join(["treedoc", "python"]))
-#     assert exit_code == 0
-# =============================================================================
-
-
 def _generate_cli_args(n):
     """Generate n args."""
     random.seed(42)

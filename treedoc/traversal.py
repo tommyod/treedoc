@@ -67,7 +67,7 @@ class ObjectTraverser(PrintMixin):
         print(*args, file=self.stream)
 
     def recurse_to_child_object(self, *, obj, child_obj) -> bool:
-        """Given an object and it's child, do we recurse down to the child?"""
+        """Given an object and its child, do we recurse down to the child?"""
 
         # TODO: Optimize this by placing what fails most often first
 
@@ -132,8 +132,10 @@ class ObjectTraverser(PrintMixin):
             # pytest.collect has __package__ == None
             if child_obj.__package__ is None:
                 child_package_wrong = False
+
             else:
                 child_package_wrong = child_obj.__package__ in obj.__package__
+
             if different_packages and child_package_wrong:
                 self._p(f"OC: Failed on condition 2.1")
                 return False
@@ -249,6 +251,7 @@ class ObjectTraverser(PrintMixin):
 
     def _search(self, *, obj, stack=None, final_node_at_depth=None):
         """
+        Missing docstring.
         """
 
         # =============================================================================
@@ -279,11 +282,10 @@ class ObjectTraverser(PrintMixin):
         # =============================================================================
         #         (2) FILTER THE CHILD OBJECTS
         #         For efficient tree-like printing it's crucial to know whether
-        #         a child node is the last child to be visited _before_ the
+        #         a child node is the last child to be visited *before* the
         #         DFS search recurses. If a, b and c are children of A, then
         #         the algorithm must discover that c is the final child of A
-        #         before it recurses on a, b or c. This is to facilitate
-        #         efficient printing.
+        #         before it recurses on a, b or c.
         # =============================================================================
 
         # The objects we will recurse on
@@ -303,7 +305,7 @@ class ObjectTraverser(PrintMixin):
             seen_names = set()
             for name, obj in itertools.chain(generator1, generator2):
 
-                # If it's not a module it's not a problem, since gen2 only yield modules
+                # If it's not a module it's not a problem, since generator2 only yield modules
                 if not inspect.ismodule(obj):
                     yield name, obj
                     continue
@@ -336,21 +338,23 @@ class ObjectTraverser(PrintMixin):
 
             try:
                 getattr(child_obj, "__name__")
+
             except AttributeError:
                 try:
                     setattr(child_obj, "__name__", name)
+
                 except AttributeError:
-                    # This is for everything to work with properties, df.DataFrame.T
+                    # This is for everything to work with properties, e.g. pandas.DataFrame.T
                     # TODO: Figure out how to deal with properties
                     continue
 
             assert hasattr(child_obj, "__name__")
 
-            # Check if we should skip the object by virtue of it's properties
+            # Check if we should skip the object by virtue of its properties
             if not self.recurse_to_object(obj=child_obj):
                 continue
 
-            # Check if we should skip the child object by virtue of it's relationship
+            # Check if we should skip the child object by virtue of its relationship
             # to the parent object
             if not self.recurse_to_child_object(obj=obj, child_obj=child_obj):
                 continue
@@ -359,7 +363,7 @@ class ObjectTraverser(PrintMixin):
 
         # =============================================================================
         #         (3) RECURSE ON CHILD OBJECTS
-        #         For every child object that we're interested in, we recurse.
+        #         For every child object that we're interested in, recurse.
         # =============================================================================
 
         for num, (name, child_obj) in enumerate(filtered, 1):
@@ -378,7 +382,7 @@ class ObjectTraverser(PrintMixin):
 
 
 def is_inspectable(obj) -> bool:
-    """An object is inspectable if it returns True for any of the inspect.is.. functions."""
+    """An object is inspectable if it returns True for any of the inspect.is* functions."""
     func_names = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
     funcs = (getattr(inspect, func_name) for func_name in func_names)
     return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
@@ -391,8 +395,9 @@ def is_propersubpackage(package_a, package_b) -> bool:
     try:
         path_a, _ = os.path.split(inspect.getfile(package_a))
         path_b, _ = os.path.split(inspect.getfile(package_b))
-        # is a built-in module
+
     except TypeError:
+        # Is a built-in module
         return False
 
     return (path_b in path_a) and not (path_b == path_a)
@@ -407,8 +412,7 @@ def is_subpackage(package_a, package_b) -> bool:
         path_b, _ = os.path.split(inspect.getfile(package_b))
 
     except TypeError:
-        # is a built-in module
-
+        # Is a built-in module
         # For instance: is_subpackage(builtins, builtins) should return True
         if package_a == package_b:
             return True
@@ -420,32 +424,36 @@ def is_subpackage(package_a, package_b) -> bool:
 
 def is_dunder_method(obj) -> bool:
     """Is the method a dunder (double underscore), i.e. __add__(self, other)?"""
-
     assert hasattr(obj, "__name__")
+
     obj_name = obj.__name__
+
     return obj_name.endswith("__") and obj_name.startswith("__")
 
 
 def is_private(obj) -> bool:
     """Is the object private, i.e. _func(x)?"""
     assert hasattr(obj, "__name__")
+
     obj_name = obj.__name__
     typical_private = obj_name.startswith("_") and obj_name[1] != "_"
     private_subpackage = "._" in obj_name
+
     return typical_private or private_subpackage
 
 
 def is_test(obj) -> bool:
     """Is the object a test, i.e. test_func()?"""
     assert hasattr(obj, "__name__")
+
     obj_name = obj.__name__.lower()
     patterns = ("test", "_test", "__test")
+
     return any(obj_name.startswith(pattern) for pattern in patterns)
 
 
 def is_package(obj) -> bool:
     """Does the object file end with '__init__.py'?"""
-
     if not hasattr(obj, "__file__"):
         return False
 
@@ -460,7 +468,7 @@ def descend_from_package(
     include_modules=False,
     include_subpackages=False,
 ):
-    """Descent from a package to either a subpackage or modules one level down.
+    """Descend one level down from a package to either a subpackage or modules.
     
     Yields a tuple of (object, object_name) one level down.
     """
@@ -469,8 +477,9 @@ def descend_from_package(
 
     try:
         path, _ = os.path.split(inspect.getfile(package))
-        # TypeError: <module 'itertools' (built-in)> is a built-in module
+
     except TypeError:
+        # Is a built-in module
         return None
 
     prefix = package.__name__ + "."
@@ -490,10 +499,12 @@ def descend_from_package(
 
         try:
             obj = importlib.import_module(object_name)
+
         except ModuleNotFoundError:
             # TODO: Replace this with logging
             # print(f"Could not import {object_name}. Error: {error}")
             return
+
         except ImportError:
             # print(f"Could not import {object_name}. Error: {error}")
             return
@@ -515,6 +526,7 @@ def descend_from_package(
 
         if include_subpackages and ispkg:
             yield object_name, obj
+
         if include_modules and ismodule:
             yield object_name, obj
 
