@@ -218,36 +218,35 @@ class ObjectTraverser(PrintMixin):
 
     def recurse_to_object(self, obj) -> bool:
         """Given an object, should we recurse down to it?"""
-
-        # TODO: Optimize this by placing what fails most often first
-
+        
+        return_value = True
         name = obj.__name__
-
-        if name in self._ignored_names:
-            self._p(f"O: Failed on condition 1.1")
-            return False
-
-        if obj is type:
-            self._p(f"O: Failed on condition 1.2")
-            return False
-
-        if is_test(obj) and not self.tests:
-            self._p(f"O: Failed on condition 1.3")
-            return False
-
-        if is_private(obj) and not self.private:
-            self._p(f"O: Failed on condition 1.4")
-            return False
-
+        
         if is_dunder_method(obj) and not self.dunders:
             self._p(f"O: Failed on condition 1.5")
-            return False
-
+            return_value = False
+        
+        if is_private(obj) and not self.private:
+            self._p(f"O: Failed on condition 1.4")
+            return_value = False
+            
+        if obj is type:
+            self._p(f"O: Failed on condition 1.2")
+            return_value = False
+        
+        if name in self._ignored_names:
+            self._p(f"O: Failed on condition 1.1")
+            return_value = False
+        
         if not is_inspectable(obj):
             self._p(f"O: Failed on condition 1.6")
-            return False
+            return_value = False
+            
+        if is_test(obj) and not self.tests:
+            self._p(f"O: Failed on condition 1.3")
+            return_value = False
 
-        return True
+        return return_value
 
     def _search(self, *, obj, stack=None, final_node_at_depth=None):
         """
