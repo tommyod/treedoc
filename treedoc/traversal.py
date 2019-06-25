@@ -220,12 +220,12 @@ class ObjectTraverser(PrintMixin):
         """Given an object, should we recurse down to it?"""
 
         name = obj.__name__
-        
+
         # The following order is based on line profiling in an attempt to speed
         # up recursion
-        # Inline comments original condition -> renamed condition indicate 
+        # Inline comments original condition -> renamed condition indicate
         # renaming condition following profiling
-        
+
         # 1.5 -> 1.1
         if is_dunder_method(obj) and not self.dunders:
             self._p(f"O: Failed on condition 1.1")
