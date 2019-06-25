@@ -220,29 +220,40 @@ class ObjectTraverser(PrintMixin):
         """Given an object, should we recurse down to it?"""
 
         name = obj.__name__
-
+        
+        # The following order is based on line profiling in an attempt to speed
+        # up recursion
+        # Inline comments original condition -> renamed condition indicate 
+        # renaming condition following profiling
+        
+        # 1.5 -> 1.1
         if is_dunder_method(obj) and not self.dunders:
-            self._p(f"O: Failed on condition 1.5")
-            return False
-
-        if is_private(obj) and not self.private:
-            self._p(f"O: Failed on condition 1.4")
-            return False
-
-        if obj is type:
-            self._p(f"O: Failed on condition 1.2")
-            return False
-
-        if name in self._ignored_names:
             self._p(f"O: Failed on condition 1.1")
             return False
 
-        if not is_inspectable(obj):
-            self._p(f"O: Failed on condition 1.6")
+        # 1.4 -> 1.2
+        if is_private(obj) and not self.private:
+            self._p(f"O: Failed on condition 1.2")
             return False
 
-        if is_test(obj) and not self.tests:
+        # 1.2 -> 1.3
+        if obj is type:
             self._p(f"O: Failed on condition 1.3")
+            return False
+
+        # 1.1 -> 1.4
+        if name in self._ignored_names:
+            self._p(f"O: Failed on condition 1.4")
+            return False
+
+        # 1.6 -> 1.5
+        if not is_inspectable(obj):
+            self._p(f"O: Failed on condition 1.5")
+            return False
+
+        # 1.3 -> 1.6
+        if is_test(obj) and not self.tests:
+            self._p(f"O: Failed on condition 1.6")
             return False
 
         return True
