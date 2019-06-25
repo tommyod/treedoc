@@ -32,14 +32,16 @@ class PrinterABC(abc.ABC):
     def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         """Consumes an iterator yielding object stacks and yields formatted strings.
         
-        Parameters:
-        -----------
-        iterator (Iterator): an iterator yielding (print_stack, stack). The stacks
-                             are lists representing paths in the object tree.
+        Parameters
+        ----------
+        iterator : Iterator
+            An iterator yielding (print_stack, stack). 
+            The stacks are lists representing paths in the object tree.
         
         Yields
-        -------
-        formatted_str (string) : a string to be printed
+        ------
+        formatted_str : string
+            A string to be printed
         """
         pass
 
@@ -54,12 +56,16 @@ class Printer(PrintMixin):
         
         The interpretation of the following arguments varies from printer to printer.
         
-        Arguments
-        ---------
-            signature (int) :  how much signature information to show
-            docstring (int) :  how much docstring information to show
-            info (int) :  how much general information to show
-            width (int) :  maximum character width
+        Parameters
+        ----------
+            signature : int
+                How much signature information to show
+            docstring : int
+                How much docstring information to show
+            info : int
+                How much general information to show
+            width : int
+                Maximum character width
 
         """
         assert signature in (0, 1, 2, 3, 4)
@@ -86,7 +92,6 @@ class DensePrinter(Printer, PrinterABC):
 
     def _get_docstring(self, obj) -> str:
         """Get and format the docstring of an object."""
-
         if self.docstring == 0:
             return ""
         return get_docstring(obj, width=self.width)
@@ -98,9 +103,12 @@ class DensePrinter(Printer, PrinterABC):
         return formatted
 
     def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
-        # See the Abstract Base Class for the docstring
-        # Summary: take an iterable object yielding (stack, final_node_at_depth)
-        # and returns strings
+        """ See the Abstract Base Class for the docstring.
+        
+        Summary
+        -------
+        Take an iterable object yielding (stack, final_node_at_depth) and returns strings.
+        """
         for stack in self._format_row(iterable):
 
             self._validate_obj_stack(stack)
@@ -145,9 +153,9 @@ class TreePrinter(Printer, PrinterABC):
 
     def _get_docstring(self, obj, *, width) -> str:
         """Get and format the docstring of an object."""
-
         if self.docstring == 0:
             return ""
+
         return get_docstring(obj, width=width)
 
     def _format_signature(self, obj, *, width) -> str:
@@ -157,9 +165,12 @@ class TreePrinter(Printer, PrinterABC):
         return formatted
 
     def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
-        # See the Abstract Base Class for the docstring
-        # Summary: take an iterable object yielding (stack, final_node_at_depth)
-        # and returns strings
+        """ See the Abstract Base Class for the docstring.
+        
+        Summary
+        -------
+        Take an iterable object yielding (stack, final_node_at_depth) and returns strings.
+        """
         assert isinstance(iterable, collections.abc.Iterable)
 
         for print_stack, stack in self._format_row(iterable):
@@ -190,6 +201,7 @@ class TreePrinter(Printer, PrinterABC):
 
             to_yield = " ".join([joined_print_stack, obj_names]) + signature
             assert len(to_yield) <= self.width
+
             yield to_yield
 
             # No need to show docstring, or no docstring to show, simply continue
@@ -198,6 +210,7 @@ class TreePrinter(Printer, PrinterABC):
 
             # Want to print with docstring on the new line. Logic to switch up symbols
             last_in_stack = print_stack[-1]
+
             if last_in_stack == self.RIGHT:
                 symbol = self.DOWN
             elif last_in_stack == self.LAST:
@@ -208,6 +221,7 @@ class TreePrinter(Printer, PrinterABC):
             print_stack[-1] = symbol
             to_yield = " ".join([" ".join(print_stack), '"{}"'.format(docstring)])
             assert len(to_yield) <= self.width
+
             yield to_yield
 
     def _format_row(self, iterator, depth=0, print_stack=None):
@@ -216,7 +230,8 @@ class TreePrinter(Printer, PrinterABC):
         This recursive generator takes an iterator which yields 
         (stack, final_node_at_depth) and from it computes (print_stack, stack).
         It's purpose is to generate the pretty tree-structure from the 
-        `final_node_at_depth` stack."""
+        `final_node_at_depth` stack.
+        """
 
         if not isinstance(iterator, Peekable):
             iterator = Peekable(iter(iterator))
@@ -275,7 +290,6 @@ class TreePrinter(Printer, PrinterABC):
 
             # The next stack has more elements, so it's a child of the current node
             if len(next_stack) > len_stack:
-
                 # Find the appropriate recursion symbol and then recurse
                 rec_symbol = self.BLANK if final_at_depth else self.DOWN
 
@@ -304,26 +318,36 @@ class TreePrinter(Printer, PrinterABC):
 def _describe(obj) -> str:
     """Produce a short description of the given object.
     
-    Inspired by pydoc.describe."""
+    Inspired by pydoc.describe.
+    """
     if inspect.ismodule(obj):
+
         if obj.__name__ in sys.builtin_module_names:
             return "built-in module"
+
         if hasattr(obj, "__path__"):
             return "package"
         else:
             return "module"
+
     if inspect.isbuiltin(obj):
         return "built-in function"
+
     if inspect.isgetsetdescriptor(obj):
         return "getset descriptor"
+
     if inspect.ismemberdescriptor(obj):
         return "member descriptor"
+
     if inspect.isclass(obj):
         return "class"
+
     if inspect.isfunction(obj):
         return "function"
+
     if inspect.ismethod(obj):
         return "method"
+
     return type(obj).__name__
 
 
@@ -356,6 +380,7 @@ def get_docstring(obj, *, width=88) -> str:
     first_line, _ = pydoc.splitdoc(doc)
 
     return_str = textwrap.shorten(first_line, width=width, placeholder="...")
+
     if return_str:
         return_str = return_str[:-3] if return_str.endswith("....") else return_str
         return return_str
@@ -372,7 +397,7 @@ def get_docstring(obj, *, width=88) -> str:
 
 def clean_object_stack(stack):
     """
-    Join an object stack so that consequtive modules are merged into the last one.
+    Join an object stack so that consecutive modules are merged into the last one.
     
     This avoids the stack [collections, collections.abc] as being named
     'collections.collections.abc'.
@@ -390,6 +415,7 @@ def clean_object_stack(stack):
 
     stack = stack.copy()
     new_stack = []
+
     for obj in stack:
         # This one is a module, and the last one is a module
         # Therefore it must be a submodule, get rid of the first one
@@ -445,6 +471,7 @@ def signature_from_docstring(obj):
 
     # If not docstring is available, return
     docstring_line = get_docstring(obj)
+
     if not docstring_line:
         return None
 
@@ -454,12 +481,14 @@ def signature_from_docstring(obj):
 
     # Look for the name of the object, i.e. func(x)
     assert hasattr(obj, "__name__")
+
     if not obj.__name__ in docstring_line:
         return None
 
     # Attempt to get the signature
     index = docstring_line.index(obj.__name__) + len(obj.__name__)
     signature_part = docstring_line[index:]
+
     try:
         ret_value = _between(signature_part, "(", ")")
         if ret_value:
@@ -500,18 +529,21 @@ def format_signature(obj, *, verbosity=2, width=88) -> str:
 
     # It's too wide, shorten it and return
     inner_sig = str(signature_string).strip("()")
+
     try:
         inner_sig = textwrap.shorten(inner_sig, width=width - 2, placeholder=" ...")
     except ValueError:  # ValueError: placeholder too large for max width
         inner_sig = ""
+
     result = "(" + inner_sig + ")"
+
     assert len(result) <= width
+
     return result
 
 
 def _format_signature(obj, *, verbosity=2) -> str:
-    """Format the signature, but make no guarantee for width.
-    """
+    """Format the signature, but make no guarantee for width."""
     # TODO: Figure out how to handle *
 
     max_verbosity = 4
@@ -536,12 +568,10 @@ def _format_signature(obj, *, verbosity=2) -> str:
 
         # Failed to find a signature in the docstring
         if signature_in_docs is None:
-
             # inspect.signature and docstring info has failed, still return if callable
             if callable(obj) and verbosity >= 1:
                 return "(...)"
             return ""
-
         # Found a signature in the docstring
         else:
             if verbosity == 1:
@@ -587,7 +617,6 @@ def _format_signature(obj, *, verbosity=2) -> str:
         # TODO: Give user warning if verbosity needs to be adjusted, e.g.
         # print(f'Adjusting verbosity: {verbosity} -> {max_verbosity}.')
         verbosity = max_verbosity
-
         # Fails for instance on collections.ChainMap without this logic
         return str(sig)
 
@@ -614,7 +643,6 @@ def _format_signature(obj, *, verbosity=2) -> str:
 def resolve_str_to_obj(object_string) -> object:
     """
     Resolve a string to a Python object.
-    
     
     list -> builtin
     collections -> module
@@ -647,7 +675,6 @@ def resolve_str_to_obj(object_string) -> object:
 def resolve_input(obj):
     """Resolve a general input (str, iterable, etc) to a list of Python objects.
     
-    
     Examples
     --------
     >>> resolve_input("list") == [list]
@@ -676,25 +703,18 @@ def resolve_input(obj):
     # Special handling if "python" is passed
     if isinstance(obj, list) and len(obj) == 1 and obj[0].lower().strip() == "python":
         objects = []
-
         for (importer, object_name, ispkg) in pkgutil.iter_modules():
-
             if not ispkg:
                 continue
-
             try:
                 obj = importlib.import_module(object_name)
             except:
                 continue
-
             objects.append(obj)
-
         return objects
-
     elif isinstance(obj, str):
         assert " " not in obj
         return [resolve_str_to_obj(obj)]
-
     elif isinstance(obj, (list, set, tuple)):
         attempt = [resolve_str_to_obj(o) if isinstance(o, str) else o for o in obj]
         return [obj for obj in attempt if obj is not None]
