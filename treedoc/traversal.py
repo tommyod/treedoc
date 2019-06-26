@@ -26,6 +26,11 @@ import sys
 
 from treedoc.utils import PrintMixin
 
+# Defining inspection funcs in global scope speeds up treedoc program by ~20%
+_func_names = [func_name for func_name in dir(inspect) if func_name.startswith("is")]
+INSPECTION_FUNCS = [getattr(inspect, func_name) for func_name in _func_names]
+del _func_names
+
 # =============================================================================
 # ------------------------ PART 1/2 OF MODULE - CLASSES -----------------------
 # =============================================================================
@@ -382,10 +387,9 @@ class ObjectTraverser(PrintMixin):
 
 
 def is_inspectable(obj) -> bool:
-    """An object is inspectable if it returns True for any of the inspect.is* functions."""
-    func_names = (func_name for func_name in dir(inspect) if func_name.startswith("is"))
-    funcs = (getattr(inspect, func_name) for func_name in func_names)
-    return any([func(obj) for func in funcs]) or isinstance(obj, functools.partial)
+    """An object is inspectable if it returns True for any of the inspect.is.. functions."""
+    is_inspectable_by_func = any((func(obj) for func in INSPECTION_FUNCS))
+    return is_inspectable_by_func or isinstance(obj, functools.partial)
 
 
 def is_propersubpackage(package_a, package_b) -> bool:

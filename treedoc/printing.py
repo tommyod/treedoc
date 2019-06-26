@@ -185,16 +185,7 @@ class TreePrinter(Printer, PrinterABC):
             else:
                 obj_names = ".".join([s.__name__ for s in clean_object_stack(stack)])
 
-                # TODO: Remove this
-                try:
-                    resolve_str_to_obj(obj_names)
-                except ImportError:
-                    pass
-                # if resolve_str_to_obj(obj_names) is None:
-                #    pass
-                # print("FAILED TO LOAD")
-                # print(obj_names)
-                # assert resolve_str_to_obj(obj_names) is not None
+            # TODO: Consider a check of whether the object can be resolved here
 
             # TODO: Differentiate between INFO = 1 AND INFO = 2
 
