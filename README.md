@@ -48,7 +48,7 @@ interactive Python interpreter session or a Jupyter notebook.
 ## Contributing
 
 Contributions are welcome.
-If you wish to work on a problem, please create a Work In Progress (WIP) pull request to get feedback.
+If you wish to work on a problem, please create a [draft pull request](https://github.blog/2019-02-14-introducing-draft-pull-requests/) to get feedback.
 We aim for:
 
 - Zero dependencies, but dependencies for testing are ok.
