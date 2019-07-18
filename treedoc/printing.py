@@ -694,10 +694,13 @@ def resolve_str_to_obj(object_string: str) -> object:
     base, package = os.path.split(os.path.realpath(possible_pkg))
 
     # Append the base to the system path and try to import the module
-    # This allows `__init__.py` in "package" to have imports such as
-    # from functions import func
+    # This allows `__init__.py` in "package" to have relative imports such as
+    # from .functions import func
     # and we'll be able to get them
     sys.path.append(base)
+    # TODO: Would it be possible to expand logic so that `from functions import func`
+    # also works?
+
     try:
         return importlib.import_module(package)
     except:
