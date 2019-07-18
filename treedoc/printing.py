@@ -383,8 +383,6 @@ def get_docstring(obj, *, width=88) -> str:
     if (not first_line) and rest and ("\n\n" in rest):
         first_line = rest.split("\n\n")[0].replace("\n", " ")
 
-    while ' '
-
     return_str = textwrap.shorten(first_line, width=width, placeholder="...")
 
     if return_str:
