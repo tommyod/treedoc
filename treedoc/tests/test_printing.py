@@ -334,6 +334,14 @@ class TestObjectResolution:
             resolve_str_to_obj("gibberish")
 
     @staticmethod
+    def test_resolve_str_to_obj_from_file():
+        """Test that object resolution works on files."""
+
+        filename = operator.__file__
+
+        assert resolve_str_to_obj(filename) == resolve_str_to_obj("operator")
+
+    @staticmethod
     @pytest.mark.parametrize(
         "input_arg, expected",
         [

@@ -8,6 +8,7 @@ import abc
 import collections
 import importlib
 import inspect
+import os
 import pkgutil
 import pydoc
 import sys
@@ -644,7 +645,7 @@ def _format_signature(obj, *, verbosity=2) -> str:
         return str(sig)
 
 
-def resolve_str_to_obj(object_string) -> object:
+def resolve_str_to_obj(object_string: str) -> object:
     """
     Resolve a string to a Python object.
     
@@ -665,15 +666,51 @@ def resolve_str_to_obj(object_string) -> object:
     >>> resolve_str_to_obj("gibberish.Counter")
     Traceback (most recent call last):
         ...
-    ImportError: Could not resolve 'gibberish.Counter'.
+    ModuleNotFoundError: No module named 'gibberish'
     """
     assert isinstance(object_string, str)
-    suggestion = pydoc.locate(object_string)
 
-    if suggestion is None and object_string != "None":
-        raise ImportError("Could not resolve '{}'.".format(object_string))
-    else:
+    # Case 1: Some jokster passed the string "None", so we return None back
+    if object_string == "None":
+        return None
+
+    # Case 2: The object string is "collections.deque" or some dotted path
+    suggestion = pydoc.locate(object_string)
+    if suggestion is not None:
         return suggestion
+
+    # Case 3: The object string is "myfile.py", i.e. a module
+    if object_string.endswith(".py"):
+        try:
+            # Try to import the file directly, e.g.:
+            # /home/username/pythonfiles/functions.py
+            return pydoc.importfile(object_string)
+        except FileNotFoundError:
+            # Join with the current working directory and try
+            possible_module = os.path.join(os.getcwd(), object_string)
+            return pydoc.importfile(possible_module)
+
+    # Case 4: The object string is "package", a directory with for instance
+    # `__init__.py` and `functions.py` under it
+
+    # Must join and split in case user passer "folder/folder/package"
+    possible_pkg = os.path.join(os.getcwd(), object_string)
+    base, package = os.path.split(os.path.realpath(possible_pkg))
+
+    # Append the base to the system path and try to import the module
+    # This allows `__init__.py` in "package" to have imports such as
+    # from .functions import func
+    # from functions import func
+    # and we'll be able to get them. There are probably limits to this hack.
+    sys.path.append(base)
+    sys.path.append(package)
+
+    try:
+        return importlib.import_module(package)
+    except:
+        sys.path.pop()  # Clean up
+        sys.path.pop()
+        raise
 
 
 def resolve_input(obj):
