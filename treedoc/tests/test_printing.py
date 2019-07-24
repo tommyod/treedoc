@@ -287,6 +287,26 @@ def test_get_docstring():
 
     assert get_docstring(func, width=16) == "Lorem Ipsum..."
 
+    func.__doc__ = """
+    Return a fixed frequency TimedeltaIndex, with day as the default
+    frequency
+    
+    Parameters
+    ----------"""
+    get_docstring(
+        func
+    ) == "Return a fixed frequency TimedeltaIndex, with day as the default frequency"
+
+    func.__doc__ = """
+    Call ``func`` on self    producing a DataFrame with transformed values
+    and that has the same axis length as self.
+    
+    .. versionadded:: 0.20.0"""
+
+    get_docstring(
+        func
+    ) == "Call ``func`` on self producing a DataFrame with transformed values and that has the same axis length as self."
+
 
 class TestObjectResolution:
     @staticmethod

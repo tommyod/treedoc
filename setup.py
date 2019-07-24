@@ -1,5 +1,6 @@
-from os import path
 import re
+from os import path
+
 from setuptools import find_packages, setup
 
 # Get the long description from README.md

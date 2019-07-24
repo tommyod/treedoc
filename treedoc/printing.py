@@ -377,7 +377,11 @@ def get_docstring(obj, *, width=88) -> str:
     # pydoc.getdoc is slightly more general than inspect.getdoc,see:
     # https://github.com/python/cpython/blob/master/Lib/pydoc.py#L92
     doc = pydoc.getdoc(obj)
-    first_line, _ = pydoc.splitdoc(doc)
+    first_line, rest = pydoc.splitdoc(doc)
+
+    # Could not get a single synopsis. Can we get the first two sentences?
+    if (not first_line) and rest and ("\n\n" in rest):
+        first_line = rest.split("\n\n")[0].replace("\n", " ")
 
     return_str = textwrap.shorten(first_line, width=width, placeholder="...")
 
