@@ -1,4 +1,4 @@
-# <img src="branding/icons/treedoc_white_rounded.png" height="60">
+# <img src="https://raw.githubusercontent.com/tommyod/treedoc/master/branding/icons/treedoc_white_rounded.png" height="60">
 [![Build Status](https://api.travis-ci.com/tommyod/treedoc.svg?branch=master)](https://travis-ci.com/tommyod/treedoc) [![PyPI version](https://badge.fury.io/py/treedoc.svg)](https://pypi.org/project/treedoc/)  [![Downloads](https://pepy.tech/badge/treedoc)](https://pepy.tech/project/treedoc) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Minimalistic Python documentation for dendrophiles.
@@ -24,14 +24,11 @@ about arguments, see `treedoc --help` or `help(treedoc)`.
 
 ### Command-line interface
 
-![Example
-1](branding/examples/example_list.gif)
+![Example 1 - See the GitHub repo](https://github.com/tommyod/treedoc/blob/master/branding/examples/example_list.gif)
 
-![Example
-2](branding/examples/example_collectionsabc.gif)
+![Example 2 - See the GitHub repo](https://github.com/tommyod/treedoc/blob/master/branding/examples/example_collectionsabc.gif)
 
-![Example
-3](branding/examples/example_pandas_grep.gif)
+![Example 3 - See the GitHub repo](https://github.com/tommyod/treedoc/blob/master/branding/examples/example_pandas_grep.gif)
 
 
 ## Python shell and notebooks
@@ -40,15 +37,15 @@ treedoc can be imported and used just like any other package, e.g. in an
 interactive Python interpreter session or a Jupyter notebook. 
 
 ### Interpreter
-![Example 4](branding/examples/example_python_list.gif)
+![Example 4 - See the GitHub repo](https://github.com/tommyod/treedoc/blob/master/branding/examples/example_python_list.gif)
 
 ### Jupyter notebook
-![Example 5](branding/examples/example_jupyter_list.gif)
+![Example 5 - See the GitHub repo](https://github.com/tommyod/treedoc/blob/master/branding/examples/example_jupyter_list.gif)
 
 ## Contributing
 
 Contributions are welcome.
-If you wish to work on a problem, please create a [draft pull request](https://github.blog/2019-02-14-introducing-draft-pull-requests/) to get feedback.
+If you wish to work on a problem, please create a [pull request](https://github.blog/2019-02-14-introducing-draft-pull-requests/) to get feedback.
 We aim for:
 
 - Zero dependencies, but dependencies for testing are ok.
