@@ -37,4 +37,5 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     keywords=["documentation, utility"],
+    python_requires='>=3.6'
 )
