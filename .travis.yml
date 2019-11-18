@@ -14,6 +14,11 @@ matrix:
       dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
       sudo: required
       python: '3.7'
+      
+    - os: linux
+      dist: xenial    # required for Python 3.8 (travis-ci/travis-ci#9069)
+      sudo: required
+      python: '3.8'
 
 # =============================================================================
 #     - os: linux
