@@ -32,13 +32,13 @@ class PrinterABC(abc.ABC):
     @abc.abstractmethod
     def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
         """Consumes an iterator yielding object stacks and yields formatted strings.
-        
+
         Parameters
         ----------
         iterator : Iterator
-            An iterator yielding (print_stack, stack). 
+            An iterator yielding (print_stack, stack).
             The stacks are lists representing paths in the object tree.
-        
+
         Yields
         ------
         formatted_str : string
@@ -54,9 +54,9 @@ class Printer(PrintMixin):
         self, *, signature: int = 1, docstring: int = 2, info: int = 2, width: int = 88
     ):
         """Initialize a printer.
-        
+
         The interpretation of the following arguments varies from printer to printer.
-        
+
         Parameters
         ----------
             signature : int
@@ -104,8 +104,8 @@ class DensePrinter(Printer, PrinterABC):
         return formatted
 
     def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
-        """ See the Abstract Base Class for the docstring.
-        
+        """See the Abstract Base Class for the docstring.
+
         Summary
         -------
         Take an iterable object yielding (stack, final_node_at_depth) and returns strings.
@@ -166,8 +166,8 @@ class TreePrinter(Printer, PrinterABC):
         return formatted
 
     def format_iterable(self, iterable) -> typing.Generator[str, None, None]:
-        """ See the Abstract Base Class for the docstring.
-        
+        """See the Abstract Base Class for the docstring.
+
         Summary
         -------
         Take an iterable object yielding (stack, final_node_at_depth) and returns strings.
@@ -227,10 +227,10 @@ class TreePrinter(Printer, PrinterABC):
 
     def _format_row(self, iterator, depth=0, print_stack=None):
         """Takes an iterator and yields tuples (print_stack, stack).
-        
-        This recursive generator takes an iterator which yields 
+
+        This recursive generator takes an iterator which yields
         (stack, final_node_at_depth) and from it computes (print_stack, stack).
-        It's purpose is to generate the pretty tree-structure from the 
+        It's purpose is to generate the pretty tree-structure from the
         `final_node_at_depth` stack.
         """
 
@@ -318,7 +318,7 @@ class TreePrinter(Printer, PrinterABC):
 
 def _describe(obj) -> str:
     """Produce a short description of the given object.
-    
+
     Inspired by pydoc.describe.
     """
     if inspect.ismodule(obj):
@@ -359,9 +359,9 @@ def describe(obj) -> str:
 
 def get_docstring(obj, *, width=88) -> str:
     """Get a docstring summary from an object.
-    
+
     If no docstring is available, an empty string is returned.
-    
+
     Examples
     --------
     >>> get_docstring(set.intersection)
@@ -403,10 +403,10 @@ def get_docstring(obj, *, width=88) -> str:
 def clean_object_stack(stack):
     """
     Join an object stack so that consecutive modules are merged into the last one.
-    
+
     This avoids the stack [collections, collections.abc] as being named
     'collections.collections.abc'.
-    
+
     >>> import collections
     >>> from collections import abc
     >>> clean_object_stack([collections, abc]) == [abc]
@@ -446,7 +446,7 @@ def _get_name(param) -> str:
 
 def _between(string, start, end) -> str:
     """Returns what's between `start` and `end`, exclusive.
-    
+
     Examples
     >>> _between("im a nice (person) to all", "(", ")")
     'person'
@@ -463,10 +463,10 @@ def _between(string, start, end) -> str:
 
 def signature_from_docstring(obj):
     """Extract signature from built-in object docstring.
-    
+
     Some of the built-in methods have signature info in the docstring. One example is
     `dict.pop`. This method will retrieve the docstring, and return None if it cannot.
-    
+
     >>> import math
     >>> signature_from_docstring(math.log) in ('x[, base]', 'x, [base=math.e]')
     True
@@ -505,13 +505,13 @@ def signature_from_docstring(obj):
 
 
 def format_signature(obj, *, verbosity=2, width=88) -> str:
-    """ 
+    """
     Format a function signature for printing.
-    
+
     This function tries first to use inspect.signature, if that fails it will look for
     signature information in the first line of the docstring, and if that fails it will
     return a generic sigature if the object is callable.
-    
+
     Examples
     --------
     >>> import collections
@@ -648,11 +648,11 @@ def _format_signature(obj, *, verbosity=2) -> str:
 def resolve_str_to_obj(object_string: str) -> object:
     """
     Resolve a string to a Python object.
-    
+
     list -> builtin
     collections -> module
     collections.Counter -> object
-    
+
     Examples
     --------
     >>> resolve_str_to_obj("list") == list
@@ -715,7 +715,7 @@ def resolve_str_to_obj(object_string: str) -> object:
 
 def resolve_input(obj):
     """Resolve a general input (str, iterable, etc) to a list of Python objects.
-    
+
     Examples
     --------
     >>> resolve_input("list") == [list]

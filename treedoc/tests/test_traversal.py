@@ -73,8 +73,7 @@ class TestObjectTraverser:
         "subpackages, modules", itertools.product([True, False], [True, False])
     )
     def test_recusion_to_objs_only_where_defined(subpackages, modules):
-        """Do not recurse to objects defined elsewhere (unless we're in __init__.py).
-        """
+        """Do not recurse to objects defined elsewhere (unless we're in __init__.py)."""
         from treedoctestpackage import module
         from treedoctestpackage.module2 import SuperClass
 
@@ -85,11 +84,11 @@ class TestObjectTraverser:
     @pytest.mark.parametrize("subpackages", [True, False])
     def test_recursion_objs_same_level(subpackages):
         """Test discover of object imported into __init__.py, defined at same level.
-        
+
         Consider the structure:
             __init__.py (`MyClass` imported into here)
             module.py (`MyClass` defined here)
-            
+
         If recursion to modules is activated, we discover module.py:MyClass.
         If recursion to modules it NOT activated, we discover it as __init__.py:MyClass.
         """
@@ -118,15 +117,15 @@ class TestObjectTraverser:
     @pytest.mark.parametrize("modules", [True, False])
     def test_recursion_objs_lower_level(modules):
         """Test discover of object imported into __init__.py, defined at at lower level.
-        
+
         Consider the structure:
             __init__.py (`func_subtraction` imported into here)
             subpackage/subpackagemodule.py (`func_subtraction` defined here)
-            
-        If recursion to subpackages is activated, we discover 
+
+        If recursion to subpackages is activated, we discover
             subpackage/subpackagemodule.py:func_subtraction.
-            
-        If recursion to subpackages it NOT activated, we discover 
+
+        If recursion to subpackages it NOT activated, we discover
             it as __init__.py:func_subtraction.
         """
         import treedoctestpackage

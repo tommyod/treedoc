@@ -30,13 +30,13 @@ def treedoc(
     stream=sys.stdout,
 ):
     """Print minimalistic tree-like documentation.
-    
+
     Arguments
     ---------
     obj
         A string representing an object, or several space-separated objects, or a list
         of objects. Examples: "dict", "dict set", [dict, set]
-    
+
     Examples
     --------
     >>> treedoc(list)

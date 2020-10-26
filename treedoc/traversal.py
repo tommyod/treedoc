@@ -482,7 +482,7 @@ def descend_from_package(
     include_subpackages=False,
 ):
     """Descend one level down from a package to either a subpackage or modules.
-    
+
     Yields a tuple of (object, object_name) one level down.
     """
     if not inspect.ismodule(package):

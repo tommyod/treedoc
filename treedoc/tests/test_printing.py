@@ -230,7 +230,7 @@ def map_itemgetter(iterable, index: int):
 )
 def test_signature_from_docstring(input_arg, expected):
     """Test the function getting signature information from docstrings.
-    
+
     Due to builtin docstrings differing on different Python versions,
     we allow several possibilities."""
     assert signature_from_docstring(input_arg) in expected
@@ -370,7 +370,7 @@ class TestObjectResolution:
 
 class TestSignature:
     """
-    Class for gathering format_signature() tests. 
+    Class for gathering format_signature() tests.
     Note the stripping of whitespaces in some of the tests. More info on this in PR #9.
     """
 
@@ -385,7 +385,7 @@ class TestSignature:
     @staticmethod
     @pytest.mark.parametrize("verbosity, expected", parameters)
     def test_keywords_annotated_defaults_args_kwargs(verbosity, expected):
-        """ 
+        """
         Test that formatting signature works on a user defined function.
         """
 
@@ -406,7 +406,7 @@ class TestSignature:
         "verbosity, expected", [(0, ""), (1, "()"), (2, "()"), (3, "()"), (4, "()")]
     )
     def test_empty_signature(verbosity, expected):
-        """ 
+        """
         Test that formatting signature works on a user defined function with no arguments.
         """
 
@@ -427,7 +427,7 @@ class TestSignature:
         ],
     )
     def test_builtin_class(verbosity, expected):
-        """ 
+        """
         Test that formatting signature works on a built-in class.
         """
         from collections import Counter
