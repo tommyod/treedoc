@@ -160,9 +160,7 @@ class ObjectTraverser(PrintMixin):
             if hasattr(obj, "__file__") and hasattr(child_obj, "__file__"):
 
                 obj_pth, obj_py_file = os.path.split(inspect.getfile(obj))
-                child_obj_pth, child_obj_py_file = os.path.split(
-                    inspect.getfile(child_obj)
-                )
+                child_obj_pth, child_obj_py_file = os.path.split(inspect.getfile(child_obj))
                 if not obj_pth in child_obj_pth:
                     self._p(f"OC: Failed on condition 2.3")
                     return False
@@ -278,9 +276,7 @@ class ObjectTraverser(PrintMixin):
         stack = stack or []
         final_node_at_depth = final_node_at_depth or [True]
 
-        self._p(
-            f"yield_data({obj}, stack={stack}), final_node_at_depth={final_node_at_depth}"
-        )
+        self._p(f"yield_data({obj}, stack={stack}), final_node_at_depth={final_node_at_depth}")
 
         if len(stack) > self.level + 1:
             self._p(f"Max level reached. Aborting.")
@@ -482,7 +478,7 @@ def descend_from_package(
     include_subpackages=False,
 ):
     """Descend one level down from a package to either a subpackage or modules.
-    
+
     Yields a tuple of (object, object_name) one level down.
     """
     if not inspect.ismodule(package):

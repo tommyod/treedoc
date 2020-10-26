@@ -79,16 +79,12 @@ class MyClass:
         return a
 
     @classmethod
-    def classmethod_bound_to_myclass(
-        cls, a, b: int, *args, c=4.2, d: int = 42, **kwargs
-    ):
+    def classmethod_bound_to_myclass(cls, a, b: int, *args, c=4.2, d: int = 42, **kwargs):
         """Class method docstring."""
         return a
 
     @staticmethod
-    def static_method_bound_to_myclass(
-        self, a, b: int, *args, c=4.2, d: int = 42, **kwargs
-    ):
+    def static_method_bound_to_myclass(self, a, b: int, *args, c=4.2, d: int = 42, **kwargs):
         """Static method docstring."""
         return a
 

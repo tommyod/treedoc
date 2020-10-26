@@ -30,13 +30,13 @@ def treedoc(
     stream=sys.stdout,
 ):
     """Print minimalistic tree-like documentation.
-    
+
     Arguments
     ---------
     obj
         A string representing an object, or several space-separated objects, or a list
         of objects. Examples: "dict", "dict set", [dict, set]
-    
+
     Examples
     --------
     >>> treedoc(list)
@@ -100,9 +100,7 @@ def setup_argumentparser(printers):
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
     # =============================================================================
 
-    traversal = parser.add_argument_group(
-        "traversal", "The arguments below are common to every printer."
-    )
+    traversal = parser.add_argument_group("traversal", "The arguments below are common to every printer.")
     traversal.add_argument(
         "-l",
         "--level",

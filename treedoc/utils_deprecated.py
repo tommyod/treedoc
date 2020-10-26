@@ -24,7 +24,7 @@ def is_bound_method(obj):
 def inspect_classify(obj):
     """
     Classify an object according to the inspect module. Not disjoint.
-    
+
     Examples
     --------
     >>> inspect_classify(list)
@@ -44,8 +44,8 @@ def inspect_classify(obj):
     ['generator']
     >>> inspect_classify(max)
     ['builtin', 'routine']
-    
-    
+
+
     Common findings:
         []
         ['abstract', 'class']
@@ -59,7 +59,7 @@ def inspect_classify(obj):
         ['methoddescriptor', 'routine']
         ['method', 'routine']
         ['module']
-        
+
         Numpy ufuncs not found.
     """
     classes = list()

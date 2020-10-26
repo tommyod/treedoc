@@ -74,10 +74,7 @@ def _generate_cli_args(n):
 
 @pytest.mark.parametrize(
     "arg_string",
-    [
-        " ".join([i, j])
-        for i, j in itertools.product(object_strings, _generate_cli_args(2))
-    ],
+    [" ".join([i, j]) for i, j in itertools.product(object_strings, _generate_cli_args(2))],
 )
 def test_cli_smoketests_w_args(arg_string):
     """The smoketests assure that the commands run without errors. No output testing

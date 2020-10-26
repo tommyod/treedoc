@@ -25,19 +25,19 @@ _marker = object()
 
 class Peekable:
     """Wrap an iterator to allow lookahead.
-    
-    Call `peek` on the result to get the value that will be returned by `next`. 
+
+    Call `peek` on the result to get the value that will be returned by `next`.
     This won't advance the iterator:
-        
+
     >>> p = Peekable(['a', 'b'])
     >>> p.peek()
     'a'
     >>> next(p)
     'a'
-        
-    Pass `peek` a default value to return instead of raising ``StopIteration`` 
+
+    Pass `peek` a default value to return instead of raising ``StopIteration``
     when the iterator is exhausted.
-    
+
     >>> p = Peekable([])
     >>> p.peek('hi')
     'hi'
@@ -59,7 +59,7 @@ class Peekable:
 
     def peek(self, default=_marker):
         """Return item that will be returned from ``next()``.
-        
+
         Returns ``default`` if iterator is exhausted. If ``default`` is not
         provided, raise ``StopIteration``.
         """
@@ -81,7 +81,7 @@ class Peekable:
 
 def get_terminal_size(fallback=(128, 24)) -> typing.Tuple[int, int]:
     """Get the terminal size.
-    
+
     See http://granitosaurus.rocks/getting-terminal-size.html
     """
     for i in range(0, 3):
