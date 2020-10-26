@@ -3,24 +3,10 @@ language: python
 notifications:
   email: false
 
-matrix:
-  include:
-  
-    - os: linux
-      sudo: required
-      python: '3.6'
-  
-    - os: linux
-      dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
-      sudo: required
-      python: '3.7'
-
-# =============================================================================
-#     - os: linux
-#       dist: xenial    
-#       sudo: required
-#       python: '3.8-dev'
-# =============================================================================
+python:
+    - 3.6
+    - 3.7
+    - 3.8
 
 # The Travis CI job lifecycle specifies the order of the commands below phases.
 # https://docs.travis-ci.com/user/job-lifecycle/#the-job-lifecycle
@@ -38,7 +24,7 @@ install:
 before_script:
   - pip install . # Install the package
   - pip show treedoc # Show information about the package
-  - black . --check # Check that code is formatted correctly w.r.t. black
+  - black . -l 120 --check # Check that code is formatted correctly w.r.t. black
   - flake8 treedoc --select=F401 --exclude=__init__.py # Unused imports
   - bash ./linting.sh # Spelling errors
   - mypy treedoc/*.py --ignore-missing-imports --show-error-context # Static type analysis
@@ -55,7 +41,9 @@ after_script:
   # report any problems rendering your README. If your markup renders fine, 
   # the command will output Checking distribution FILENAME: Passed.
   - twine check dist/*
-  - echo "$TRAVIS_TAG"
-  - if [ -n "$TRAVIS_TAG" ]; then
+  
+  - if [[ -z "$TRAVIS_PULL_REQUEST_BRANCH" && "$TRAVIS_PULL_REQUEST" == 'false' && "$TRAVIS_BRANCH" == 'master' ]]; then
+    pip install twine;
     python -m twine upload dist/* --username tommyod --password $TWINE --skip-existing;
     fi
+  - echo "$TRAVIS_TAG"

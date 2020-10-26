@@ -293,9 +293,7 @@ def test_get_docstring():
     
     Parameters
     ----------"""
-    get_docstring(
-        func
-    ) == "Return a fixed frequency TimedeltaIndex, with day as the default frequency"
+    get_docstring(func) == "Return a fixed frequency TimedeltaIndex, with day as the default frequency"
 
     func.__doc__ = """
     Call ``func`` on self    producing a DataFrame with transformed values
@@ -392,19 +390,10 @@ class TestSignature:
         def myfunc1(a, b: int, *args, c=4.2, d: int = 42, **kwargs):
             return None
 
-        assert (
-            "".join(
-                char
-                for char in format_signature(myfunc1, verbosity=verbosity)
-                if char != " "
-            )
-            == expected
-        )
+        assert "".join(char for char in format_signature(myfunc1, verbosity=verbosity) if char != " ") == expected
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "verbosity, expected", [(0, ""), (1, "()"), (2, "()"), (3, "()"), (4, "()")]
-    )
+    @pytest.mark.parametrize("verbosity, expected", [(0, ""), (1, "()"), (2, "()"), (3, "()"), (4, "()")])
     def test_empty_signature(verbosity, expected):
         """
         Test that formatting signature works on a user defined function with no arguments.
@@ -444,11 +433,7 @@ class TestSignature:
 
         assert (
             "".join(
-                char
-                for char in format_signature(
-                    myclass.method_bound_to_myclass, verbosity=verbosity
-                )
-                if char != " "
+                char for char in format_signature(myclass.method_bound_to_myclass, verbosity=verbosity) if char != " "
             )
             == expected
         )
@@ -473,9 +458,7 @@ class TestSignature:
         assert (
             "".join(
                 char
-                for char in format_signature(
-                    myclass.static_method_bound_to_myclass, verbosity=verbosity
-                )
+                for char in format_signature(myclass.static_method_bound_to_myclass, verbosity=verbosity)
                 if char != " "
             )
             == expected
@@ -489,9 +472,7 @@ class TestSignature:
 
         generator = itertools.product(list(range(15, 100)), [0, 1, 2, 3, 4])
         for width, verbosity in generator:
-            formatted_signature = format_signature(
-                func, width=width, verbosity=verbosity
-            )
+            formatted_signature = format_signature(func, width=width, verbosity=verbosity)
             assert len(formatted_signature) <= width
 
 

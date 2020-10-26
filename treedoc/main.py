@@ -100,9 +100,7 @@ def setup_argumentparser(printers):
     #     OPTIONS RELATED TO OBJECT TRAVERSAL AND RECURSION
     # =============================================================================
 
-    traversal = parser.add_argument_group(
-        "traversal", "The arguments below are common to every printer."
-    )
+    traversal = parser.add_argument_group("traversal", "The arguments below are common to every printer.")
     traversal.add_argument(
         "-l",
         "--level",

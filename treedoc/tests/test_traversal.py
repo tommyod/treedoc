@@ -23,32 +23,22 @@ class TestObjectTraverser:
         """Regardless of what the `modules` flag says, the following should hold."""
 
         traverser = ObjectTraverser(subpackages=True, modules=modules)
-        assert traverser.recurse_to_child_object(
-            obj=testpackage, child_obj=subtestpackage
-        )
+        assert traverser.recurse_to_child_object(obj=testpackage, child_obj=subtestpackage)
 
         traverser = ObjectTraverser(subpackages=False, modules=modules)
-        assert not traverser.recurse_to_child_object(
-            obj=testpackage, child_obj=subtestpackage
-        )
+        assert not traverser.recurse_to_child_object(obj=testpackage, child_obj=subtestpackage)
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "subpackages, modules", itertools.product([True, False], [True, False])
-    )
+    @pytest.mark.parametrize("subpackages, modules", itertools.product([True, False], [True, False]))
     def test_recusion_subpackages_never_up(subpackages, modules):
         """As a fail-safe, we assure that recursion will never go up."""
 
         traverser = ObjectTraverser(subpackages=subpackages, modules=modules)
         # Notice that the arguments are switched and in the wrong order
-        assert not traverser.recurse_to_child_object(
-            obj=subtestpackage, child_obj=testpackage
-        )
+        assert not traverser.recurse_to_child_object(obj=subtestpackage, child_obj=testpackage)
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "subpackages, modules", itertools.product([True, False], [True, False])
-    )
+    @pytest.mark.parametrize("subpackages, modules", itertools.product([True, False], [True, False]))
     def test_recusion_never_other_packages(subpackages, modules):
         """While inspect.getmembers(module) yields `operator` if `import operator` is
         present in `module.py`, we should never recurse to that child."""
@@ -69,9 +59,7 @@ class TestObjectTraverser:
         assert not traverser.recurse_to_child_object(obj=testpackage, child_obj=module)
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "subpackages, modules", itertools.product([True, False], [True, False])
-    )
+    @pytest.mark.parametrize("subpackages, modules", itertools.product([True, False], [True, False]))
     def test_recusion_to_objs_only_where_defined(subpackages, modules):
         """Do not recurse to objects defined elsewhere (unless we're in __init__.py)."""
         from treedoctestpackage import module
@@ -103,15 +91,11 @@ class TestObjectTraverser:
         assert MyClass in [obj for (_, obj) in inspect.getmembers(treedoctestpackage)]
 
         traverser = ObjectTraverser(subpackages=subpackages, modules=False)
-        assert traverser.recurse_to_child_object(
-            obj=treedoctestpackage, child_obj=MyClass
-        )
+        assert traverser.recurse_to_child_object(obj=treedoctestpackage, child_obj=MyClass)
 
         # It would've been found eventually, so don't discover it in __init__.py
         traverser = ObjectTraverser(subpackages=subpackages, modules=True)
-        assert not traverser.recurse_to_child_object(
-            obj=treedoctestpackage, child_obj=MyClass
-        )
+        assert not traverser.recurse_to_child_object(obj=treedoctestpackage, child_obj=MyClass)
 
     @staticmethod
     @pytest.mark.parametrize("modules", [True, False])
@@ -136,25 +120,17 @@ class TestObjectTraverser:
         # =============================================================================
 
         # Recurse if it would not have been found elsewhere and it's in __init__.py
-        assert func_subtraction in [
-            obj for (_, obj) in inspect.getmembers(treedoctestpackage)
-        ]
+        assert func_subtraction in [obj for (_, obj) in inspect.getmembers(treedoctestpackage)]
 
         traverser = ObjectTraverser(subpackages=False, modules=modules)
-        assert traverser.recurse_to_child_object(
-            obj=treedoctestpackage, child_obj=func_subtraction
-        )
+        assert traverser.recurse_to_child_object(obj=treedoctestpackage, child_obj=func_subtraction)
 
         # It would've been found eventually, so don't discover it in __init__.py
         traverser = ObjectTraverser(subpackages=True, modules=modules)
-        assert not traverser.recurse_to_child_object(
-            obj=treedoctestpackage, child_obj=func_subtraction
-        )
+        assert not traverser.recurse_to_child_object(obj=treedoctestpackage, child_obj=func_subtraction)
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "subpackages, modules", itertools.product([True, False], [True, False])
-    )
+    @pytest.mark.parametrize("subpackages, modules", itertools.product([True, False], [True, False]))
     def test_recursion_composite_classes(subpackages, modules):
         """We do not recurse to composite classes, i.e. from Car to it's Wheel.
         Instead we find the wheel class from it's module."""
@@ -203,9 +179,7 @@ class TestDescendFromPackage:
 
         import treedoctestpackage
 
-        sub_packages = descend_from_package(
-            treedoctestpackage, include_subpackages=True
-        )
+        sub_packages = descend_from_package(treedoctestpackage, include_subpackages=True)
         sub_packages = set(map_itemgetter(sub_packages, 1))
 
         from treedoctestpackage import subpackage, subpackage2
@@ -246,9 +220,7 @@ class TestDescendFromPackage:
         """
         import treedoctestpackage
 
-        modules = descend_from_package(
-            treedoctestpackage, include_private=True, include_modules=True
-        )
+        modules = descend_from_package(treedoctestpackage, include_private=True, include_modules=True)
         modules = set(map_itemgetter(modules, 1))
 
         from treedoctestpackage import module, module2, _hidden_module

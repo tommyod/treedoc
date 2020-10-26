@@ -50,9 +50,7 @@ class PrinterABC(abc.ABC):
 class Printer(PrintMixin):
     """Base class for printers, used for input validation."""
 
-    def __init__(
-        self, *, signature: int = 1, docstring: int = 2, info: int = 2, width: int = 88
-    ):
+    def __init__(self, *, signature: int = 1, docstring: int = 2, info: int = 2, width: int = 88):
         """Initialize a printer.
 
         The interpretation of the following arguments varies from printer to printer.
@@ -196,9 +194,7 @@ class TreePrinter(Printer, PrinterABC):
 
             last_obj = stack[-1]
             signature = self._format_signature(last_obj, width=self.width - width_used)
-            docstring = self._get_docstring(
-                last_obj, width=self.width - len(joined_print_stack) - 3
-            )
+            docstring = self._get_docstring(last_obj, width=self.width - len(joined_print_stack) - 3)
 
             to_yield = " ".join([joined_print_stack, obj_names]) + signature
             assert len(to_yield) <= self.width
@@ -252,9 +248,7 @@ class TreePrinter(Printer, PrinterABC):
         if len(stack) == 1:
             yield print_stack, stack
             next(iterator)
-            yield from self._format_row(
-                iterator, depth=depth + 1, print_stack=print_stack
-            )
+            yield from self._format_row(iterator, depth=depth + 1, print_stack=print_stack)
             return
 
         # =============================================================================
@@ -435,10 +429,7 @@ def clean_object_stack(stack):
 
 def _get_name(param) -> str:
     """Checks if signature.Parameter corresponds to *args or **kwargs type input."""
-    if (
-        param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD)
-        and param.default is param.empty
-    ):
+    if param.kind in (param.VAR_POSITIONAL, param.VAR_KEYWORD) and param.default is param.empty:
         return str(param)
     else:
         return param.name
@@ -604,12 +595,8 @@ def _format_signature(obj, *, verbosity=2) -> str:
         return str(sig)
 
     # Check if signature has annotations or defaults
-    annotated = any(
-        param.annotation is not param.empty for param in sig.parameters.values()
-    )
-    has_defaults = any(
-        param.default is not param.empty for param in sig.parameters.values()
-    )
+    annotated = any(param.annotation is not param.empty for param in sig.parameters.values())
+    has_defaults = any(param.default is not param.empty for param in sig.parameters.values())
 
     # Dial down verbosity if user has provided a more verbose alternative than is available
     if not annotated:
@@ -634,9 +621,7 @@ def _format_signature(obj, *, verbosity=2) -> str:
 
     elif verbosity == 3:
         return_sig = SEP.join(
-            param.name + "=" + str(param.default)
-            if param.default is not param.empty
-            else _get_name(param)
+            param.name + "=" + str(param.default) if param.default is not param.empty else _get_name(param)
             for param in sig.parameters.values()
         )
         return "(" + return_sig + ")"
