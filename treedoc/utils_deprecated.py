@@ -65,7 +65,6 @@ def inspect_classify(obj):
     classes = list()
 
     for function_name in sorted(dir(inspect)):
-
         if not function_name.startswith("is"):
             continue
 

@@ -53,7 +53,6 @@ def _generate_cli_args(n):
     yielded = set()
 
     for _ in range(n):
-
         to_yield = " ".join(
             [
                 "--level " + str(random.choice([1, 2, 3])),

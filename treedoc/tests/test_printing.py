@@ -327,7 +327,6 @@ class TestObjectResolution:
 
     @staticmethod
     def test_resolve_str_to_obj_raises():
-
         with pytest.raises(ImportError):
             resolve_str_to_obj("gibberish")
 
@@ -361,7 +360,6 @@ class TestObjectResolution:
 
     @staticmethod
     def test_resolve_input_raises():
-
         with pytest.raises(ImportError):
             resolve_input("list dict gibberish")
 

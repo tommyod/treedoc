@@ -83,7 +83,6 @@ class ObjectTraverser(PrintMixin):
         # =============================================================================
 
         if inspect.ismodule(obj) and not inspect.ismodule(child_obj):
-
             # Prevent `collections.eq` / `collections._eq`
             if inspect.isbuiltin(child_obj):
                 if inspect.getmodule(child_obj) != obj:
@@ -92,13 +91,11 @@ class ObjectTraverser(PrintMixin):
 
             # Not defined in the sub-tree, skip it
             if not is_subpackage(inspect.getmodule(child_obj), obj):
-
                 self._p(f"OC: Failed on condition 1.2")
                 return False
 
             # The object is defined in a different file
             if inspect.getmodule(child_obj) != obj:
-
                 # If the object is not __init__.py,
                 # never include anything imported to it
                 if not is_package(obj):
@@ -110,7 +107,6 @@ class ObjectTraverser(PrintMixin):
 
                 # The object is defined at a lower level
                 if is_propersubpackage(inspect.getmodule(child_obj), obj):
-
                     if self.subpackages:
                         # will find it later, so skip it now
                         self._p(f"OC: Failed on condition 1.4")
@@ -120,7 +116,6 @@ class ObjectTraverser(PrintMixin):
                 if is_subpackage(inspect.getmodule(child_obj), obj) and is_subpackage(
                     obj, inspect.getmodule(child_obj)
                 ):
-
                     if self.modules:
                         # will find it later, so skip it now
                         self._p(f"OC: Failed on condition 1.5")
@@ -131,7 +126,6 @@ class ObjectTraverser(PrintMixin):
         # =============================================================================
 
         if inspect.ismodule(obj) and inspect.ismodule(child_obj):
-
             # The order is wrong, i.e. `main` in `main.subpackage` implies going up
             different_packages = child_obj.__package__ != obj.__package__
             # pytest.collect has __package__ == None
@@ -139,7 +133,7 @@ class ObjectTraverser(PrintMixin):
                 child_package_wrong = False
 
             else:
-                child_package_wrong = child_obj.__package__ in obj.__package__
+                child_package_wrong = child_obj.__package__ in obj.__package__  # type: ignore
 
             if different_packages and child_package_wrong:
                 self._p(f"OC: Failed on condition 2.1")
@@ -147,7 +141,7 @@ class ObjectTraverser(PrintMixin):
 
             if child_obj.__package__ is not None:
                 # Prevents for instance `pandas` to recurse into `numpy`
-                if not obj.__package__ in child_obj.__package__:
+                if not obj.__package__ in child_obj.__package__:  # type: ignore
                     self._p(f"OC: Failed on condition 2.2")
                     return False
 
@@ -158,7 +152,6 @@ class ObjectTraverser(PrintMixin):
 
             # Fail safe to prevent recursing from `pkg/file.py` to `pkg/__init__.py`
             if hasattr(obj, "__file__") and hasattr(child_obj, "__file__"):
-
                 obj_pth, obj_py_file = os.path.split(inspect.getfile(obj))
                 child_obj_pth, child_obj_py_file = os.path.split(inspect.getfile(child_obj))
                 if not obj_pth in child_obj_pth:
@@ -197,7 +190,6 @@ class ObjectTraverser(PrintMixin):
         # We're dealing with a class imported from another library, skip it
         # TODO: Extend this to other objects?
         if inspect.isclass(child_obj):
-
             if not is_subpackage(inspect.getmodule(child_obj), obj):
                 self._p(f"OC: Failed on condition 3.1")
                 return False
@@ -314,7 +306,6 @@ class ObjectTraverser(PrintMixin):
             seen_objects = []
             seen_names = set()
             for name, obj in itertools.chain(generator1, generator2):
-
                 # If it's not a module it's not a problem, since generator2 only yield modules
                 if not inspect.ismodule(obj):
                     yield name, obj
@@ -329,7 +320,6 @@ class ObjectTraverser(PrintMixin):
                 # The comparison operation has been overwritten. Fall back to naming
                 # This happen for instance with pandas NaT (Not a Time)
                 except TypeError:
-
                     if name not in seen_names:
                         seen_objects.append(obj)
                         seen_names.add(name)
@@ -343,7 +333,6 @@ class ObjectTraverser(PrintMixin):
         # Iterate through children
         filtered = []
         for name, child_obj in sorted(generator, key=self.sort_key):
-
             self._p(f"Looking at {name}, {type(child_obj)}")
 
             try:
@@ -377,7 +366,6 @@ class ObjectTraverser(PrintMixin):
         # =============================================================================
 
         for num, (name, child_obj) in enumerate(filtered, 1):
-
             last = True if len(filtered) == num else False
             yield from self._search(
                 obj=child_obj,
@@ -495,8 +483,7 @@ def descend_from_package(
 
     generator = pkgutil.iter_modules(path=[path], prefix=prefix)
 
-    for (importer, object_name, ispkg) in generator:
-
+    for importer, object_name, ispkg in generator:
         ismodule = not ispkg
 
         # Covers names such as "test", "tests", "testing", ...
