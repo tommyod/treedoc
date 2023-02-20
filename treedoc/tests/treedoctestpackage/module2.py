@@ -71,6 +71,5 @@ class Wheel:
 
 
 class Car:
-
     wheel_cls = Wheel
     wheel = Wheel()

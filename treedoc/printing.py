@@ -70,7 +70,7 @@ class Printer(PrintMixin):
         assert signature in (0, 1, 2, 3, 4)
         assert docstring in (0, 1, 2)
         assert info in (0, 1, 2, 3, 4)
-        assert width in range(2 ** 6, 2 ** 8 + 1)
+        assert width in range(2**6, 2**8 + 1)
         self.signature = signature
         self.docstring = docstring
         self.info = info
@@ -83,7 +83,6 @@ class Printer(PrintMixin):
 
 
 class DensePrinter(Printer, PrinterABC):
-
     SEP = " -> "
     END = "\n"
     SPACES2 = "  "
@@ -109,7 +108,6 @@ class DensePrinter(Printer, PrinterABC):
         Take an iterable object yielding (stack, final_node_at_depth) and returns strings.
         """
         for stack in self._format_row(iterable):
-
             self._validate_obj_stack(stack)
 
             # The row represents a path in the tree, the leaf object is the "final" object
@@ -143,7 +141,6 @@ class DensePrinter(Printer, PrinterABC):
 
 
 class TreePrinter(Printer, PrinterABC):
-
     # Class attributes used for printing
     RIGHT = "├──"
     DOWN = "│  "
@@ -173,7 +170,6 @@ class TreePrinter(Printer, PrinterABC):
         assert isinstance(iterable, collections.abc.Iterable)
 
         for print_stack, stack in self._format_row(iterable):
-
             self._validate_obj_stack(stack)
 
             joined_print_stack = " ".join(print_stack)
@@ -257,7 +253,6 @@ class TreePrinter(Printer, PrinterABC):
 
         # Iterate over every child at this level
         while True:
-
             # Get new elements from the iterator, default is (False, False)
             stack, final_node_at_depth = next(iterator, (False, False))
 
@@ -316,7 +311,6 @@ def _describe(obj) -> str:
     Inspired by pydoc.describe.
     """
     if inspect.ismodule(obj):
-
         if obj.__name__ in sys.builtin_module_names:
             return "built-in module"
 
@@ -729,7 +723,7 @@ def resolve_input(obj):
     # Special handling if "python" is passed
     if isinstance(obj, list) and len(obj) == 1 and obj[0].lower().strip() == "python":
         objects = []
-        for (importer, object_name, ispkg) in pkgutil.iter_modules():
+        for importer, object_name, ispkg in pkgutil.iter_modules():
             if not ispkg:
                 continue
             try:

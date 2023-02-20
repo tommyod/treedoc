@@ -152,7 +152,6 @@ def map_itemgetter(iterable, index: int):
 
 
 def test_is_package():
-
     import treedoctestpackage
 
     assert is_package(treedoctestpackage)
