@@ -133,7 +133,7 @@ class ObjectTraverser(PrintMixin):
                 child_package_wrong = False
 
             else:
-                child_package_wrong = child_obj.__package__ in obj.__package__
+                child_package_wrong = child_obj.__package__ in obj.__package__  # type: ignore
 
             if different_packages and child_package_wrong:
                 self._p(f"OC: Failed on condition 2.1")
@@ -141,7 +141,7 @@ class ObjectTraverser(PrintMixin):
 
             if child_obj.__package__ is not None:
                 # Prevents for instance `pandas` to recurse into `numpy`
-                if not obj.__package__ in child_obj.__package__:
+                if not obj.__package__ in child_obj.__package__:  # type: ignore
                     self._p(f"OC: Failed on condition 2.2")
                     return False
 
